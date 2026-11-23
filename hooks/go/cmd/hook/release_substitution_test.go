@@ -15,7 +15,7 @@ func TestReleaseSubstitutionAndANSIOnProviders(t *testing.T) {
 			for _, tc := range []struct{ command, reason string }{
 				{`terraform -chdir=$(pwd)/infra apply`, "non-literal"},
 				{`kubectl $(printf apply) -f prod.yaml`, "non-literal"},
-				{`k$()ubectl apply`, "command-substituted executable"},
+				{`k$()ubectl apply`, "script-opaque:command-position-expansion"},
 				{`$'\x6bubectl' apply`, "kubectl apply is a production-shaped deploy command"},
 				{`echo $'it\'s; $(kubectl apply)'`, ""},
 				{"cat <<EOF\nkubectl apply $(date)\nEOF\n", ""},

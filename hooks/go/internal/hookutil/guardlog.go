@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"runtime"
 )
 
 // GuardLog is the guard.log owner for one guard: where its directory is, how
@@ -54,6 +55,10 @@ func (g GuardLog) Append(logRoot string, record any) error {
 		return err
 	}
 	trusted, err := os.Getwd()
+	if err == nil && runtime.GOOS == "darwin" {
+		// Getwd can return the old pathname after macOS has removed the directory.
+		err = checkWorkingDirectory(trusted)
+	}
 	if err != nil {
 		return fmt.Errorf("%s could not resolve the working directory: %w", g.Guard, err)
 	}
@@ -66,6 +71,21 @@ func (g GuardLog) Append(logRoot string, record any) error {
 			return guardAliasError{guard: g.Guard}
 		}
 		return err
+	}
+	return nil
+}
+
+func checkWorkingDirectory(path string) error {
+	named, err := os.Stat(path)
+	if err != nil {
+		return err
+	}
+	current, err := os.Stat(".")
+	if err != nil {
+		return err
+	}
+	if !os.SameFile(named, current) {
+		return &os.PathError{Op: "getwd", Path: path, Err: os.ErrNotExist}
 	}
 	return nil
 }

@@ -2,6 +2,7 @@ package toolcall
 
 import (
 	"context"
+	"errors"
 
 	"github.com/muehz/agentics/hooks/go/internal/shellwords"
 )
@@ -33,6 +34,9 @@ type Inspection struct {
 	DataView string
 	// DataProven reports that Policy is the parse of a proven data view.
 	DataProven bool
+	// DataCanceled reports that PowerShell data proof or publication stopped
+	// on cancellation after source inspection.
+	DataCanceled bool
 
 	execution shellwords.ExecutionContext
 }
@@ -55,10 +59,14 @@ func (c Call) Inspect(ctx context.Context, scripts shellwords.ScriptReader) Insp
 	}
 	source := shellwords.ParseScripts(ctx, command, execution.Dialect, c.ScriptOptions(scripts))
 	inspection.Source, inspection.Policy, inspection.DataView = source, source, command
-	if view, proven, err := shellwords.PowerShellFileData(ctx, command, execution); err == nil && proven {
+	view, proven, err := shellwords.PowerShellFileData(ctx, command, execution)
+	inspection.DataCanceled = errors.Is(err, context.Canceled) || errors.Is(err, context.DeadlineExceeded)
+	if err == nil && proven {
 		candidate := shellwords.ParseContext(ctx, view, execution.Dialect)
 		if ctx.Err() == nil {
 			inspection.Policy, inspection.DataView, inspection.DataProven = candidate, view, true
+		} else {
+			inspection.DataCanceled = true
 		}
 	}
 	return inspection

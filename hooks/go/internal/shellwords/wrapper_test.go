@@ -83,7 +83,7 @@ func TestReadWrapper(t *testing.T) {
 		return readingWant{refusal: exe + " requires exactly -c or -lc and a literal command string"}
 	}
 	psContract := func(exe string) readingWant {
-		return readingWant{refusal: exe + " requires optional -NoProfile/-NonInteractive, then -Command and one literal token"}
+		return readingWant{refusal: exe + " requires optional PowerShell flags, then -File <literal .ps1> or -Command and one literal token"}
 	}
 	envName := func(w string) readingWant { return readingWant{refusal: "env " + w + " requires a literal name"} }
 	duration := readingWant{refusal: "timeout requires a literal duration before the command"}
@@ -97,6 +97,10 @@ func TestReadWrapper(t *testing.T) {
 		want    readingWant
 	}{
 		{"sh -c 'echo hi'", POSIX, readingWant{cmd: "echo hi"}},
+		{"dash -c 'echo hi'", PowerShell, readingWant{cmd: "echo hi"}},
+		{"ksh -lc 'echo hi'", POSIX, readingWant{cmd: "echo hi"}},
+		{"pwsh -nop -noni -NoLogo -ep RemoteSigned -Command 'Write-Output hi'", POSIX, readingWant{cmd: "Write-Output hi", powerShell: true}},
+		{"pwsh -ep Example -Command 'Write-Output hi'", POSIX, psContract("pwsh")},
 		{"bash -lc 'echo hi'", POSIX, readingWant{cmd: "echo hi"}},
 		{"bash -c 'echo hi'", PowerShell, readingWant{cmd: "echo hi"}},
 		{`bash -c "$X"`, POSIX, readingWant{cmd: "$X"}},

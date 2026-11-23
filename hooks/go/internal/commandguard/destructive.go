@@ -3,8 +3,10 @@ package commandguard
 import (
 	"strconv"
 	"strings"
+	"unicode/utf8"
 
 	"github.com/muehz/agentics/hooks/go/internal/argv"
+	"github.com/muehz/agentics/hooks/go/internal/pathshape"
 	"github.com/muehz/agentics/hooks/go/internal/shellwords"
 )
 
@@ -150,8 +152,15 @@ func parsePowerShellRemoval(words []shellwords.Word) powerShellRemoval {
 		word := words[i]
 		literalPath := false
 		option := ""
-		if !word.Quoted && word.Literal && word.Raw == word.Text {
-			option = strings.ToLower(word.Text)
+		rawOption := word.Raw
+		head, width := utf8.DecodeRuneInString(rawOption)
+		switch head {
+		case '\u2013', '\u2014', '\u2015':
+			rawOption = "-" + rawOption[width:]
+		}
+		// The lexer may normalize a plain option's leading Unicode dash in Text.
+		if !word.Quoted && word.Literal && (word.Raw == word.Text || rawOption == word.Text) {
+			option = strings.ToLower(rawOption)
 		}
 		switch option {
 		case "-recurse", "-r":
@@ -160,7 +169,7 @@ func parsePowerShellRemoval(words []shellwords.Word) powerShellRemoval {
 		case "-force":
 			continue
 		case "-path", "-literalpath":
-			literalPath = strings.EqualFold(word.Text, "-literalpath")
+			literalPath = option == "-literalpath"
 			if i+1 == len(words) {
 				result.understood = false
 				continue
@@ -178,7 +187,7 @@ func parsePowerShellRemoval(words []shellwords.Word) powerShellRemoval {
 			}
 			continue
 		default:
-			if !word.Quoted && strings.HasPrefix(word.Text, "-") {
+			if strings.HasPrefix(rawOption, "-") || (!word.Quoted && strings.HasPrefix(word.Text, "-")) {
 				result.understood = false
 				continue
 			}
@@ -407,18 +416,23 @@ func classifyRM(words []shellwords.Word) (match string, broad, active bool) {
 
 func broadRemoveItem(words []shellwords.Word) (string, bool) {
 	removal := parsePowerShellRemoval(words)
-	if !removal.recursive {
-		return "", false
-	}
 	for _, target := range removal.targets {
 		if target.literalPath && strings.ContainsAny(target.word.Text, "*?[]") {
 			continue
 		}
-		if isBroadTarget(target.word) {
+		if isLiteralRemovalRoot(target.word) || removal.recursive && isBroadTarget(target.word) {
 			return "Remove-Item " + target.word.Raw, true
 		}
 	}
 	return "", false
+}
+
+func isLiteralRemovalRoot(word shellwords.Word) bool {
+	if !word.Literal {
+		return false
+	}
+	text := normalizeDotSegments(word.Text)
+	return text == "/" || pathshape.HasDrive(text) && len(text) == 3 && text[2] == '/'
 }
 
 func classifyFindDelete(words []shellwords.Word) (match string, broad, active bool) {

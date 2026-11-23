@@ -5,7 +5,9 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"os"
 	"path"
+	"path/filepath"
 	"reflect"
 	"slices"
 	"strings"
@@ -16,6 +18,7 @@ import (
 	"github.com/muehz/agentics/hooks/go/internal/hookspec"
 	"github.com/muehz/agentics/hooks/go/internal/hookspec/hookspectest"
 	"github.com/muehz/agentics/hooks/go/internal/hosttest"
+	"github.com/muehz/agentics/hooks/go/internal/scriptsnap"
 	"github.com/muehz/agentics/hooks/go/internal/shellwords"
 	"github.com/muehz/agentics/hooks/go/internal/surface"
 	"github.com/muehz/agentics/hooks/go/internal/toolcall"
@@ -343,6 +346,75 @@ func TestPowerShellLiteralPathDisablesPatternExpansion(t *testing.T) {
 	inspection := shellReads(t, "PowerShell", `Get-Content -LiteralPath '.e[n]v'`, "")
 	if inspection.Reason.Refused() || len(inspection.Paths) != 1 || inspection.Paths[0].ExpandPattern {
 		t.Fatalf("inspection = %#v", inspection)
+	}
+}
+
+func TestPowerShellReaderPathElements(t *testing.T) {
+	for _, command := range []string{
+		`Get-Content -LiteralPath 'notes.txt','.env'`,
+		`Get-Content -LiteralPath:'notes.txt','.env'`,
+		`Get-Content -Lit:'notes.txt','.env'`,
+		`Get-Content -Pat:'notes.txt','.env'`,
+	} {
+		inspection := shellReads(t, "PowerShell", command, "")
+		findings, err := collectShell(inspection.Paths, nil, nil)
+		if inspection.Reason.Refused() || err != nil || len(findings) != 1 || findings[0].path != ".env" {
+			t.Errorf("%q: expected one classified path, got paths %#v, findings %#v, error %v", command, inspection.Paths, findings, err)
+		}
+	}
+	inspection := shellReads(t, "PowerShell", `Get-Content -LiteralPath 'notes.txt,.env'`, "")
+	if inspection.Reason.Refused() || len(inspection.Paths) != 1 || inspection.Paths[0].Text != "notes.txt,.env" {
+		t.Fatalf("quoted comma must stay in one path, got %#v", inspection)
+	}
+}
+
+func TestDirectScriptReaderUsesFileDialect(t *testing.T) {
+	hosttest.ScrubGuardEnv(t)
+	dir := t.TempDir()
+	file := filepath.Join(dir, "report")
+	src := "#!/usr/bin/env pwsh\nGet-Content -LiteralPath 'one.txt','two.txt'\n"
+	if err := os.WriteFile(file, []byte(src), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	call := readCall(t, buildEventAt(t, "Bash", map[string]any{"command": "./report"}, dir))
+	ctx := t.Context()
+	result := inspectShellReads(ctx, call, call.Inspect(ctx, scriptsnap.New()))
+	if result.Reason.Refused() || len(result.Paths) != 2 {
+		t.Fatalf("expected both PowerShell operands from the inspected script, got %#v", result)
+	}
+	for i, want := range []string{"one.txt", "two.txt"} {
+		p := result.Paths[i]
+		if p.Text != want || p.Dialect != shellwords.PowerShell || p.ExpandPattern || p.Origin == nil || p.Origin.Line != 2 {
+			t.Errorf("operand %d: got %#v, want literal PowerShell path %q from line 2", i, p, want)
+		}
+	}
+}
+
+func TestCanceledPowerShellDataProofStillDeniesInWarnMode(t *testing.T) {
+	hosttest.ScrubGuardEnv(t)
+	t.Setenv("SECRETS_GUARD_MODE", "warn")
+	const command = `Get-Content -LiteralPath .env`
+	event := buildEvent(t, "PowerShell", map[string]any{"command": command})
+	call := readCall(t, event)
+	checkpoint := &hookspectest.CancelContext{Context: t.Context()}
+	shellwords.ParseScripts(checkpoint, command, shellwords.PowerShell, call.ScriptOptions(scriptsnap.New()))
+	ctx := &hookspectest.CancelContext{Context: t.Context(), At: checkpoint.Calls + 1}
+	control := Run(hookspec.Request{Context: t.Context(), Event: event, Scripts: scriptsnap.New()})
+	if control.Kind() != contract.KindContext {
+		t.Fatalf("warn-mode control returned %v, want context", control.Kind())
+	}
+	out := Run(hookspec.Request{Context: ctx, Event: event, Scripts: scriptsnap.New()})
+	if out.Kind() != contract.KindDeny || !strings.Contains(out.Payload(), "credential file read(s) blocked") {
+		t.Errorf("canceled data proof returned %v with %q, want denial preserving the credential finding", out.Kind(), out.Payload())
+	}
+}
+
+func TestPowerShellCanonicalLocationGlob(t *testing.T) {
+	root := globFixture(t, "docs/sample.txt")
+	inspection := shellReads(t, "PowerShell", `Set-Location docs && Get-Content *.txt`, root)
+	findings, err := collectShell(inspection.Paths, nil, nil)
+	if inspection.Reason.Refused() || err != nil || len(findings) != 0 {
+		t.Fatalf("expected benign glob resolved from the new location, got paths %#v, findings %#v, error %v", inspection.Paths, findings, err)
 	}
 }
 
@@ -986,6 +1058,11 @@ func TestRunDeniesPowerShellCredentialRead(t *testing.T) {
 		`Microsoft.PowerShell.Utility\Select-String -Pattern TOKEN -Path .env`,
 		". Get-Content .env",
 		". .env",
+		"Move-Item .env out",
+		"mi .env out",
+		"move .env out",
+		"sls TOKEN .env",
+		"cpi .env out",
 	} {
 		t.Run(command, func(t *testing.T) {
 			payload := buildEvent(t, "PowerShell",
@@ -1018,6 +1095,11 @@ func TestRunAllowsBenignPowerShell(t *testing.T) {
 		"&Get-Content .env.example",
 		`&'Microsoft.PowerShell.Management\Get-Content' .env.example`,
 		`Microsoft.PowerShell.Utility\Write-Output .env`,
+		"Move-Item a.txt b.txt",
+		"mi a.txt b.txt",
+		"move a.txt b.txt",
+		"sls TOKEN README.md",
+		"cpi a.txt b.txt",
 	} {
 		t.Run(command, func(t *testing.T) {
 			payload := buildEvent(t, "PowerShell",

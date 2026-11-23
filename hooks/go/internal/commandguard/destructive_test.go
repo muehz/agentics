@@ -5,8 +5,32 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/muehz/agentics/hooks/go/internal/contract"
+	"github.com/muehz/agentics/hooks/go/internal/hookspec"
+	"github.com/muehz/agentics/hooks/go/internal/hookspec/hookspectest"
+	"github.com/muehz/agentics/hooks/go/internal/hosttest"
 	"github.com/muehz/agentics/hooks/go/internal/shellwords"
 )
+
+func TestPowerShellRemovalUnicodeOptionsWithScriptInspection(t *testing.T) {
+	hosttest.ScrubGuardEnv(t)
+	for _, tc := range []struct{ command, reason string }{
+		{`Remove-Item –LiteralPath 'cache/[old].txt'`, ""},
+		{"Remove-Item –Rec`urse ./cache", "command_parse_limit"},
+	} {
+		out := Run(hookspec.Request{
+			Context: t.Context(), Provider: "claude-code", Hook: "command-guardian",
+			Event: buildEvent(t, "PowerShell", commandInput(t, tc.command), t.TempDir()), Scripts: hookspectest.Scripts{},
+		})
+		if tc.reason == "" {
+			if out.Kind() != contract.KindPass {
+				t.Errorf("%q: literal path should pass, got %v with %q", tc.command, out.Kind(), out.Payload())
+			}
+		} else if out.Kind() != contract.KindDeny || !strings.Contains(out.Payload(), tc.reason) {
+			t.Errorf("%q: got %v with %q, want denial containing %q", tc.command, out.Kind(), out.Payload(), tc.reason)
+		}
+	}
+}
 
 func TestDeletionUncertaintyPerInvocation(t *testing.T) {
 	const inspection = "Use literal deletion operands and supported options so the guard can inspect every target."
@@ -92,10 +116,23 @@ func TestDeletionUncertaintyPerInvocation(t *testing.T) {
 func TestPowerShellDeletionPrecision(t *testing.T) {
 	for _, tc := range []tableCase{
 		{name: "scratch", tool: "PowerShell", command: `Remove-Item -LiteralPath '.git-commit-msg.txt'`, want: "pass"},
+		{name: "filesystem root without recursive flag", tool: "PowerShell", command: `Remove-Item /`, want: "deny"},
+		{name: "drive root without recursive flag", tool: "PowerShell", command: `Remove-Item -LiteralPath 'C:\'`, want: "deny"},
 		{name: "protected child", tool: "PowerShell", command: `Remove-Item -LiteralPath '.git/config'`, want: "deny", wantReason: "2 blocking threat(s) detected: destructive_file_ops - Do not delete the .git directory. Use Git commands to manage repository state."},
 		{name: "protected env", tool: "PowerShell", command: `Remove-Item -LiteralPath '.env.production'`, want: "deny", wantReason: "1 blocking threat(s) detected: destructive_file_ops - Move the .env file to a backup location instead of removing it."},
 	} {
 		t.Run(tc.name, func(t *testing.T) { assertCaseSemantics(t, tc, recordCase(t, tc)) })
+	}
+}
+
+func TestNonrecursivePowerShellRootCheckPreservesWhitespace(t *testing.T) {
+	const command = `Remove-Item -LiteralPath '/ '`
+	parsed := shellwords.Parse(command, shellwords.PowerShell)
+	if len(parsed.Invocations) != 1 || len(parsed.Invocations[0].Words) != 3 || parsed.Invocations[0].Words[2].Text != "/ " {
+		t.Fatalf("expected literal operand preserving the child name, got %+v", parsed.Invocations)
+	}
+	if match, broad := broadRemoveItem(parsed.Invocations[0].Words); broad {
+		t.Errorf("quoted whitespace child was classified as a root: %q", match)
 	}
 }
 

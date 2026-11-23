@@ -69,6 +69,8 @@ type wrapperSpec struct {
 // wrappers is the closed roster of commands the parser looks through, keyed by the lower-case executable name.
 var wrappers = map[string]wrapperSpec{
 	"sh":         {read: readShell},
+	"dash":       {read: readShell},
+	"ksh":        {read: readShell},
 	"bash":       {read: readShell},
 	"pwsh":       {read: readPowerShell},
 	"powershell": {read: readPowerShell},
@@ -185,15 +187,69 @@ func readShell(_ context.Context, exe string, words []Word, dialect Dialect, _ i
 	return wrapperReading{dialect: POSIX, commandString: &words[2], complete: true}
 }
 
-func readPowerShell(_ context.Context, exe string, words []Word, dialect Dialect, _ int) wrapperReading {
-	i := 1
-	for i < len(words) && words[i].Literal && (strings.EqualFold(words[i].Text, "-NoProfile") || strings.EqualFold(words[i].Text, "-NonInteractive")) {
-		i++
+// powerShellEntry matches the original dash because cmdlet arguments also carry normalized flag text.
+func powerShellEntry(words []Word) int {
+	for i := 1; i < len(words); i++ {
+		w := words[i]
+		if !w.Literal || strings.ContainsAny(w.Raw, "–—―") {
+			return -1
+		}
+		switch asciiLower(w.Text) {
+		case "-noprofile", "-nop", "-noninteractive", "-noni", "-nologo", "-sta", "-mta", "-noexit", "-noprofileloadtime":
+		case "-executionpolicy", "-ep":
+			i++
+			if i == len(words) || !words[i].Literal {
+				return -1
+			}
+			switch asciiLower(words[i].Text) {
+			case "bypass", "unrestricted", "remotesigned", "allsigned", "restricted", "default", "undefined":
+			default:
+				return -1
+			}
+		case "-file", "-command", "-c":
+			return i
+		default:
+			return -1
+		}
 	}
-	if i+2 != len(words) || !words[i].Literal || !strings.EqualFold(words[i].Text, "-Command") {
+	return -1
+}
+
+func readPowerShell(_ context.Context, exe string, words []Word, dialect Dialect, _ int) wrapperReading {
+	i := powerShellEntry(words)
+	if i < 0 || i+2 != len(words) || asciiLower(words[i].Text) == "-file" {
 		return wrapperRefusal(dialect, formPowerShellContract, exe)
 	}
 	return wrapperReading{dialect: PowerShell, commandString: &words[i+1], complete: true}
+}
+
+func shellFileForm(exe string, words []Word) (scriptForm, bool, Refusal) {
+	switch {
+	case posixShellName(exe):
+		form, file, rule := parseScriptForm(words)
+		return form, file, ruleRefusal(rule, nil)
+	case exe == "powershell" || exe == "pwsh":
+		return parsePowerShellScriptForm(words)
+	default:
+		return scriptForm{}, false, Refusal{}
+	}
+}
+
+func parsePowerShellScriptForm(words []Word) (scriptForm, bool, Refusal) {
+	i := powerShellEntry(words)
+	if i < 0 || i+1 >= len(words) {
+		return scriptForm{}, true, ruleRefusal(RuleFormUnsupportedOption, nil)
+	}
+	if words[i+1].Literal && words[i+1].Text == "-" {
+		return scriptForm{}, true, opaqueRefusal(constructStdinToShell, nil)
+	}
+	if asciiLower(words[i].Text) != "-file" {
+		if i+2 != len(words) {
+			return scriptForm{}, true, ruleRefusal(RuleFormUnsupportedOption, nil)
+		}
+		return scriptForm{}, false, Refusal{}
+	}
+	return scriptForm{path: words[i+1], args: words[i+2:], dialect: PowerShell}, true, Refusal{}
 }
 
 // readEnv reads env's options, assignments, and child, and collects the environment effects in the same walk.

@@ -42,6 +42,53 @@ func (c ScriptCall) CallerWords() []string {
 	return out
 }
 
+// scriptPatternArg distinguishes a quoted part of an argument from a wildcard
+// later in the same word. An escaped wildcard is data in both caller dialects.
+func scriptPatternArg(w Word, caller Dialect) bool {
+	var quote byte
+	for i := 0; i < len(w.Raw); i++ {
+		c := w.Raw[i]
+		if quote != '\'' && (caller == POSIX && c == '\\' || caller == PowerShell && c == '\x60') {
+			i++
+			continue
+		}
+		if quote != 0 {
+			if c == quote {
+				quote = 0
+			}
+			continue
+		}
+		switch c {
+		case '\'', '"':
+			quote = c
+		case '*', '?', '[':
+			return true
+		case '{':
+			if caller == POSIX {
+				return true
+			}
+		case '~':
+			if caller == POSIX && i == 0 {
+				return true
+			}
+		}
+	}
+	return false
+}
+
+func scriptArgumentText(w Word, caller Dialect) string {
+	if caller == PowerShell && isUnquotedFlagHead(w.Raw) {
+		// Cmdlet option matching normalizes Unicode dash characters, while a
+		// script receives the spelling supplied by its caller.
+		tail := strings.TrimLeftFunc(w.Raw, isPSDashRune)
+		prefix := w.Raw[:len(w.Raw)-len(tail)]
+		if normalized := normalizeLeadingDashes(prefix); normalized != prefix && strings.HasPrefix(w.Text, normalized) {
+			return prefix + strings.TrimPrefix(w.Text, normalized)
+		}
+	}
+	return w.Text
+}
+
 // forwarder is a whole word that is one positional parameter or the whole argument vector: $1, "$1", ${1}, $@, "$@".
 var forwarder = regexp.MustCompile(`^"?\$(?:@|\*|[1-9]|\{[1-9@*][^}]*\})"?$`)
 
@@ -60,6 +107,9 @@ func forwardsParameters(inv *Invocation) bool {
 // reads the text of the script, so a word in a string can match; it is consulted only for a call that is fed. xargs
 // reads its input list from the same stream.
 var stdinReader = regexp.MustCompile(`(?m)(?:^|[\s;&|(){])(?:read|mapfile|readarray|xargs)(?:[\s;&|)]|$)|(?:^|[\s;&|(){])cat[ \t]*(?:$|[;&|)])`)
+
+// Like the POSIX stdin scan, this check is consulted only for a fed script.
+var powerShellInput = regexp.MustCompile(`(?i)\$(?:input\b|\{input\})|\[\s*(?:system\.)?console\s*\]\s*::\s*(?:in\b|openstandardinput\b|read(?:line|key)?\b)`)
 
 // argFrame is one open context of the parameter scan.
 type argFrame struct {
@@ -483,4 +533,33 @@ func loopsOverParams(text string) bool {
 	}
 	rest = strings.TrimLeft(rest[n:], " \t")
 	return strings.HasPrefix(rest, ";") || hasWordAt(strings.TrimLeft(rest, " \t\r\n"), "do")
+}
+
+// scriptCallerWords preserves the element boundaries of in-process PowerShell
+// arguments. Native shell launches keep their scalar argv spelling.
+func (p *parser) scriptCallerWords(form scriptForm) ([]Word, bool) {
+	if !form.direct || form.caller != PowerShell || form.dialect != PowerShell {
+		return form.args, true
+	}
+	lexer := psParser{ctx: p.ctx, mode: psModeTyped, line: 1}
+	var words []Word
+	for _, arg := range form.args {
+		if !arg.Literal {
+			words = append(words, arg)
+			continue
+		}
+		if isUnquotedFlagHead(arg.Raw) {
+			if head, raw, joined := strings.Cut(arg.Raw, ":"); joined {
+				name, value, _ := strings.Cut(arg.Text, ":")
+				words = append(words, Word{Text: name, Raw: head, Literal: true})
+				arg = Word{Text: value, Raw: raw, Literal: true}
+			}
+		}
+		elements, complete := lexer.providerTargets(arg)
+		if !complete {
+			return nil, false
+		}
+		words = append(words, elements...)
+	}
+	return words, true
 }

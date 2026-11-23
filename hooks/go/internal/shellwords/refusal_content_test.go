@@ -45,7 +45,10 @@ func contentConstructRows() []contentRow {
 	return []contentRow{
 		body("eval \"$"+m+"\" "+m+"\n", constructEval),
 		body("trap 'echo "+m+"' EXIT\n", constructTrap),
-		body("source ./lib "+m+"\n", constructSource),
+		body("source lib "+m+"\n", constructSource),
+		body("./report.cmd "+m+"\n", constructBatchFile),
+		contentNested("construct dotnet-call", "pwsh -File /ws/report.ps1", RuleOpaque, constructDotNetCall, fakeReader{"/ws/report.ps1": {Text: "[Fixture.Report]::Describe('" + m + "')\n"}}),
+		contentNested("construct dynamic-call", "pwsh -File /ws/report.ps1", RuleOpaque, constructDynamicCall, fakeReader{"/ws/report.ps1": {Text: "Import-Module ./" + m + ".psd1\n"}}),
 		body("zsh -c 'echo "+m+"' "+m+"\n", constructOtherShell),
 		body("$"+m+" "+m+"\n", constructCommandPositionExpansion),
 		body("bash -c \"$"+m+"\" "+m+"\n", constructDynamicC),
@@ -250,7 +253,7 @@ func TestTypedFormRefusalsReportContent(t *testing.T) {
 		quoted  bool // the text holds the marker, inside a whole dash word
 	}{
 		{"shell contract", formShellContract, POSIX, `bash -x ` + m, "bash requires exactly -c or -lc and a literal command string", false},
-		{"PowerShell contract", formPowerShellContract, PowerShell, `pwsh -File ` + m, "pwsh requires optional -NoProfile/-NonInteractive, then -Command and one literal token", false},
+		{"PowerShell contract", formPowerShellContract, PowerShell, `pwsh -File ` + m, "pwsh requires optional PowerShell flags, then -File <literal .ps1> or -Command and one literal token", false},
 		{"env name", formEnvName, POSIX, `env -u "$` + m + `" ` + m, "env -u requires a literal name", false},
 		{"wrapper option", formWrapperOption, POSIX, `sudo --bogus ` + m + ` ` + m, option("sudo", "--bogus"), false},
 		{"wrapper value", formWrapperValue, POSIX, `sudo -u "$` + m + `" ` + m, "sudo -u requires a literal value", false},

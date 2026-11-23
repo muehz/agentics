@@ -305,7 +305,9 @@ func TestDispatcherProvisionPathEncoding(t *testing.T) {
 		valid           bool
 	}{
 		{"valid-unicode", "¢界🙂", true},
+		{"valid-ascii-control", "path\x01end", true},
 		{"invalid-byte", "bad\xff", false},
+		{"invalid-continuation", "bad\xc2\x01", false},
 		{"truncated", "bad\xe2\x82", false},
 		{"overlong", "bad\xe0\x80\x80", false},
 		{"surrogate", "bad\xed\xa0\x80", false},

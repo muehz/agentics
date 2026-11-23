@@ -16,6 +16,7 @@ import (
 	"github.com/muehz/agentics/hooks/go/internal/hookspec"
 	"github.com/muehz/agentics/hooks/go/internal/hosttest"
 	"github.com/muehz/agentics/hooks/go/internal/provider"
+	"github.com/muehz/agentics/hooks/go/internal/scriptsnap"
 	"github.com/muehz/agentics/hooks/go/internal/shellwords"
 	"github.com/muehz/agentics/hooks/go/internal/surface"
 )
@@ -66,7 +67,14 @@ func TestGuardPrecisionPartialProof(t *testing.T) {
 				if tc.tool == "Bash" {
 					dialect = shellwords.POSIX
 				}
-				parsed := shellwords.ParseContext(checkpoint, tc.command, dialect)
+				var parsed shellwords.Result
+				if dialect == shellwords.PowerShell {
+					parsed = shellwords.ParseScripts(checkpoint, tc.command, dialect, shellwords.ScriptOptions{
+						Reader: scriptsnap.New(), Context: shellwords.ExecutionContext{Dialect: dialect, Proven: true},
+					})
+				} else {
+					parsed = shellwords.ParseContext(checkpoint, tc.command, dialect)
+				}
 				if tc.stage == "consumer" {
 					execution := shellwords.ExecutionContext{Dialect: dialect, Proven: true}
 					if len(parsed.Invocations) != 1 || parsed.Invocations[0].Inspection != shellwords.BashMetadata || !execution.ForInvocation(parsed, 0).AllowsNewProof() {
@@ -200,7 +208,7 @@ func TestGuardPrecisionPartialProof(t *testing.T) {
 											reasons = map[string][]string{
 												"command-guardian": {"unsafe_publication"},
 												"release-guardian": {"release-guardian could not inspect"},
-												"secrets-guardian": {"credential file read(s) blocked"},
+												"secrets-guardian": {"canceled"},
 											}[guard]
 										}
 										for _, reason := range reasons {

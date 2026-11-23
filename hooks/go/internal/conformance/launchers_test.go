@@ -1,6 +1,7 @@
 package conformance
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -9,15 +10,30 @@ import (
 	"testing"
 
 	"github.com/muehz/agentics/hooks/go/internal/hookbuild"
+	"github.com/muehz/agentics/hooks/go/internal/hosttest"
 )
 
-// launcherTreeFiles is a plain tree that satisfies bin-launchers with dummy
-// bytes; the rule reads names, CR bytes and one attribute line, never the
-// launcher's machine format.
-var launcherTreeFiles = map[string]string{
-	"bin/agx":        "#!/bin/sh\nexec true\n",
-	"bin/agx.exe":    "MZ dummy launcher",
-	".gitattributes": "* text=auto eol=lf\n# bin/agx.exe binary is only a comment here\nbin/agx.exe binary linguist-generated\n",
+// committedLauncherScript loads the committed launcher so fixture trees stay
+// aligned with the digest enforced by bin-launchers.
+func committedLauncherScript(t *testing.T) []byte {
+	t.Helper()
+	path := filepath.Join(hosttest.Checkout(t), "bin", "agx")
+	data, err := os.ReadFile(path)
+	if err != nil {
+		t.Fatalf("reading committed bin/agx: %v", err)
+	}
+	return data
+}
+
+// launcherTreeFiles is a plain tree that satisfies bin-launchers. The rule
+// reads names, bytes and one attribute line, never the launcher's machine
+// format.
+func launcherTreeFiles(t *testing.T) map[string]string {
+	return map[string]string{
+		"bin/agx":        string(committedLauncherScript(t)),
+		"bin/agx.exe":    "MZ dummy launcher",
+		".gitattributes": "* text=auto eol=lf\n# bin/agx.exe binary is only a comment here\nbin/agx.exe binary linguist-generated\n",
+	}
 }
 
 func writeLauncherTree(t *testing.T, files map[string]string) string {
@@ -88,7 +104,7 @@ func TestBinLaunchersRoster(t *testing.T) {
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
-			root := writeLauncherTree(t, launcherTreeFiles)
+			root := writeLauncherTree(t, launcherTreeFiles(t))
 			tc.mutate(t, root)
 			if got := launcherPaths(t, checkBinLaunchers(root, false)); !reflect.DeepEqual(got, tc.want) {
 				t.Fatalf("bin-launchers paths = %v, want %v", got, tc.want)
@@ -97,12 +113,45 @@ func TestBinLaunchersRoster(t *testing.T) {
 	}
 }
 
+func TestBinLaunchersRejectsDigestDrift(t *testing.T) {
+	for _, sourceOnly := range []bool{false, true} {
+		t.Run(fmt.Sprintf("sourceOnly=%t", sourceOnly), func(t *testing.T) {
+			files := launcherTreeFiles(t)
+			data := []byte(files[launcherScriptRel])
+			data[0] ^= 1
+			if strings.ContainsRune(string(data), '\r') {
+				t.Fatal("mutated launcher unexpectedly contains CR")
+			}
+			files[launcherScriptRel] = string(data)
+			if sourceOnly {
+				delete(files, "bin/agx.exe")
+				delete(files, ".gitattributes")
+			}
+			root := writeLauncherTree(t, files)
+			failures := checkBinLaunchers(root, sourceOnly)
+			if len(failures) != 1 || failures[0].Rule != "bin-launchers" || failures[0].Path != launcherScriptRel || !strings.Contains(failures[0].Message, "SHA-256 differs from shellwords.AgxLauncherSHA256") {
+				t.Fatalf("digest drift findings = %#v, want one bin-launchers finding naming the digest mismatch", failures)
+			}
+		})
+	}
+}
+
+func TestBinLaunchersSourceOnlyAcceptsCommittedScript(t *testing.T) {
+	files := launcherTreeFiles(t)
+	delete(files, "bin/agx.exe")
+	delete(files, ".gitattributes")
+	root := writeLauncherTree(t, files)
+	if failures := checkBinLaunchers(root, true); len(failures) != 0 {
+		t.Fatalf("source-only pristine launcher findings = %#v, want none", failures)
+	}
+}
+
 // TestBinLaunchersRunInsideFreshness proves RunFreshness carries the rule and
 // keeps its findings when the source digest later cannot be computed: this
 // tree has a committed hook binary but no hooks/go module.
 func TestBinLaunchersRunInsideFreshness(t *testing.T) {
 	files := map[string]string{"hooks/bin/agx-linux-amd64": "not built"}
-	for rel, content := range launcherTreeFiles {
+	for rel, content := range launcherTreeFiles(t) {
 		files[rel] = content
 	}
 	root := writeLauncherTree(t, files)

@@ -33,7 +33,7 @@ func TestFlowCallForm(t *testing.T) {
 				deny                bool
 			}{
 				{"bash-literal", "Bash", `"` + bashBinary + `" flow ` + verb.args, false},
-				{"bash-variable", "Bash", `AGX_BIN="` + bashBinary + `"; "$AGX_BIN" flow ` + verb.args, false},
+				{"bash-variable", "Bash", `AGX_BIN="` + bashBinary + `"; "$AGX_BIN" flow ` + verb.args, true},
 				{"powershell-call", "PowerShell", `& "` + powerShellBinary + `" flow ` + verb.args, false},
 				{"bash-computed", "Bash", `$(printf "%s" "` + bashBinary + `") flow ` + verb.args, true},
 				{"powershell-computed", "PowerShell", `& $(Write-Output "` + powerShellBinary + `") flow ` + verb.args, true},
@@ -57,8 +57,9 @@ func TestFlowCallForm(t *testing.T) {
 						return
 					}
 					reason := requireDeny(t, surface, code, stdout, stderr)
-					if !strings.Contains(reason, "command-substituted executable is not literal") {
-						t.Fatalf("computed executable denial lost its distinctive reason: %q", reason)
+					if !strings.Contains(reason, "[commands] 1 blocking threat(s) detected: command_parse_limit - ") ||
+						!strings.Contains(reason, "script-opaque:command-position-expansion") {
+						t.Fatalf("dynamic executable denial lost its distinctive reason: %q", reason)
 					}
 					if surface != "claude-code" && stderr != "" {
 						t.Fatalf("JSON guard emitted unexpected stderr: %q", stderr)

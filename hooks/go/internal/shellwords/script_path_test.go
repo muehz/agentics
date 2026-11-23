@@ -128,7 +128,7 @@ func TestScriptPathResolution(t *testing.T) {
 		{"bash ../../ok.sh", "C:/ws", "", "script-cwd-unproven"},
 		{"bash ../ok.sh", "C:\\ws", "C:/ok.sh", ""},
 		// bash has no chdir builtin.
-		{"chdir sub; bash ./ok.sh", "/ws", "/ws/ok.sh", ""},
+		{"chdir sub; bash ./ok.sh", "/ws", "", "script-predecessor-may-write"},
 		{"cd sub && bash ./ok.sh &", "/ws", "/ws/sub/ok.sh", ""},
 		{"false && cd sub; echo x && bash ./ok.sh", "/ws", "", "script-cwd-unproven"},
 		{"echo $(cd sub); bash ./ok.sh", "/ws", "", "script-cwd-unproven"},
@@ -193,16 +193,16 @@ func TestScriptPathResolution(t *testing.T) {
 		{"time command cd sub; bash ./ok.sh", "/ws", "/ws/sub/ok.sh", ""},
 		{"bash -c 'time cd sub; bash ./ok.sh'", "/ws", "/ws/sub/ok.sh", ""},
 		// bash finds builtins by exact name only: CD, Builtin and /usr/bin/cd are other programs.
-		{"CD sub; bash ./ok.sh", "/ws", "/ws/ok.sh", ""},
-		{"Builtin cd sub; bash ./ok.sh", "/ws", "/ws/ok.sh", ""},
-		{"/usr/bin/cd sub; bash ./ok.sh", "/ws", "/ws/ok.sh", ""},
-		{"Command cd sub; bash ./ok.sh", "/ws", "/ws/ok.sh", ""},
+		{"CD sub; bash ./ok.sh", "/ws", "", "script-predecessor-may-write"},
+		{"Builtin cd sub; bash ./ok.sh", "/ws", "", "script-predecessor-may-write"},
+		{"/usr/bin/cd sub; bash ./ok.sh", "/ws", "", "script-predecessor-may-write"},
+		{"Command cd sub; bash ./ok.sh", "/ws", "", "script-predecessor-may-write"},
 		{"\"cd\" sub && bash ./ok.sh", "/ws", "/ws/sub/ok.sh", ""},
 		{"\"command\" cd sub && bash ./ok.sh", "/ws", "/ws/sub/ok.sh", ""},
 		// Only an exact, unquoted keyword before a cd is a keyword; If, "if" or -x make the line another command.
 		{"If cd sub; bash ./ok.sh", "/ws", "", "script-cwd-unproven"},
 		{"\"if\" cd sub; bash ./ok.sh", "/ws", "", "script-cwd-unproven"},
-		{"true; -x cd sub; bash ./ok.sh", "/ws", "", "script-cwd-unproven"},
+		{"true; -x cd sub; bash ./ok.sh", "/ws", "", "script-predecessor-may-write"},
 		{"! cd sub; bash ./ok.sh", "/ws", "/ws/sub/ok.sh", ""},
 		{"popd; bash ./ok.sh", "/ws", "", "script-cwd-unproven"},
 		{"for i in 1; do cd sub; done; bash ./ok.sh", "/ws", "", "script-cwd-unproven"},
@@ -223,7 +223,7 @@ func TestScriptPathResolution(t *testing.T) {
 		{"builtin -- cd sub; bash ./ok.sh", "/ws", "", "script-cwd-unproven"},
 		{"builtin builtin cd sub; bash ./ok.sh", "/ws", "", "script-cwd-unproven"},
 		// A command word that only expands at run time may be a cd.
-		{"C=cd; $C sub; bash ./ok.sh", "/ws", "", "script-cwd-unproven"},
+		{"C=cd; $C sub; bash ./ok.sh", "/ws", "", "script-opaque:command-position-expansion"},
 		// So may one that brace expansion or a glob turns into cd, although the lexer keeps it as one literal word.
 		{"{cd,} sub; bash ./ok.sh", "/ws", "", "script-cwd-unproven"},
 		{"{cd,} sub && bash ./ok.sh", "/ws", "", "script-cwd-unproven"},
@@ -253,7 +253,7 @@ func TestScriptPathResolution(t *testing.T) {
 		// Ordinary command words around a cd still leave the directory proven.
 		{"echo hi; cd sub && bash ./ok.sh", "/ws", "/ws/sub/ok.sh", ""},
 		{"env echo hi; bash ./ok.sh", "/ws", "/ws/ok.sh", ""},
-		{"./tool x; cd sub && bash ./ok.sh", "/ws", "/ws/sub/ok.sh", ""},
+		{"./tool x; cd sub && bash ./ok.sh", "/ws", "", "script-predecessor-may-write"},
 		{"git status; cd sub; bash ./ok.sh", "/ws", "/ws/sub/ok.sh", ""},
 		{"echo *.txt $X; cd sub && bash ./ok.sh", "/ws", "/ws/sub/ok.sh", ""},
 		{"while test ! -e stop; do bash ./ok.sh; done", "/ws", "/ws/ok.sh", ""},
@@ -283,6 +283,11 @@ func TestScriptPathResolution(t *testing.T) {
 	}
 	for _, tc := range cases {
 		res := ParseScripts(context.Background(), tc.command, POSIX, ScriptOptions{Reader: files, Context: provenPOSIX, Cwd: tc.cwd, Host: host})
+		if tc.command == "C=cd; $C sub; bash ./ok.sh" {
+			if len(res.Scripts) != 0 || len(res.Invocations) != 2 || res.Invocations[1].Reason.Rule() != RuleCwdUnproven {
+				t.Errorf("a dynamic predecessor leaves the later script without a proven cwd: %+v", res)
+			}
+		}
 		switch got := firstScriptReason(res); {
 		case tc.wantReason == "":
 			found := false
@@ -401,8 +406,8 @@ func TestScriptPowerShellDirectoryChangeCommands(t *testing.T) {
 	}
 	// bash has no push-location, so in the POSIX dialect it is an ordinary program.
 	res = ParseScripts(context.Background(), "push-location sub; bash ./ok.sh", POSIX, ScriptOptions{Reader: files, Context: provenPOSIX, Cwd: "/ws"})
-	if child := scriptChild(res); child == nil || child.Script.Path != "/ws/ok.sh" {
-		t.Fatalf("push-location in bash changed the directory: %+v", res.Invocations)
+	if got := firstScriptReason(res); got != "script-predecessor-may-write" || len(res.Scripts) != 0 {
+		t.Fatalf("unknown POSIX predecessor: reason %q, scripts %+v", got, res.Scripts)
 	}
 }
 
@@ -420,11 +425,11 @@ func TestScriptUninspectableCommandIsAnUnprovableCD(t *testing.T) {
 			t.Errorf("%q: want the call refused as %s, got %+v", command, want, last)
 		}
 	}
-	// A refused script call runs in a shell of its own and changes nothing here, even when its path would expand.
-	for _, command := range []string{"bash ./missing.sh; bash ./ok.sh", "bash ./{a,b}.sh; bash ./ok.sh"} {
+	// A refused read provides no inspected predecessor for the following call.
+	for command, first := range map[string]Rule{"bash ./missing.sh; bash ./ok.sh": RuleUnreadable, "bash ./{a,b}.sh; bash ./ok.sh": RulePathNotLiteral} {
 		res := ParseScripts(context.Background(), command, POSIX, ScriptOptions{Reader: files, Context: provenPOSIX, Cwd: "/ws"})
-		if child := scriptChild(res); child == nil || child.Script.Path != "/ws/ok.sh" {
-			t.Errorf("%q: a refused script call blocked the next one: %+v", command, res.Invocations)
+		if len(res.Scripts) != 0 || len(res.Invocations) != 2 || res.Invocations[0].Reason.Rule() != first || res.Invocations[1].Reason.Rule() != RulePredecessorMayWrite {
+			t.Errorf("%q: want the original read refusal and a predecessor refusal, got %+v", command, res.Invocations)
 		}
 	}
 }

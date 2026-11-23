@@ -3491,13 +3491,15 @@
       "expected": {
         "command-guardian": {
           "decision": "deny",
-          "reason": "unsafe_publication"
+          "reason": "2 blocking threat(s) detected: command_parse_limit - Rewrite the script line so the command it runs is literal; eval, trap, a dynamic source and an expansion in command position cannot be inspected. (script-opaque:eval)"
         },
         "secrets-guardian": {
-          "decision": "pass"
+          "decision": "deny",
+          "reason": "script-opaque:eval"
         },
         "release-guardian": {
-          "decision": "pass"
+          "decision": "deny",
+          "reason": "script-opaque:eval"
         }
       }
     },
@@ -3871,7 +3873,8 @@
       },
       "expected": {
         "command-guardian": {
-          "decision": "pass"
+          "decision": "deny",
+          "reason": "1 blocking threat(s) detected: destructive_file_ops"
         },
         "secrets-guardian": {
           "decision": "pass"
@@ -5011,10 +5014,12 @@
           "reason": "network_exfiltration"
         },
         "secrets-guardian": {
-          "decision": "pass"
+          "decision": "deny",
+          "reason": "dash requires exactly -c or -lc and a literal command string"
         },
         "release-guardian": {
-          "decision": "pass"
+          "decision": "deny",
+          "reason": "dash requires exactly -c or -lc and a literal command string"
         }
       }
     },

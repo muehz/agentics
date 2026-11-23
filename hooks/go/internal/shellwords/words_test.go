@@ -262,7 +262,7 @@ func TestEnvironmentEffectsWithoutInvocation(t *testing.T) {
 // literal copy of the wrapper set, so a label dropped from it fails here too, and so does a wrapper added to the
 // table without it.
 func TestWrappersAreShadowed(t *testing.T) {
-	names := []string{"sh", "bash", "pwsh", "powershell", "env", "command", "nohup", "exec", "sudo", "time",
+	names := []string{"sh", "bash", "dash", "ksh", "pwsh", "powershell", "env", "command", "nohup", "exec", "sudo", "time",
 		"xargs", "timeout", "doas", "nice", "ionice", "stdbuf", "setsid", "flock"}
 	for _, name := range names {
 		if !isWrapper(name) {
@@ -1083,7 +1083,7 @@ func TestTypedFormRefusalsKeepTheirText(t *testing.T) {
 		producer, command, want string
 	}{
 		{"shell contract", `bash -x`, "bash requires exactly -c or -lc and a literal command string"},
-		{"PowerShell contract", `pwsh -File x`, "pwsh requires optional -NoProfile/-NonInteractive, then -Command and one literal token"},
+		{"PowerShell contract", `pwsh -File x`, "pwsh requires optional PowerShell flags, then -File <literal .ps1> or -Command and one literal token"},
 		{"env name", `env -u`, "env -u requires a literal name"},
 
 		{"option env", `env --bogus x`, option("env", "--bogus")},

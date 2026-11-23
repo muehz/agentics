@@ -106,9 +106,6 @@ var stamp = []byte(sourceDigest)
 func main() {}
 `
 
-// tinyLauncherScript is the LF shell launcher committed as bin/agx.
-const tinyLauncherScript = "#!/bin/sh\nexec true\n"
-
 // tinyGitAttributes marks the launcher binary the way the repository does.
 const tinyGitAttributes = "* text=auto eol=lf\nbin/agx.exe binary linguist-generated\n"
 
@@ -213,7 +210,7 @@ func writeTinyModuleRaw(t *testing.T, root string) {
 		"hooks/go/cmd/hook/main_test.go":         tinyMainTestGo,
 		"hooks/go/internal/provider/provider.go": tinyProviderGo,
 		"hooks/go/cmd/launcher/main.go":          tinyLauncherGo,
-		"bin/agx":                                tinyLauncherScript,
+		"bin/agx":                                string(committedLauncherScript(t)),
 		".gitattributes":                         tinyGitAttributes,
 		// Pure-ASCII dispatcher so the run-hook-ascii rule (part of Audit) is
 		// satisfied; .go-only digest hashing means this file never disturbs

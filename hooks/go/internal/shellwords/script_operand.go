@@ -103,7 +103,7 @@ func (p *parser) applyOperandRule(s operandScope) {
 		}
 	}
 	var proofs map[string]operandProof
-	if !s.sourced && len(wanted) > 0 {
+	if s.lines != nil && !s.sourced && len(wanted) > 0 {
 		proofs = p.operandProofs(s, wanted)
 	}
 	for _, u := range uses {
@@ -362,7 +362,8 @@ func protectedVerb(inv *Invocation) (string, bool) {
 		return "", false
 	}
 	exe := strings.ToLower(ExecutableName(words[0].Text))
-	if !argv.Lookup(exe).ProvenOperands {
+	entry := argv.Lookup(exe)
+	if !entry.ProvenOperands && !(inv.Dialect == PowerShell && entry.PowerShellProvenOperands) {
 		return exe, false
 	}
 	if exe == "git" {

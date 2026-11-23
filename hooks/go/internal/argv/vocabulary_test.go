@@ -5,7 +5,7 @@ import (
 	"testing"
 )
 
-// vocabularyRows states every name the vocabulary holds with all six attributes written out, so a changed row shows
+// vocabularyRows states every name the vocabulary holds with all seven attributes written out, so a changed row shows
 // as a test diff. The rows copy the rosters the guards and the script proof read today; the package cannot import
 // them, so another test compares the two.
 var vocabularyRows = []struct {
@@ -22,11 +22,11 @@ var vocabularyRows = []struct {
 	{"pulumi", Command{Classified: true, Shadow: true, VerbCLI: true}},
 	{"aws", Command{Classified: true, Shadow: true, VerbCLI: true}},
 	{"az", Command{Classified: true, Shadow: true, VerbCLI: true}},
-	{"new-azresourcegroupdeployment", Command{Classified: true}},
-	{"new-azdeployment", Command{Classified: true}},
-	{"new-azsubscriptiondeployment", Command{Classified: true}},
-	{"new-azmanagementgroupdeployment", Command{Classified: true}},
-	{"new-aztenantdeployment", Command{Classified: true}},
+	{"new-azresourcegroupdeployment", Command{Classified: true, Shadow: true}},
+	{"new-azdeployment", Command{Classified: true, Shadow: true}},
+	{"new-azsubscriptiondeployment", Command{Classified: true, Shadow: true}},
+	{"new-azmanagementgroupdeployment", Command{Classified: true, Shadow: true}},
+	{"new-aztenantdeployment", Command{Classified: true, Shadow: true}},
 	{"gcloud", Command{Classified: true, Shadow: true, VerbCLI: true}},
 	{"vercel", Command{Classified: true, Shadow: true, VerbCLI: true}},
 
@@ -56,41 +56,46 @@ var vocabularyRows = []struct {
 	{"source", Command{Classified: true, Shadow: true, Evaluator: true}},
 	{".", Command{Classified: true, Shadow: true, Evaluator: true}},
 	{"dd", Command{Classified: true, Shadow: true, ProvenOperands: true}},
-	{"get-content", Command{Classified: true}},
-	{"gc", Command{Classified: true}},
+	{"get-content", Command{Classified: true, Shadow: true}},
+	{"gc", Command{Classified: true, Shadow: true}},
 	{"type", Command{Classified: true, Shadow: true}},
-	{"select-string", Command{Classified: true}},
-	{"copy-item", Command{Classified: true}},
-	{"copy", Command{Classified: true}},
-	{"format-hex", Command{Classified: true}},
+	{"select-string", Command{Classified: true, Shadow: true}},
+	{"sls", Command{Classified: true, Shadow: true}},
+	{"copy-item", Command{Classified: true, Shadow: true}},
+	{"copy", Command{Classified: true, Shadow: true}},
+	{"format-hex", Command{Classified: true, Shadow: true}},
 	{"git", Command{Classified: true, Shadow: true, VerbCLI: true, ProvenOperands: true}},
 
 	// The commands the command guard checks for writing, deleting or moving a settings file or a Git hook.
 	{"tee", Command{Classified: true, Shadow: true}},
 	{"rm", Command{Classified: true, Shadow: true, ProvenOperands: true}},
-	{"del", Command{Classified: true}},
-	{"erase", Command{Classified: true}},
+	{"del", Command{Classified: true, Shadow: true, PowerShellProvenOperands: true}},
+	{"erase", Command{Classified: true, Shadow: true, PowerShellProvenOperands: true}},
 	{"unlink", Command{Classified: true, Shadow: true}},
 	{"truncate", Command{Classified: true, Shadow: true}},
 	{"shred", Command{Classified: true, Shadow: true}},
-	{"move", Command{Classified: true}},
-	{"move-item", Command{Classified: true}},
-	{"mi", Command{Classified: true}},
-	{"remove-item", Command{Classified: true}},
-	{"ri", Command{Classified: true}},
-	{"set-content", Command{Classified: true}},
-	{"sc", Command{Classified: true}},
-	{"add-content", Command{Classified: true}},
-	{"ac", Command{Classified: true}},
-	{"clear-content", Command{Classified: true}},
-	{"clc", Command{Classified: true}},
-	{"out-file", Command{Classified: true}},
-	{"rename-item", Command{Classified: true}},
-	{"rni", Command{Classified: true}},
-	{"ren", Command{Classified: true}},
-	{"new-item", Command{Classified: true}},
-	{"ni", Command{Classified: true}},
-	{"cpi", Command{Classified: true}},
+	{"move", Command{Classified: true, Shadow: true}},
+	{"move-item", Command{Classified: true, Shadow: true}},
+	{"mi", Command{Classified: true, Shadow: true}},
+	{"remove-item", Command{Classified: true, Shadow: true, PowerShellProvenOperands: true}},
+	{"ri", Command{Classified: true, Shadow: true, PowerShellProvenOperands: true}},
+	{"rd", Command{Classified: true, Shadow: true, PowerShellProvenOperands: true}},
+	{"rmdir", Command{Classified: true, Shadow: true, PowerShellProvenOperands: true}},
+	{"set-content", Command{Classified: true, Shadow: true}},
+	{"sc", Command{Classified: true, Shadow: true}},
+	{"add-content", Command{Classified: true, Shadow: true}},
+	{"ac", Command{Classified: true, Shadow: true}},
+	{"clear-content", Command{Classified: true, Shadow: true}},
+	{"clc", Command{Classified: true, Shadow: true}},
+	{"out-file", Command{Classified: true, Shadow: true}},
+	{"rename-item", Command{Classified: true, Shadow: true}},
+	{"rni", Command{Classified: true, Shadow: true}},
+	{"ren", Command{Classified: true, Shadow: true}},
+	{"new-item", Command{Classified: true, Shadow: true}},
+	{"ni", Command{Classified: true, Shadow: true}},
+	{"cpi", Command{Classified: true, Shadow: true}},
+	{"set-item", Command{Classified: true, Shadow: true}},
+	{"si", Command{Classified: true, Shadow: true}},
 	{"install", Command{Classified: true, Shadow: true}},
 	{"ln", Command{Classified: true, Shadow: true}},
 	{":", Command{Classified: true}},
@@ -110,18 +115,29 @@ var vocabularyRows = []struct {
 	// The downloaders and evaluators the command guard pairs across a pipe.
 	{"curl", Command{Classified: true, Shadow: true}},
 	{"wget", Command{Classified: true, Shadow: true}},
-	{"invoke-webrequest", Command{Classified: true}},
-	{"iwr", Command{Classified: true}},
-	{"invoke-expression", Command{Classified: true, Evaluator: true}},
-	{"iex", Command{Classified: true, Evaluator: true}},
+	{"invoke-webrequest", Command{Classified: true, Shadow: true}},
+	{"iwr", Command{Classified: true, Shadow: true}},
+	{"invoke-restmethod", Command{Classified: true, Shadow: true}},
+	{"irm", Command{Classified: true, Shadow: true}},
+	{"invoke-expression", Command{Classified: true, Shadow: true, Evaluator: true}},
+	{"iex", Command{Classified: true, Shadow: true, Evaluator: true}},
+	{"invoke-command", Command{Classified: true, Shadow: true, Evaluator: true}},
+	{"icm", Command{Classified: true, Shadow: true, Evaluator: true}},
+	{"start-process", Command{Classified: true, Shadow: true}},
+	{"saps", Command{Classified: true, Shadow: true}},
+	{"start", Command{Classified: true, Shadow: true}},
+	{"import-module", Command{Classified: true, Shadow: true}},
+	{"ipmo", Command{Classified: true, Shadow: true}},
+	{"add-type", Command{Classified: true, Shadow: true}},
+	{"new-module", Command{Classified: true, Shadow: true}},
 
 	// The shells. The parser unwraps only the POSIX shells and the PowerShell hosts, and the script proof never inspects
 	// a call to another shell. The command guard reads sh, bash and zsh as consumers of a download.
 	{"sh", Command{Classified: true, Shadow: true, Shell: PosixShell}},
 	{"bash", Command{Classified: true, Shadow: true, Shell: PosixShell}},
 	{"zsh", Command{Classified: true, Shell: OtherShell}},
-	{"dash", Command{Shell: OtherShell}},
-	{"ksh", Command{Shell: OtherShell}},
+	{"dash", Command{Shadow: true, Shell: PosixShell}},
+	{"ksh", Command{Shadow: true, Shell: PosixShell}},
 	{"fish", Command{Shell: OtherShell}},
 	{"csh", Command{Shell: OtherShell}},
 	{"tcsh", Command{Shell: OtherShell}},
@@ -244,5 +260,21 @@ func TestVocabularyIsClosed(t *testing.T) {
 	sort.Strings(extra)
 	for _, name := range extra {
 		t.Errorf("the table holds %q but the test does not list it", name)
+	}
+}
+
+func TestPowerShellProvenOperandsSeparation(t *testing.T) {
+	t.Parallel()
+	for _, name := range []string{"remove-item", "ri", "del", "erase", "rd", "rmdir"} {
+		cmd := Lookup(name)
+		if cmd.ProvenOperands || !cmd.PowerShellProvenOperands {
+			t.Errorf("Lookup(%q) = %+v, want ProvenOperands=false and PowerShellProvenOperands=true", name, cmd)
+		}
+	}
+	for _, name := range []string{"rm", "git", "dd", "chmod"} {
+		cmd := Lookup(name)
+		if !cmd.ProvenOperands || cmd.PowerShellProvenOperands {
+			t.Errorf("Lookup(%q) = %+v, want ProvenOperands=true and PowerShellProvenOperands=false", name, cmd)
+		}
 	}
 }

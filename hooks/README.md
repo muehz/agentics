@@ -78,10 +78,9 @@ The guardian sections of this README describe source behavior and the tracked re
 not establish packaged binary behavior, native macOS or ARM acceptance, or a live provider session. Keep those evidence
 classes separate.
 
-Command-guardian, release-guardian, and secrets-guardian read a supported `bash` or `sh` call of a local `.sh` or
-`.bash` script as data and its content is inspected for known patterns (see
-[Script invocation](#command-guardian-script-invocation)). Direct invocation (`./x.sh`), a typed `source` or `.`, other
-interpreters, and PowerShell script forms are not read.
+Command-guardian, release-guardian, and secrets-guardian inspect supported local shell and PowerShell scripts as data.
+They share the script snapshot and report the path and line of the command they inspected. See
+[Script invocation](#command-guardian-script-invocation).
 
 Default-on SessionStart, opt-in Stop, and the commit reminder inside PreToolUse remain future #1101 integration under
 the same event contract. No placeholder registrations are installed. The settings below cover the guard policy rules
@@ -426,9 +425,9 @@ These controls keep prose and probes from tripping execution-shaped rules:
 
 An agent often runs a script instead of typing the commands in it. Command-guardian,
 [release-guardian](#release-guardian-script-invocation) and [secrets-guardian](#secrets-guardian-script-invocation)
-therefore read a local script file as data when a supported `bash` or `sh` call names it, and judge the commands inside
-with the same rules as typed commands. They never execute, import, or print the script. All three read each file once
-per request through one shared snapshot, so they see the same bytes and apply the same limits and the same refusals.
+therefore read a local script file as data when a supported shell call names it, and judge the commands inside with the
+same rules as typed commands. They never execute, import, or print the script. All three read each file once per request
+through one shared snapshot, so they see the same bytes and apply the same limits and the same refusals.
 
 This is inspection for known patterns. It does not establish that a script is harmless, and it does not cover every way
 a script can be run (see [What is not covered](#command-guardian-what-is-not-covered)).
@@ -437,14 +436,22 @@ a script can be run (see [What is not covered](#command-guardian-what-is-not-cov
 
 A call is inspected when all of these hold:
 
-- **Form.** `bash` or `sh`, then any of `--`, `--noprofile`, `--norc`, `-e`, `-u`, then a literal path, then arguments.
-  Every other option is refused as `script-form-unsupported-option` (`-x`, `-i`, `-l`, `-o`, `--rcfile`, `--init-file`,
-  and so on). `bash -c '...'` and a bare `bash` keep the handling they had before. `bash -n FILE` stays a syntax read,
-  described under [False-positive controls](#command-guardian-false-positive-controls).
-- **Path.** The path is literal: no variable, substitution, glob, brace, or leading `~` (`script-path-not-literal`). It
-  ends in `.sh` or `.bash`, in any letter case (`script-extension`). Inside an inspected script, `source` and `.` of a
-  literal `.sh` or `.bash` operand that contains a `/` are followed the same way. A bare `source x.sh` searches `PATH`
-  first, so it is `script-opaque:source`. A typed `source` or `.` is not followed.
+- **Shell calls.** `sh`, `bash`, `dash` and `ksh` accept a literal `.sh`, `.bash`, `.dash` or `.ksh` file with optional
+  `--noprofile`, `--norc`, `-e`, `-u` or `--`. A literal `-c` or `-lc` command is inspected as command text. In POSIX
+  commands, `source ./file` and `. ./file` inspect local files in the current shell. A bare name for either builtin
+  searches `PATH` and gives `script-opaque:source`.
+- **PowerShell calls.** `pwsh` and `powershell` accept `-File <literal .ps1> [args...]` or a literal `-Command` string.
+  Startup flags are case-insensitive and use ASCII dashes. Supported flags are `-NoProfile` (`-nop`), `-NonInteractive`
+  (`-noni`), `-NoLogo`, `-Sta`, `-Mta`, `-NoExit`, `-NoProfileLoadTime` and `-ExecutionPolicy` (`-ep`) followed by a
+  literal policy name. Supported policies are Bypass, Unrestricted, RemoteSigned, AllSigned, Restricted, Default and
+  Undefined. A direct PowerShell call, `& ./report.ps1` and `. ./report.ps1` all inspect the script. A quoted wildcard
+  argument such as `'src/*.ts'` stays literal. Unquoted wildcard arguments to parameter-consuming scripts are reported
+  to the guards.
+- **Direct local paths.** The guards classify an executable path by its literal name, binary header and shebang.
+  PowerShell always inspects a `.ps1` as PowerShell, including a local script found by an omitted-extension lookup.
+  Without a shebang, POSIX inspects plain text as shell commands. A native executable or a script with a recognized
+  non-shell interpreter continues through ordinary command checks. The committed `bin/agx` launcher is recognized by its
+  SHA-256 digest. A different file named `agx` follows the usual classification rules.
 - **Context.** The tool is `Bash` or `PowerShell` on Claude Code, Codex, Copilot CLI, or Antigravity (where
   `run_command` normalizes to `Bash`), with no shell selector and no `env` or `environment` override in the tool input.
   Otherwise the call is refused as `script-context-unqualified`.
@@ -514,23 +521,26 @@ as the physical directory.
 
 ### Command-guardian commands before the call
 
-The guard reads the script before anything in the command runs, so a command ahead of the call that the lists below name
-as a writer or a shell-state change makes the call refused. The lists are closed. Any other command (`python gen.py`,
-`cargo run`, `node build.js`) is not judged as a writer, and a change it makes before the script runs is not seen (see
-[What is not covered](#command-guardian-what-is-not-covered)). Only commands typed in the tool call are judged here; the
-commands inside a script are judged as script content. An earlier inspected script call keeps its proof.
+The guard reads a script before the shell runs any part of the tool call. A typed command preceding a script call must
+match a known non-writing form. Otherwise the guard refuses the call with `script-predecessor-may-write`. For example,
+run a build, a generator such as `python gen.py`, or a custom executable in its own tool call before calling the script.
 
-`script-predecessor-may-write` covers:
+The following forms can precede a script call:
 
-- a redirect to any file other than `/dev/null`, `/dev/stdout`, or `/dev/stderr`;
-- `tee`, `cp`, `mv`, `install`, `ln`, `dd`, `rsync`, `tar`, `unzip`, `truncate`, `touch`, `wget`, `patch`, `make`,
-  `npm`, `npx`, `pnpm`, and `yarn`;
-- `sed -i`, `perl -i`, `awk -i`, `curl` with `-o`, `--output`, `-O`, or `--remote-name`, and `go generate`;
-- the git subcommands that rewrite the working tree: `checkout`, `switch`, `restore`, `reset`, `pull`, `merge`,
-  `rebase`, `stash`, `apply`, `am`, `read-tree`, `cherry-pick`, `revert`, and `clean`, or a subcommand built at run
-  time, or a git command with options before the subcommand that the guard cannot read or that only print, when words
-  follow them (`git --exec-path checkout .` is a writer). `git restore --staged`, `git rm --cached`, `git add`, and
-  `git commit` are not writers.
+- Directory and shell setup such as `cd`, `Set-Location`, `pwd`, ordinary variable assignments, and safe shell options.
+  A directory change must satisfy the [working directory proof](#command-guardian-working-directory-proof).
+- Read-only commands such as `echo`, `head`, `Get-ChildItem`, `Test-Path`, and `Get-Content`. Commands with writing or
+  external-program options have narrower argument rules. For example, ordinary `sort`, `rg` searches, and `find` path
+  and name filters pass. Output-file options, search preprocessors, and `find` actions that execute or write are
+  refused.
+- Git metadata queries, status and history inspection, and operations such as `git add`, `git commit`, and `git fetch`.
+  Branch and tag listing, read-only configuration queries, `git restore --staged`, and `git rm --cached` have their own
+  option checks. A Git configuration override or a worktree restore breaks the proof.
+- An earlier inspected script, a supported builtin, or a literal `bash -c` or `sh -c` whose parsed commands pass the
+  same checks. Defining a function inside that child shell leaves the caller's shell state intact.
+
+Writing redirections break the proof except for descriptor duplications and writes to `/dev/null`, `/dev/stdout`, or
+`/dev/stderr`. Commands inside an inspected script are judged as script content.
 
 `script-predecessor-state` covers commands that change the shell:
 
@@ -564,6 +574,11 @@ comes before or after the call (`bash x.sh >> x.sh`, `tee ./ok.sh`, `sed -i` on 
 to itself or to another inspected script (`>> "$0"`). The match covers a spelling such as a hardlink, an 8.3 name, a
 case variant, or a `..` that the guard cannot resolve.
 
+For PowerShell, the guard compares the bound output path of content, copy, move, rename, export, download and archive
+cmdlets with the inspected scripts. A named destination can appear before the source. A reference to the running file,
+such as `$PSCommandPath` or `$MyInvocation.MyCommand.Path`, also matches. A destination under `$PSScriptRoot` is checked
+against the filename being written. Writing an ordinary log through `$logPath` inside the script passes.
+
 To run a writer and then a script, run the writer as its own tool call first and the script in the next one. Drop the
 `&` or the loop that runs beside the call.
 
@@ -579,7 +594,10 @@ guards, and each is refused as `script-opaque:<construct>`:
 | `eval`                       | `eval`, and `mapfile -C` or `readarray -C`, which run a command                                                                                                                                                                                                                                                                                   |
 | `trap`                       | any `trap`                                                                                                                                                                                                                                                                                                                                        |
 | `source`                     | `source` or `.` of a bare name, of a file that does not end in `.sh` or `.bash`, or behind `command`, `time`, or `builtin`                                                                                                                                                                                                                        |
-| `other-shell`                | a call to `zsh`, `dash`, `ksh`, `fish`, `csh`, or `tcsh`                                                                                                                                                                                                                                                                                          |
+| `dotnet-call`                | a .NET operation outside the PowerShell script allowlist                                                                                                                                                                                                                                                                                          |
+| `batch-file`                 | a Windows batch file, directly or through its command interpreter                                                                                                                                                                                                                                                                                 |
+| `dynamic-call`               | a PowerShell launcher or module operation whose target cannot be inspected                                                                                                                                                                                                                                                                        |
+| `other-shell`                | a call to `zsh`, `fish`, `csh`, or `tcsh`                                                                                                                                                                                                                                                                                                         |
 | `command-position-expansion` | a variable or substitution where the command name goes                                                                                                                                                                                                                                                                                            |
 | `dynamic-c`                  | `bash -c` or `sh -c` with a string that is not literal                                                                                                                                                                                                                                                                                            |
 | `stdin-to-shell`             | a shell that reads its commands from a pipe, a redirect, or a heredoc                                                                                                                                                                                                                                                                             |
@@ -647,7 +665,9 @@ Accepted over-refusals: any `(`, `{`, `|`, `&` or multi-line quote above the ass
 
 Residual: arithmetic contexts outside `(( ))` and `let` (`$[ ]`, `[[ -eq ]]`, subscripts, `${x:off}`, `declare -i`) can
 store a decimal integer through a proven name. The operand can then differ from the proven value only by becoming a
-relative path named by an integer. PowerShell `Remove-Item` forms are outside this rule.
+relative path named by an integer. PowerShell removal commands require literal operands. The parser has no
+variable-value proof for a PowerShell file, so it refuses a protected operand supplied through a variable.
+Secrets-guardian classifies the source of `Move-Item` as a read.
 
 ### Command-guardian arguments from the caller
 
@@ -656,6 +676,9 @@ A script that does not use its parameters ignores its arguments. A script uses t
 `set --` counts. For such a script the call is refused as `script-caller-argument` when:
 
 - an argument is not literal (`bash ./x.sh "$(date +%F)"`), or `xargs` appends arguments the guard cannot read;
+- a POSIX source call has unproven positional arguments. Bash binds an explicit argument list to the sourced file.
+  Use a literal Bash invocation and pass the arguments in the source call, for example
+  `bash -c '. ./lib.sh sample'`. A sourced file that uses no positional parameters can omit the argument list;
 - an argument is an unquoted pattern: `*`, `?`, `[`, `{`, or a leading `~`. A quoted glob counts too when the script
   expands the parameter unquoted. Quote the glob, or pass a path. A home path has no working literal spelling except the
   absolute path, because `'~/proj'` does not expand and `"$HOME/proj"` is not literal;
@@ -683,16 +706,16 @@ Other caller inputs:
 
 ### Command-guardian reading the file
 
-The reader opens the file as data and applies a path policy before and after it opens. A script must be a regular file
-of plain LF text: valid UTF-8, no byte-order mark, no NUL, and no carriage return. A CRLF script, such as one checked
-out with `autocrlf`, is refused as `script-encoding`.
+The reader applies path policy before and after opening a regular file. POSIX scripts require valid UTF-8 with LF line
+endings and no byte-order mark. PowerShell accepts ASCII or UTF-8 with a BOM, with LF or CRLF line endings. Both reject
+embedded NUL, UTF-16 and lone CR characters. The snapshot records the digest and byte length of the original file.
 
 | Reason                  | Refused when                                                                                                                                                                                                                                                                                                                                                                                                                                        |
 | ----------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `script-path-protected` | the path, or the path it resolves to, is a credential path by secrets-guardian's classifier (`.env`, SSH private keys, cloud credentials, and the rest of its list). The file is not opened                                                                                                                                                                                                                                                         |
 | `script-unreadable`     | the file is missing, unreadable, a FIFO, a device, a directory, or a symlink in the last component; the path is a network or device namespace (`//host/share`, `\\.\pipe\x`, `\??\`), a drive-relative or drive path off Windows, has a colon after the drive letter, a reserved device name (`CON`, `NUL`, `COM0` to `COM9`, `LPT0` to `LPT9`) or a trailing dot or space in any component, or lies under `/proc` or `/dev` (including `/dev/shm`) |
 | `script-changing`       | the size or modification time changed while it was read, the path no longer names the opened file, or two paths to one file returned different bytes                                                                                                                                                                                                                                                                                                |
-| `script-encoding`       | the content is not plain LF UTF-8, as above                                                                                                                                                                                                                                                                                                                                                                                                         |
+| `script-encoding`       | the content fails the encoding rules for the selected shell                                                                                                                                                                                                                                                                                                                                                                                         |
 
 The colon rule applies on every host, so a directory named `a:b` is refused on Linux too. A mapped network drive, or a
 volume mounted in a folder, resolves to a UNC or `\\?\Volume{...}` path and is refused. Hardlinks, 8.3 names, and case
@@ -801,25 +824,20 @@ script text, the call's arguments, and the call chain are never logged.
 
 ### Command-guardian what is not covered
 
-- **Other ways to run a script.** Direct invocation (`./x.sh`), a typed `source` or `.`, interpreters (`python x.py`,
-  `node x.js`), `zsh`, `dash`, and `ksh`, and PowerShell script forms (`pwsh -File`, `& ./x.ps1`) are not read.
+- **Other interpreters.** Programs invoked through `python` or `node` receive ordinary command checks. Their source
+  files are outside the shell parsers. Unsupported shell families return `script-opaque:other-shell`.
 - **Scripts that call other tools.** A script that runs `python`, `make`, or `npm run` is judged on the command it
   spells, not on what the tool runs.
 - **Spellings the parser never expands.** `find -exec bash ./x.sh {} \;`, `parallel bash ./x.sh ::: a`,
   `coproc bash ./x.sh`, a call only inside a nested `-c` string with a background list, `setsid -f`, and an `xargs -P`
   fan-out.
-- **The scan-to-run gap.** The guards read the file when the hook runs. A change between that read and the run is not
-  seen: another process, a person, a background job, or a command in the same call that is not on the writer list.
-  Writers inside an earlier script call (a `git checkout` or `git pull` in a script, with no pathspec) are not seen from
-  the later call either.
+- **The scan-to-run gap.** Another process or a person can change a script between inspection and execution. The
+  predecessor and concurrency checks cover commands visible in this tool call. A program run inside an earlier inspected
+  script can also change files without naming them on its command line, as with `git pull`.
 - **A second name for an inspected script.** A hardlink, symlinked directory, or case variant that the command never
   calls is not tracked. A hardlink to a credential file is not seen by the path policy, because the policy reads names.
   Creating the link needs a typed `ln`, which the guards judge. The credential classifier protects only `id_*` names
   under `.ssh/`, not the directory.
-- **Arguments read by a sourced file.** A script that sources another file (`. ./lib.sh`) with no arguments gives that
-  file the caller's positional parameters. The argument checks look at the called script's own text, so a `$1` that only
-  the sourced file uses is not seen, and a check-bypass flag or a credential path passed to the call reaches it
-  unchecked.
 - **Bash older than 4.4.** The parser models bash 4.4 and later, and the tests that compare it with real bash skip on
   older versions, where some constructs read differently: `time` after `time` or `!` (measured), and heredocs with a
   quote, a `#`, or a `<<` inside a substitution (seen as differences in the macOS run, cause not isolated). macOS ships
@@ -1158,10 +1176,8 @@ check.
 
 - Pattern-based detection; does not perform semantic analysis of command intent
 - May produce false positives for commands that match patterns in safe contexts (use the allowlist to suppress these)
-- **Script inspection is bounded.** A supported `bash` or `sh` call is read and inspected for known patterns, within the
-  limits and with the over-refusals listed under [Script invocation](#command-guardian-script-invocation). Direct
-  invocation, a typed `source` or `.`, interpreters, PowerShell script forms, and a script that changes between the read
-  and the run are not covered.
+- **Script inspection is bounded.** Supported calls share the limits described under
+  [Script invocation](#command-guardian-script-invocation). The file can change after the hook reads it.
 - **Two common shell forms fail closed.** Both deny as `command_parse_limit`. `env` with no child command is a wrapper
   with nothing to inspect, so a bare `env` denies wherever it stands, as in `env | grep NAME`; `env` with a literal
   child command, as in `env FOO=1 git status`, is inspected. A redirection from a process substitution (`< <(...)`, as
@@ -1381,17 +1397,17 @@ are case-insensitive. Subshells and groups start separate segments. Command subs
 and expose their inner commands for inspection. Their output remains non-literal. An executable containing command
 substitution produces a parsing-limit denial unless a valid release record authorizes it.
 
-| ID  | Named mutation family                                                                                                                                                                                                                          | Safe controls                                                                                                                                                                                                                                                                                                                                           |
-| --- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| D01 | The guardian denies Kubernetes apply/create/delete/patch/replace/scale/set image/set env/rollout restart/rollout undo.                                                                                                                         | Kubernetes get/describe/diff and rollout status/history pass. Only `kubectl apply --dry-run=client` is exempted as a dry-run; other preview verbs pass as named.                                                                                                                                                                                        |
-| D02 | The guardian denies Helm upgrade/install/rollback/uninstall.                                                                                                                                                                                   | Helm list/status/history/template/lint pass. Install and upgrade are exempted only with explicit `--dry-run=client` and effective `--hide-secret`; rollback and uninstall have no dry-run exception. None, server, bare, and conflicting values remain gated.                                                                                           |
-| D03 | The guardian denies Terraform and OpenTofu apply/destroy and Pulumi up/destroy.                                                                                                                                                                | Terraform and OpenTofu plan/validate/fmt and Pulumi preview pass. Terraform plan -destroy also passes.                                                                                                                                                                                                                                                  |
-| D04 | The guardian denies AWS CloudFormation deploy/create-stack/update-stack/delete-stack/execute-change-set, gcloud run deploy, and a Vercel default/deploy invocation with effective `--prod` or `--target=production`.                           | AWS describe/list and change-set creation, gcloud describe/list, recognized non-deploy Vercel subcommands, Vercel preview, and ordinary documentation pass. Vercel's pinned Boolean parser treats every `--prod` occurrence, including `--prod=false`, as production. Any `--help` occurrence, including `--help=false`, is treated as help.            |
-| D05 | The guardian recognizes the named mutations through literal `sh -c`, `bash -c`, `bash -lc`, `pwsh -Command`, and recognized `env`/`command`/`nohup`/`sudo`/`time`/`xargs`/`timeout`/`doas`/`nice`/`ionice`/`stdbuf`/`setsid`/`flock` wrappers. | Quoted inert command examples pass. A supported `bash` or `sh` script call is read and its commands are matched against this table (see [Release-guardian script invocation](#release-guardian-script-invocation)); other script files and remote-shell interpreters are not evaluated. At its parsing limit, a recognized execution wrapper is denied. |
+| ID  | Named mutation family                                                                                                                                                                                                                          | Safe controls                                                                                                                                                                                                                                                                                                                                                      |
+| --- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| D01 | The guardian denies Kubernetes apply/create/delete/patch/replace/scale/set image/set env/rollout restart/rollout undo.                                                                                                                         | Kubernetes get/describe/diff and rollout status/history pass. Only `kubectl apply --dry-run=client` is exempted as a dry-run; other preview verbs pass as named.                                                                                                                                                                                                   |
+| D02 | The guardian denies Helm upgrade/install/rollback/uninstall.                                                                                                                                                                                   | Helm list/status/history/template/lint pass. Install and upgrade are exempted only with explicit `--dry-run=client` and effective `--hide-secret`; rollback and uninstall have no dry-run exception. None, server, bare, and conflicting values remain gated.                                                                                                      |
+| D03 | The guardian denies Terraform and OpenTofu apply/destroy and Pulumi up/destroy.                                                                                                                                                                | Terraform and OpenTofu plan/validate/fmt and Pulumi preview pass. Terraform plan -destroy also passes.                                                                                                                                                                                                                                                             |
+| D04 | The guardian denies AWS CloudFormation deploy/create-stack/update-stack/delete-stack/execute-change-set, gcloud run deploy, and a Vercel default/deploy invocation with effective `--prod` or `--target=production`.                           | AWS describe/list and change-set creation, gcloud describe/list, recognized non-deploy Vercel subcommands, Vercel preview, and ordinary documentation pass. Vercel's pinned Boolean parser treats every `--prod` occurrence, including `--prod=false`, as production. Any `--help` occurrence, including `--help=false`, is treated as help.                       |
+| D05 | The guardian recognizes the named mutations through literal `sh -c`, `bash -c`, `bash -lc`, `pwsh -Command`, and recognized `env`/`command`/`nohup`/`sudo`/`time`/`xargs`/`timeout`/`doas`/`nice`/`ionice`/`stdbuf`/`setsid`/`flock` wrappers. | Quoted inert command examples pass. A supported local shell or PowerShell script call is read and its commands are matched against this table (see [Release-guardian script invocation](#release-guardian-script-invocation)); other script files and remote-shell interpreters are not evaluated. At its parsing limit, a recognized execution wrapper is denied. |
 
 Nearby commands such as `kubectl diff`, `helm template`, and `terraform plan` pass. The table is intentionally small.
 Custom deploy scripts and other platforms pass until their exact shape is reviewed and added here. The exception is a
-script that a supported `bash` or `sh` call names: its commands are matched against this table.
+script that a supported local shell or PowerShell call names: its commands are matched against this table.
 
 ### Release-guardian environment matching
 
@@ -1439,19 +1455,19 @@ Azure CLI `what-if`, `validate`, `show`, and `list`, PowerShell `Test-Az*Deploym
 deployment check. Standalone `az deployment <scope> create --help` and `-h` also pass. Help mixed with deployment
 arguments remains guarded because those arguments can consume help-looking values.
 
-This coverage does not inspect custom scripts beyond the supported `bash` and `sh` calls, or direct ARM REST calls.
+This coverage does not inspect custom scripts beyond the supported shell and PowerShell calls, or direct ARM REST calls.
 Azure deployment stacks, `azd`, Bicep module publication, and other Azure resource mutations are outside these command
 families.
 
 ## Release-guardian script invocation
 
-Release-guardian reads the same scripts as command-guardian and secrets-guardian. A supported `bash` or `sh` call of a
-local `.sh` or `.bash` file is read as data, never executed, and the commands inside are matched against the table
-above. The three guardians share one snapshot of each file per request, the same limits, and the same refusal reasons.
-The supported forms, the working-directory proof, the rules for commands before the call, the constructs that are
-refused, and the limits are described in [Command-guardian script invocation](#command-guardian-script-invocation); the
-reason names are in [Command-guardian refusal reasons](#command-guardian-refusal-reasons). This is inspection for known
-patterns, not a statement that a script is harmless.
+Release-guardian reads the same scripts as command-guardian and secrets-guardian. Release-guardian checks the commands
+in a supported local shell or PowerShell script against the table above. The three guardians share one snapshot of each
+file per request, the same limits, and the same refusal reasons. The supported forms, the working-directory proof, the
+rules for commands before the call, the constructs that are refused, and the limits are described in
+[Command-guardian script invocation](#command-guardian-script-invocation); the reason names are in
+[Command-guardian refusal reasons](#command-guardian-refusal-reasons). This is inspection for known patterns, not a
+statement that a script is harmless.
 
 What is specific to this guardian:
 
@@ -1473,9 +1489,7 @@ What is specific to this guardian:
 - The guardian has no check of its own on the arguments passed to a script. The parser-level refusals still apply to it
   (for example `script-caller-argument` for a non-literal argument to a script that uses its parameters).
 
-Not covered: a deploy script run directly (`./deploy.sh`), with a typed `source` or `.`, by another interpreter, or
-through PowerShell script forms; a deploy that a script reaches through another tool; and a script that changes between
-the read and the run.
+A deploy reached through an external tool and changes to a script after inspection remain outside the check.
 
 ## Release-guardian provider output matrix
 
@@ -1566,10 +1580,8 @@ These files prove only the mechanics of the live check; a real release uses the 
   escapes that produce ASCII. NUL, non-ASCII numeric escapes, and `\c` control escapes produce parsing-limit denials.
   Quoted shell syntax remains data. Heredoc substitutions expose their inner commands without treating their output as
   an executable.
-- The hook does not read deployment manifests. It reads script contents only for the supported `bash` and `sh` calls,
-  and only to match the commands the script spells. A script run directly (`./deploy.sh`), with a typed `source` or `.`,
-  by another interpreter, or through PowerShell script forms is not read, and a script that changes between the read and
-  the run is not seen.
+- The hook checks commands spelled in supported local shell and PowerShell scripts. Deployment manifests and changes to
+  a script after inspection remain outside its scope.
 - It checks that the record is a non-empty regular file carrying the `# Change Record:` heading and modified within 24
   hours. It does not validate the record's approval status. Setting `AGX_RELEASE_RECORD_SHA256` binds the record's
   content to a known hash, but the hash itself is host-set and unverified against any external source.
@@ -1612,7 +1624,7 @@ write still denies.
 Read protection covers the conventional credential paths, exact filesystem MCP read schemas, redirected literal readers,
 and credential-printing commands listed below. A template suffix does not exempt a private key or an explicit
 credential-store directory. Ordinary dotenv templates remain readable. Active local shell globs use bounded filesystem
-metadata inspection. The guard follows the reads inside a supported `bash` or `sh` script call (see
+metadata inspection. The guard follows the reads inside a supported local shell or PowerShell script call (see
 [Script invocation](#secrets-guardian-script-invocation)) and does not follow other script or interpreter reads.
 
 For Terraform structure, use `terraform state list` or unnamed `terraform output`. A named output, JSON/raw output, JSON
@@ -1751,9 +1763,9 @@ EOF                                    # a real-shaped key here, not an EXAMPLE 
 Current implementation recognizes credential-read syntax by literal command and argument roles. In PowerShell, covered
 `Get-Content` forms include direct calls, the call operator, and a module-qualified command; a template suffix such as
 `.env.example` remains allowed unless the path names an explicit credential store. Local wildcard reads are classified
-from bounded filesystem metadata. These checks do not read file contents. A supported `bash` or `sh` script call is the
-one case where a script file is read, as described under [Script invocation](#secrets-guardian-script-invocation); other
-scripts are not evaluated.
+from bounded filesystem metadata. These checks do not read file contents. A supported local shell or PowerShell script
+call is the one case where a script file is read, as described under
+[Script invocation](#secrets-guardian-script-invocation); other scripts are not evaluated.
 
 The exact Bash inspection forms in [command-guardian](#command-guardian-false-positive-controls) classify their file
 operand as a read. A public script path passes this credential check, while `.env` remains a credential read and is
@@ -1841,12 +1853,11 @@ retain their existing lexical policy.
 
 ## Secrets-guardian script invocation
 
-Secrets-guardian reads the same scripts as command-guardian and release-guardian. A supported `bash` or `sh` call of a
-local `.sh` or `.bash` file is read as data, never executed, and the reader commands inside are judged like typed ones.
-The shared snapshot, the supported forms, the working-directory proof, the rules for commands before the call, the
-constructs that are refused, the limits, and the reason names are described in
-[Command-guardian script invocation](#command-guardian-script-invocation). This is inspection for known patterns, not a
-statement that a script is harmless.
+Secrets-guardian reads the same scripts as command-guardian and release-guardian. Reader commands in supported local
+shell and PowerShell scripts receive the same checks as typed commands. The shared snapshot, the supported forms, the
+working-directory proof, the rules for commands before the call, the constructs that are refused, the limits, and the
+reason names are described in [Command-guardian script invocation](#command-guardian-script-invocation). This is
+inspection for known patterns, not a statement that a script is harmless.
 
 What is specific to this guardian:
 
@@ -1869,10 +1880,8 @@ What is specific to this guardian:
 - **No value scan of the script.** The write-direction secret scan reads the typed command text only. A secret value
   written inside a script file is not scanned when the script is called.
 
-Not covered: a script run directly (`./x.sh`), with a typed `source` or `.`, by another interpreter, or through
-PowerShell script forms; a credential read that a script reaches through another tool; a hardlink to a credential file,
-which the path policy cannot see because it reads names (creating the link needs a typed `ln`, which the guardians
-judge); and a script that changes between the read and the run.
+The path policy classifies names. A hardlink can have a different name from the protected file. Credential reads
+performed by external tools and changes to a script after inspection remain outside the check.
 
 ## Secrets-guardian configuration
 
@@ -1974,7 +1983,7 @@ stderr; Copilot CLI and Codex each denied it at exit 0 through their own decisio
   kind. Use `SECRETS_GUARD_ALLOWLIST` for a path that should be readable.
 - **Shell parsing is bounded.** The shared parser handles supported literal Bash and PowerShell quoting and separators.
   The guard resolves active local globs using directory metadata and checks both lexical matches and symlink targets.
-  Scripts other than a supported `bash` or `sh` call, dynamic reads without an identifiable glob, and MCP servers
+  Scripts outside the supported shell and PowerShell forms, dynamic reads without an identifiable glob, and MCP servers
   outside the exact roster remain coverage gaps. Literal non-glob reads retain lexical path classification.
 - **New syntax proof has a closed authority boundary.** Only canonical shell tool names with a validated normalized
   argument shape can receive the new literal data treatment. A shell selector, environment override, malformed envelope,

@@ -2,6 +2,8 @@ package conformance
 
 import (
 	"bytes"
+	"crypto/sha256"
+	"encoding/hex"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -9,6 +11,7 @@ import (
 	"strings"
 
 	"github.com/muehz/agentics/hooks/go/internal/hookbuild"
+	"github.com/muehz/agentics/hooks/go/internal/shellwords"
 )
 
 // launcherScriptRel is the shell launcher Git Bash, macOS and Linux run. A CR
@@ -63,6 +66,14 @@ func checkBinLaunchers(repoRoot string, sourceOnly bool) []Failure {
 				Rule: "bin-launchers", Path: rel,
 				Message: "contains a CR byte; a shell cannot run a CRLF script, so commit it with LF line endings",
 			})
+		} else if rel == launcherScriptRel {
+			digest := sha256.Sum256(data)
+			if got := hex.EncodeToString(digest[:]); got != shellwords.AgxLauncherSHA256 {
+				failures = append(failures, Failure{
+					Rule: "bin-launchers", Path: rel,
+					Message: fmt.Sprintf("SHA-256 differs from shellwords.AgxLauncherSHA256 (got %s)", got),
+				})
+			}
 		}
 	}
 	if !sourceOnly && !marksLauncherBinary(filepath.Join(repoRoot, ".gitattributes")) {

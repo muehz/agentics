@@ -15,14 +15,14 @@ func isShellExe(exe string) bool {
 
 // isScriptCallExe reports whether exe starts a script-call form, whose refusals carry a named script- reason.
 func isScriptCallExe(exe string) bool {
-	return exe == "sh" || exe == "bash" || exe == "source" || exe == "."
+	return posixShellName(exe) || exe == "pwsh" || exe == "powershell" || exe == "source" || exe == "."
 }
 
 // refusedScriptCall reports whether inv is a refused script call under a named rule, such as script-unreadable. Only
 // those keep their reason; any other refusal on a script child is relabeled, because its text may quote file content.
 func refusedScriptCall(inv *Invocation) bool {
 	return !inv.Inspectable && inv.Reason.Rule() != RuleNone && len(inv.Words) > 0 &&
-		isScriptCallExe(strings.ToLower(ExecutableName(inv.Words[0].Text)))
+		(isScriptCallExe(strings.ToLower(ExecutableName(inv.Words[0].Text))) || localPathHead(inv.Words[0].Text) || scriptSuffix(inv.Words[0].Text))
 }
 
 // shellReadsStdin reports whether a shell invocation may take its commands from standard input: the segment follows
@@ -96,13 +96,16 @@ func (p *parser) markScriptOpacity(start int) {
 			continue
 		}
 		switch {
-		case refusedScriptCall(inv):
+		case refusedScriptCall(inv) || inv.Reason.Rule() == RuleOpaque:
 			inv.Reason = inv.Reason.locatedAt(inv.Script)
 		case !inv.Inspectable:
 			inv.Reason = opaqueRefusal(formConstruct(inv), inv.Script)
 		default:
-			rule := scriptConstruct(inv)
-			if rule == constructNone && !p.judged[i] {
+			rule := constructNone
+			if inv.Dialect == POSIX {
+				rule = scriptConstruct(inv)
+			}
+			if inv.Dialect == POSIX && rule == constructNone && !p.judged[i] {
 				rule = pinnedConstruct(inv, p.ownResets(inv))
 			}
 			if p.judged == nil {

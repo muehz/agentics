@@ -181,11 +181,22 @@ func Run(req hookspec.Request) hookspec.Outcome {
 	reporting := newThreatReport(diag, mode, warning, fields, rd.redactor, parsed.Scripts, req.Settings)
 	report, reportRedacted := reporting.report, reporting.reportLabeled
 
+	// Find the transfer sink before reporting refusals. Keep the transfer
+	// finding in its usual place in the report.
+	var transfer threat
+	refusedSink := checkTransferCommands(invocations, func(r rule, match, suggestion string) {
+		transfer = threat{r, match, suggestion}
+	})
+
 	// Command-guardian's posture for a refused invocation: the first one is
 	// reported as command_parse_limit at high severity, so a command line the
 	// guard cannot read is never treated as harmless.
 	if fields.commandPresent {
 		for index, inv := range invocations {
+			// The transfer rule already denies execution through this sink.
+			if index == refusedSink {
+				continue
+			}
 			if _, refused := inspection.Refusal(req.ExecutionContext(), index); refused {
 				// A typed environment effect supplies a specific, sanitized
 				// failure even when an env wrapper has no child executable.
@@ -238,7 +249,9 @@ func Run(req hookspec.Request) hookspec.Outcome {
 	// MCP match names the deny reason ahead of any text match on the payload.
 	checkMCP(fields.toolName, fields.call.Layers(), report)
 	checkDestructiveSQL(fields, invocations, report)
-	checkTransferCommands(invocations, report)
+	if transfer.rule.id != "" {
+		report(transfer.rule, transfer.match, transfer.suggestion)
+	}
 
 	// The generic bank: each rule takes its first match, original text before
 	// joined text. Parsed commands skip superseded legacy rows.

