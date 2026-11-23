@@ -11,6 +11,7 @@ import {
   evaluateReport,
   main,
 } from "./ci-actions-lock.ts";
+import { jobSteps } from "./testing/workflow-steps.ts";
 
 function cleanReport(sep: "/" | "\\" = "/") {
   const release = `.github${sep}workflows${sep}release.lock.yml`;
@@ -187,6 +188,43 @@ test("main invokes gh actions-lock with --verify, --ignore-local-actions, and --
     1,
   );
   assert.match(writtenErrors[0] ?? "", /^::error::unexpected local action/);
+});
+
+test("the release workflow locks remote dependencies of its checkout-relative actions", () => {
+  const root = path.resolve(import.meta.dirname, "../../../..");
+  const readYaml = (file: string): unknown =>
+    YAML.parse(fs.readFileSync(path.join(root, file), "utf8"));
+  const workflow = ".github/workflows/release.lock.yml";
+  const lock = readYaml(".github/workflows/actions.lock") as {
+    workflows: Record<string, string[]>;
+  };
+  const pins = lock.workflows[workflow];
+  assert.ok(pins, "release workflow has no lock entry");
+
+  const releaseJobs = jobSteps(new Map([[workflow, readYaml(workflow)]]));
+  const localActions = new Set(
+    releaseJobs.flatMap(({ steps }) =>
+      steps.flatMap(({ uses }) => (uses?.startsWith("./") ? [uses] : [])),
+    ),
+  );
+  assert.ok(localActions.size > 0, "release workflow lost its local actions");
+  const missing = [];
+  for (const action of localActions) {
+    const file = `${action.slice(2)}/action.yml`;
+    const jobs = jobSteps(new Map([[file, readYaml(file)]]));
+    for (const { uses } of jobs.flatMap(({ steps }) => steps)) {
+      if (uses && uses.includes("@")) {
+        // The lock keys remote action subpaths by their owner and repository.
+        const key = uses.replace(/^([^/]+\/[^/@]+)\/[^@]+(@.+)$/u, "$1$2");
+        if (!pins.includes(key)) missing.push(`${file}: ${uses}`);
+      }
+    }
+  }
+  assert.deepEqual(
+    missing,
+    [],
+    "remote pins missing from the release workflow",
+  );
 });
 
 test("verify-lockfile.yml runs ci-actions-lock.ts on pinned Node after installing pinned gh-actions-lock", () => {
