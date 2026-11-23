@@ -524,6 +524,18 @@ jobs:
             - name: Prepare independent bundle directory
               run: mkdir rebuilt
 
+            # The runner resolves composite dependencies before evaluating their step conditions.
+            # Declare the rebuild's Go setup directly so the release workflow locks the exact SHA.
+            - name: Set up Go for the independent rebuild
+              uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+              with:
+                  go-version-file: ${{ github.workspace }}/hooks/go/go.mod
+                  cache: false
+            - name: Record the independent Go setup
+              env:
+                  GO_MOD: ${{ github.workspace }}/hooks/go/go.mod
+              run: printf 'AGX_GO_CACHE_RESTORED=%s\n' "$GO_MOD" >> "$GITHUB_ENV"
+
             - name: Independently rebuild the release bundle
               uses: ./.github/actions/release
               with:
