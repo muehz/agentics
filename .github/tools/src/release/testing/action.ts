@@ -220,7 +220,7 @@ function assignedLiteral(
   name: string,
   opener: string,
 ): string | undefined {
-  const escaped = name.replace(/[$]/g, "\\$");
+  const escaped = name.replace(/[\\^$.*+?()[\]{}|]/gu, "\\$&");
   const pattern = new RegExp(`\\b${escaped}\\b[^=\\n]*:?=\\s*\\${opener}`);
   const match = pattern.exec(text);
   if (match === null) return undefined;

@@ -1,6 +1,12 @@
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
-import { existsSync, lstatSync, readdirSync, readFileSync } from "node:fs";
+import {
+  existsSync,
+  lstatSync,
+  readdirSync,
+  readFileSync,
+  readlinkSync,
+} from "node:fs";
 import path from "node:path";
 import { test } from "node:test";
 import {
@@ -599,8 +605,8 @@ test(
     await withSkillsRepo((root) => {
       assert.equal(link(root, "docs/linked.md", "ARCHITECTURE.md"), true);
       const at = path.join(root, "docs", "linked.md");
-      assert.ok(lstatSync(at).isSymbolicLink());
       assert.equal(readFileSync(at, "utf8"), "# Shared\n\nIntent only.\n");
+      assert.equal(readlinkSync(at), "ARCHITECTURE.md");
     });
   },
 );
