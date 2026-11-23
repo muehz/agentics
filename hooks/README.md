@@ -676,9 +676,9 @@ A script that does not use its parameters ignores its arguments. A script uses t
 `set --` counts. For such a script the call is refused as `script-caller-argument` when:
 
 - an argument is not literal (`bash ./x.sh "$(date +%F)"`), or `xargs` appends arguments the guard cannot read;
-- a POSIX source call has unproven positional arguments. Bash binds an explicit argument list to the sourced file.
-  Use a literal Bash invocation and pass the arguments in the source call, for example
-  `bash -c '. ./lib.sh sample'`. A sourced file that uses no positional parameters can omit the argument list;
+- a POSIX source call has unproven positional arguments. Bash binds an explicit argument list to the sourced file. Use a
+  literal Bash invocation and pass the arguments in the source call, for example `bash -c '. ./lib.sh sample'`. A
+  sourced file that uses no positional parameters can omit the argument list;
 - an argument is an unquoted pattern: `*`, `?`, `[`, `{`, or a leading `~`. A quoted glob counts too when the script
   expands the parameter unquoted. Quote the glob, or pass a path. A home path has no working literal spelling except the
   absolute path, because `'~/proj'` does not expand and `"$HOME/proj"` is not literal;

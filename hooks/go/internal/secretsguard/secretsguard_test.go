@@ -368,6 +368,19 @@ func TestPowerShellReaderPathElements(t *testing.T) {
 	}
 }
 
+func TestPowerShellReaderAliasPathElements(t *testing.T) {
+	for _, command := range []string{
+		"type alpha.txt,beta.txt",
+		"copy alpha.txt,beta.txt output",
+		"move alpha.txt,beta.txt output",
+	} {
+		inspection := shellReads(t, "PowerShell", command, "")
+		if inspection.Reason.Refused() || len(inspection.Paths) < 2 || inspection.Paths[0].Text != "alpha.txt" || inspection.Paths[1].Text != "beta.txt" {
+			t.Errorf("%q: expected two separate leading paths, got %#v", command, inspection)
+		}
+	}
+}
+
 func TestDirectScriptReaderUsesFileDialect(t *testing.T) {
 	hosttest.ScrubGuardEnv(t)
 	dir := t.TempDir()

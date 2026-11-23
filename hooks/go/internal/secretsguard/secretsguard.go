@@ -833,7 +833,7 @@ func readExecutableName(word shellwords.Word) string {
 
 func powerShellPathListReader(verb string) bool {
 	switch verb {
-	case "get-content", "gc", "select-string", "sls", "copy-item", "cpi", "move-item", "mi", "format-hex":
+	case "get-content", "gc", "type", "select-string", "sls", "copy-item", "cpi", "copy", "move-item", "mi", "move", "format-hex":
 		return true
 	}
 	return false

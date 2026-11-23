@@ -136,6 +136,15 @@ func TestPOSIXSourceRequiresProvenArgumentBinding(t *testing.T) {
 		}
 	}
 
+	for _, command := range []string{
+		"/bin/bash -c 'source /ws/second.inc explicit'",
+		"/opt/git/bash.exe -c 'source /ws/second.inc explicit'",
+	} {
+		if reason := firstScriptReason(parseScript(command, files)); reason != "script-predecessor-may-write" {
+			t.Errorf("%q: reason = %q, want script-predecessor-may-write", command, reason)
+		}
+	}
+
 	res := parseScript(". /ws/static", files)
 	if reason := firstScriptReason(res); reason != "" || len(res.ScriptCalls) != 1 || res.ScriptCalls[0].ConsumesParams {
 		t.Errorf("parameter-independent source: reason %q, calls %+v", reason, res.ScriptCalls)

@@ -654,7 +654,7 @@ func (p *psParser) decodePSBacktick(text *strings.Builder) (literalOK bool, ok b
 			}
 			hexStr := p.src[p.pos+2 : p.pos+2+closeBrace]
 			val, err := strconv.ParseUint(hexStr, 16, 32)
-			if err != nil || !utf8.ValidRune(rune(val)) {
+			if err != nil || val > utf8.MaxRune || !utf8.ValidRune(rune(val)) {
 				p.noteOpaque(psOpaqueUnsupportedSyntax, openLine)
 				p.pos += 2 + closeBrace + 1
 				return false, false
