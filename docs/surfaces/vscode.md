@@ -150,9 +150,9 @@ The retained record does not establish skill invocation end-to-end; plugin disco
 harness a session used or whether Agentics's skills and hooks load in each; whether organization policy blocked
 enablement on the probed account; `agent/runSubagent` dispatch, nesting, or cost-tier behavior in practice;
 project-scope settings; the Agent Host's behavior; whether a plugin installed through Copilot CLI loads in VS Code;
-whether the `muehz/agentics` marketplace entry resolves now that the repository carries
-`.claude-plugin/marketplace.json` and no `.github/plugin/marketplace.json` (#1175); or behavior on other VS Code
-versions and platforms. Use the live check to establish runtime activation.
+whether the `muehz/agentics` marketplace entry resolves now that the repository carries its catalog under
+`.claude-plugin/marketplace.json`; or behavior on other VS Code versions and platforms. Use the live check to establish
+runtime activation.
 
 ## Packaged Assets
 

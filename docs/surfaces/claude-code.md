@@ -186,9 +186,8 @@ retained single-check commands.
 
 Current source/config process proofs exercise the real wrapper and source binary after simulated provider selection on
 Windows and Linux. They do not establish live Claude scheduling or packaged binary behavior. Native macOS and ARM
-acceptance also remain separate. Default-on SessionStart, opt-in Stop, and the PreToolUse commit reminder remain held
-for #1101; no placeholder callbacks are installed. Workflow policy settings are described in
-[hooks/README.md](../../hooks/README.md#settings).
+acceptance also remain separate. See [workflow policy settings](../../hooks/README.md#settings) for the guard settings
+and the planned workflow reminders.
 
 Retained legacy dispatch probe: on Claude Code 2.1.247 on Windows 11 (2026-08-28), Claude Code ran `run-hook.cmd`
 through `cmd.exe`, which execs the committed Windows binary; `command-guardian` and `secrets-guardian` produced their

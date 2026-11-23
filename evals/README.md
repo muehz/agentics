@@ -278,9 +278,8 @@ Fields are additive within version 1: a new optional field can appear, so a read
 ## Reproducible fleet evaluation
 
 The CLI builds packets from its canonical roster and category data and derives packet file lists from manifests and
-asset references. The CLI is the only fleet path. Batch hardening, compression, and reference cleanup are tracked in
-#946, #947, and #948. Packet roots mirror repository paths, so relative references inside a bundled asset resolve from
-that asset's directory in the packet.
+asset references. Use the CLI for fleet runs. Packet roots mirror repository paths, so relative references inside a
+bundled asset resolve from that asset's directory in the packet.
 
 | Fleet convenience                           | Current disposition                                                                                                                                                        |
 | ------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |

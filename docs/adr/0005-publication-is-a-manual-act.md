@@ -51,11 +51,10 @@ response goes stale, and `release publish` sent `tag_name` explicitly so the pro
 after the placeholder. That guarantee is now a maintainer reading the tag field before clicking, per the instruction in
 `CONTRIBUTING.md`. The failure mode is a tag-pinned consumer resolving nothing.
 
-**Amended 2026-09-22 (#620).** The tag-field guard failed for v1.110.0, which published under a placeholder. `stage` now
-creates `refs/tags/vX.Y.Z` at the target before it creates the draft, so GitHub binds the draft to the real tag and the
-publish form cannot offer a placeholder. `release context` fails a run while any `untagged-*` tag or placeholder-tagged
-published release exists, and prints the recovery. The residual risk this paragraph recorded is closed; the manual click
-remains the sign-off.
+**Amended 2026-09-22.** To prevent publication under a placeholder, `stage` creates `refs/tags/vX.Y.Z` at the target
+before it creates the draft, so GitHub binds the draft to the real tag and the publish form cannot offer a placeholder.
+`release context` fails a run while any `untagged-*` tag or placeholder-tagged published release exists, and prints the
+recovery. The residual risk this paragraph recorded is closed; the manual click remains the sign-off.
 
 ## Considered and declined
 

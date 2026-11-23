@@ -276,9 +276,8 @@ The docs don't say how the **Publish** action then appears.
     Source/config process proofs on Windows and Linux simulate provider selection, then run the real wrapper and source
     binary. They establish source behavior only. They do not establish packaged binary or live-host acceptance. Newly
     packaged macOS and ARM checks remain pending. A normalized PowerShell test shape is not proof that Codex delivers a
-    native PowerShell tool. Default-on SessionStart, opt-in Stop, and the PreToolUse commit reminder remain future #1101
-    integration with no installed placeholders. Workflow policy settings are described in
-    [hooks/README.md](../../hooks/README.md#settings).
+    native PowerShell tool. See [workflow policy settings](../../hooks/README.md#settings) for the guard settings and
+    the planned workflow reminders.
 
     The guards ran in `--mode warn` until the deny path was exercised. The adapter had always implemented it.
     `codexRender` emits `permissionDecision: "deny"` on `PreToolUse`, and the recorded Codex dispatch corpus pins the

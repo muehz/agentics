@@ -1,13 +1,13 @@
 # A post carries only its own sources, and a named review post on a fork PR is shown first
 
-This record amends [0018](0018-trust-boundaries.md) and [0014](0014-approval-and-pushback.md). It answers #1470, which a
-security review of #1450 rated Medium. [0020](0020-environment-and-platform.md) removed `context: fork` from review, so
-the review lead now reads a pull request's title, body and diff in the caller's own conversation, and a named
-`/agentics:review post <n>` goes out after the outbound checks with no second question. Those checks read the
-repository's visibility, redact secrets and internal hosts, withhold unfixed security findings on public repositories
-and honor an embargo. None of them stops other conversation text (earlier discussion, other files, other work items)
-from going into the body, so a prompt injection planted in a pull request could ask the agent to quote that text in a
-public comment. The same pattern holds for every path that reads untrusted text in the main conversation and then posts.
+This record amends [0018](0018-trust-boundaries.md) and [0014](0014-approval-and-pushback.md).
+[0020](0020-environment-and-platform.md) removed `context: fork` from review, so the review lead now reads a pull
+request's title, body and diff in the caller's own conversation, and a named `/agentics:review post <n>` goes out after
+the outbound checks with no second question. Those checks read the repository's visibility, redact secrets and internal
+hosts, withhold unfixed security findings on public repositories and honor an embargo. None of them stops other
+conversation text (earlier discussion, other files, other work items) from going into the body, so a prompt injection
+planted in a pull request could ask the agent to quote that text in a public comment. The same pattern holds for every
+path that reads untrusted text in the main conversation and then posts.
 
 One principle runs through both rules below. What a post may carry is decided by the post's own sources, which the skill
 names in advance, and never by what the text being reviewed asks for.
@@ -16,7 +16,6 @@ names in advance, and never by what the text being reviewed asks for.
 
 ### Every composed post traces each passage to one of its own sources
 
-- **Answers:** #1470
 - **Rule:** The posting envelope's outbound checks gain a fifth check, provenance, run after the other four and before
   the post. Every passage of the body traces to one of the post's sources; a passage that traces to none is removed, and
   the run's report says what was withheld, as the other checks do. The check applies to a body the agent composes (a
@@ -48,7 +47,6 @@ names in advance, and never by what the text being reviewed asks for.
 
 ### An attended named review post on a fork PR shows its text once and asks
 
-- **Answers:** #1470
 - **Rule:** A named, attended `post`-mode review post on a pull request whose `isCrossRepository` is anything other than
   `false` shows the finished text once, exactly as it will post, after the outbound checks, and asks one question. It
   covers every post the pipeline's last step makes: a new comment, an in-place update and the no-issues rewrite. Any

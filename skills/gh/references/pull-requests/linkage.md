@@ -107,8 +107,8 @@ State the set in this form:
 
 ```text
 Detected issue linkage:
-  #162: gate/gh: draft-PR creation must resolve issue linkage (open)  → Closes
-  #154: Pipeline routing between the lifecycle skills (open, parent)  → Part of
+  #123: Add CSV export to the audit report (open)     → Closes
+  #456: Improve audit reporting (open, parent)        → Part of
 ```
 
 **No candidates.** Ask once, as one decision question in the format of

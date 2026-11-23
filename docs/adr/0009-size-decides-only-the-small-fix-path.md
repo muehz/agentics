@@ -1,20 +1,19 @@
 # Size decides only the small-fix path, and only by its signals
 
-> **Amended (2026-11-11, #1311) by [0013](0013-proportional-delivery-paths.md).** A one-task change that fails only the
-> size signal now takes the middle path, and that record changes how the fifth signal is measured and who may write the
-> fix.
+> **Amended (2026-11-11) by [0013](0013-proportional-delivery-paths.md).** A one-task change that fails only the size
+> signal now takes the middle path, and that record changes how the fifth signal is measured and who may write the fix.
 
-> **Amended (2026-11-11, #1311) by [0016](0016-git-write-ownership.md).** A bug fix commits its failing test on its own
-> unless a pre-commit hook rejects that commit, in which case the recorded failing run stands in for it.
+> **Amended (2026-11-11) by [0016](0016-git-write-ownership.md).** A bug fix commits its failing test on its own unless
+> a pre-commit hook rejects that commit, in which case the recorded failing run stands in for it.
 
-> **Amended (2026-11-11, #1311) by [0017](0017-flow-state-v2.md).** Under the `local` storage setting a small fix's rows
-> go to the clone-local store; under `committed`, the default, they stay in the committed `unassigned/state.tsv`.
+> **Amended (2026-11-11) by [0017](0017-flow-state-v2.md).** Under the `local` storage setting a small fix's rows go to
+> the clone-local store; under `committed`, the default, they stay in the committed `unassigned/state.tsv`.
 
-> **Amended (2026-10-17, #1111).** The trail is now `state.tsv`, written by `flow`, so there is no month-level
-> `events.tsv`. A small fix writes its rows to `<work-root>/unassigned/state.tsv`, and `gate branch` finds the
-> `skip chain <branch>` row there (see `skills/execute/references/flow-state.md`). The next phase is read from the
-> current row's `next`, and no header carries a `next-owner`. The chain-state code under `go/hooks/internal/chain` is
-> gone. This record keeps its original wording for the decision it made.
+> **Amended (2026-10-17).** The trail is now `state.tsv`, written by `flow`, so there is no month-level `events.tsv`. A
+> small fix writes its rows to `<work-root>/unassigned/state.tsv`, and `gate branch` finds the `skip chain <branch>` row
+> there (see `skills/execute/references/flow-state.md`). The next phase is read from the current row's `next`, and no
+> header carries a `next-owner`. The chain-state code under `go/hooks/internal/chain` is gone. This record keeps its
+> original wording for the decision it made.
 
 Every change that could alter behavior used to open with `intent`, and intent's **When the chain is required** rule said
 "Size does not decide this". A one-line fix to a default carried the same intent, spec, and plan as a feature. The rule
@@ -62,8 +61,8 @@ rejected that, because the pull request reviewer is that second person (Q33).
 
 **Routing dispatches the fix itself.** Declined because it duplicates `execute` (spec, Scope Decisions S1).
 
-**A minimal work folder with a one-task plan.** Declined because it contradicts Q33 and adds folders that #1123 would
-then have to consolidate (spec, Scope Decisions S1).
+**A minimal work folder with a one-task plan.** Declined because the small-fix path uses a receipt and avoids a new work
+folder that would later need consolidation.
 
 **File and line counts alone.** The user added the limit on rewriting more than half of a file ("what if those files are
 completely rewritten"), spec Scope Decisions S2.

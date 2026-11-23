@@ -60,7 +60,7 @@ Invoke an installed Agentics skill as `/agentics:<skill>`.
 > record above is historical. `copilot skill list --json` still returns exactly 33 Agentics plugin skills with `peer`
 > absent (plus 2 Copilot built-in skills). The effective roster is unaffected.
 
-> `peer` has since been removed (#1156), so the counts and exclusion notes in this record are historical.
+> The skill counts describe this probe. Use `copilot skill list --json` to inspect the current install.
 
 `hooks/hooks.copilot.json` uses Copilot's native hook shape:
 
@@ -83,9 +83,8 @@ retained single-check commands.
 
 Source/config process proofs on Windows and Linux simulate provider selection, then run the real wrapper and source
 binary. They establish source behavior only. They do not establish packaged binary or live-host acceptance. Newly
-packaged macOS and ARM checks remain pending. Default-on SessionStart, opt-in Stop, and the PreToolUse commit reminder
-remain held for #1101; no placeholders are installed. Workflow policy settings are described in
-[hooks/README.md](../../hooks/README.md#settings).
+packaged macOS and ARM checks remain pending. See [workflow policy settings](../../hooks/README.md#settings) for the
+guard settings and the planned workflow reminders.
 
 ### Agent Plugins 1.0
 
@@ -212,9 +211,8 @@ copilot plugin install agentics@muehz
 ```
 
 `browse` lists the marketplace's catalog and is the quickest confirmation that `.claude-plugin/marketplace.json`
-resolved. Copilot's docs say it also reads `.claude-plugin/`; a hosted add of this repository after #1175 has not been
-observed. Note that `awesome-copilot` is registered by default (`copilot-plugins` is now an ordinary marketplace you add
-yourself), so `muehz` is an addition to a non-empty set. Always qualify installs as `agentics@muehz`.
+resolved. Use the browse command to verify the downloaded package. Copilot registers `awesome-copilot` by default.
+`copilot-plugins` is a marketplace you add yourself. Always qualify installs as `agentics@muehz`.
 
 For a development checkout, use [`npm run plugin:setup`](../../CONTRIBUTING.md#local-setup) to generate and register the
 staging directory.

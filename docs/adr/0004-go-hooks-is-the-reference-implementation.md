@@ -60,9 +60,6 @@ no host depends on may be changed as an ordinary change — it needs a corpus di
 - Tests assert at the seam a host meets — exit code, stdout, stderr, log-record fields — and never on the shape of an
   internal function.
 
-Issues #359 through #370 are the worked examples of this bar: each names one violation in the tree at the time this
-record was written, and each closes when its package is rewritten to the list above.
-
 ## When a host relies on a corrected behavior
 
 A change made under this record may turn out to break a real host: the Live check in a guardian section of the hooks
