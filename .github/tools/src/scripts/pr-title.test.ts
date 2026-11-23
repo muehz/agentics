@@ -244,7 +244,7 @@ titleTest(
 
 test("title is passed through env and never interpolated in run", () => {
   assert.deepEqual(step.step.env, {
-    PR_TITLE: "${{ github.event.pull_request.title }}",
+    PR_TITLE: "${{ fromJSON(steps.metadata.outputs.snapshot).title }}",
   });
   assert.doesNotMatch(step.step.run!, /\$\{\{/);
 });
@@ -351,8 +351,8 @@ markerTest("a footer in a CRLF body is still found", () => {
 test("release-marker step reads title and body only through env", () => {
   const envOnly = (step: WorkflowStepData) => {
     assert.deepEqual(step.env, {
-      PR_TITLE: "${{ github.event.pull_request.title }}",
-      PR_BODY: "${{ github.event.pull_request.body }}",
+      PR_TITLE: "${{ fromJSON(steps.metadata.outputs.snapshot).title }}",
+      PR_BODY: "${{ fromJSON(steps.metadata.outputs.snapshot).body }}",
     });
     assert.doesNotMatch(step.run!, /\$\{\{/);
     assert.doesNotMatch(step.run!, /github\.event/);

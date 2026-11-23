@@ -3,6 +3,7 @@ name: Validate
 on:
   pull_request:
     branches: [main]
+    types: [opened, synchronize, reopened, edited]
   push:
     branches: [main]
   schedule:
@@ -111,15 +112,14 @@ jobs:
   # this guard existed, two version-moving pull requests merged with a completely
   # empty body and left no record of the change anywhere but the file it touched.
   #
-  # It runs on the same pull request events as every other job here, drafts
-  # included. An edit to the title or description alone starts no run, so the
-  # check reads them as of the last push; push again after editing them.
+  # Read one current snapshot per run, including reruns of an older event.
+  # Keep the job checkout-free when reading metadata from fork pull requests.
   pr-metadata:
     name: PR / Title and description
     runs-on: ubuntu-slim
     if: github.event_name == 'pull_request'
-    # The body arrives in the event payload. Nothing is read from the API.
-    permissions: {}
+    permissions:
+      pull-requests: read
     outputs:
       level: ${{ steps.markers.outputs.level }}
     steps:
@@ -127,10 +127,48 @@ jobs:
         with:
           node-version: 26.12.1
 
+      - name: Fetch current pull request metadata
+        id: metadata
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          node <<'NODE'
+          const { appendFileSync } = require("node:fs");
+          async function readMetadata() {
+            const { GITHUB_API_URL, GITHUB_REPOSITORY, PR_NUMBER, GH_TOKEN, GITHUB_OUTPUT } = process.env;
+            const endpoint = `${GITHUB_API_URL}/repos/${GITHUB_REPOSITORY}/pulls/${PR_NUMBER}`;
+            const response = await fetch(endpoint, {
+              headers: {
+                Accept: "application/vnd.github+json",
+                Authorization: `Bearer ${GH_TOKEN}`,
+              },
+              redirect: "error",
+              signal: AbortSignal.timeout(15_000),
+            });
+            if (!response.ok) {
+              console.error(`::error::Unable to fetch current pull request metadata (HTTP ${response.status}).`);
+              process.exitCode = 1;
+              return;
+            }
+            const { title, body, user } = await response.json();
+            if (typeof title !== "string" || (body !== null && typeof body !== "string") || typeof user?.login !== "string") {
+              throw new Error("Invalid pull request metadata.");
+            }
+            // A single JSON line preserves multiline descriptions without introducing workflow output commands.
+            const snapshot = JSON.stringify({ title, body: body ?? "", author: user.login });
+            appendFileSync(GITHUB_OUTPUT, `snapshot=${snapshot}\n`);
+          }
+          readMetadata().catch(() => {
+            console.error("::error::Unable to fetch current pull request metadata.");
+            process.exitCode = 1;
+          });
+          NODE
+
       # The title becomes the squash commit subject. Treat it as data on fork PRs.
       - name: Check the PR title
         env:
-          PR_TITLE: ${{ github.event.pull_request.title }}
+          PR_TITLE: ${{ fromJSON(steps.metadata.outputs.snapshot).title }}
         run: |
           node <<'NODE'
           const title = process.env.PR_TITLE || "";
@@ -170,8 +208,8 @@ jobs:
       - name: Check the release markers
         id: markers
         env:
-          PR_TITLE: ${{ github.event.pull_request.title }}
-          PR_BODY: ${{ github.event.pull_request.body }}
+          PR_TITLE: ${{ fromJSON(steps.metadata.outputs.snapshot).title }}
+          PR_BODY: ${{ fromJSON(steps.metadata.outputs.snapshot).body }}
         run: |
           node <<'NODE'
           const title = process.env.PR_TITLE || "";
@@ -205,8 +243,8 @@ jobs:
       # `${{ }}` interpolation would paste it into the shell as code.
       - name: Check the change description
         env:
-          PR_BODY: ${{ github.event.pull_request.body }}
-          PR_AUTHOR: ${{ github.event.pull_request.user.login }}
+          PR_BODY: ${{ fromJSON(steps.metadata.outputs.snapshot).body }}
+          PR_AUTHOR: ${{ fromJSON(steps.metadata.outputs.snapshot).author }}
         run: |
           node <<'NODE'
           // Dependabot writes its own changelog-shaped body with no `## What
