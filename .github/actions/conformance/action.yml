@@ -102,7 +102,7 @@ runs:
     #
     # Only the all and skills domains load the auditor's npm dependencies, so
     # other domains make no npm call at all. The repository requires npm
-    # 12.2.1 or later and Node 26 bundles npm 11, so an older npm is replaced
+    # 12.2.2 or later and Node 26 bundles npm 11, so an older npm is replaced
     # first. Both installs pass --ignore-scripts, and npm ci reads the
     # auditor's lockfile, never the audited checkout's. An auditor that
     # already holds node_modules is used as it is. The module imports only

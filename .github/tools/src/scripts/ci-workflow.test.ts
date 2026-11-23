@@ -1237,7 +1237,7 @@ function assertTypeScriptSuite(source: string): void {
     "ts-suite must not pin a Go toolchain",
   );
   const pin = job.steps.findIndex(
-    (step) => step.run === "npm install --global --ignore-scripts npm@12.2.1",
+    (step) => step.run === "npm install --global --ignore-scripts npm@12.2.2",
   );
   const install = job.steps.findIndex(
     (step) => step.run === "npm ci --ignore-scripts",

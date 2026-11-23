@@ -194,7 +194,7 @@ jobs:
                   node-version: 26.12.1
             - name: Install npm 12
               if: steps.resume.outputs.mode == 'analyze'
-              run: npm install --global --ignore-scripts npm@12.2.1
+              run: npm install --global --ignore-scripts npm@12.2.2
             - name: Install release tooling
               if: steps.resume.outputs.mode == 'analyze'
               working-directory: .github/release
@@ -279,7 +279,7 @@ jobs:
                   node-version: 26.12.1
             - name: Install npm 12
               if: env.MODE == 'analyze'
-              run: npm install --global --ignore-scripts npm@12.2.1
+              run: npm install --global --ignore-scripts npm@12.2.2
             # npm code runs here, with no token in the environment. The
             # token is minted in the next step.
             - name: Install release tooling
