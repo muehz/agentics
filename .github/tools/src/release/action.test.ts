@@ -256,6 +256,16 @@ test("the TypeScript flag reader finds the allow-list of a parseArgs call", () =
   );
 });
 
+test("the TypeScript flag reader rejects an expression that resembles a declaration", () => {
+  assert.throws(
+    () =>
+      flagsFromSource(
+        'const ACTIVE_FLAGS = ["repo"] as const;\nparseArgs(argv, ACTIVE.FLAGS);',
+      ),
+    /cannot find the allow-list ACTIVE\.FLAGS/,
+  );
+});
+
 test("the TypeScript output reader finds keys in a literal and in a variable", () => {
   assert.deepEqual(
     outputKeysFromTypeScript(
