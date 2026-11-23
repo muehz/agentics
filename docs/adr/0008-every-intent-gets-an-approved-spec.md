@@ -1,14 +1,14 @@
 # Every intent gets an approved spec
 
-> **Amended (2026-11-11, #1311) by [0013](0013-proportional-delivery-paths.md).** A middle-path change gets a reviewed
-> and approved brief in place of the intent, the spec and the plan; every other change keeps the intent approval, spec
+> **Amended (2026-11-11) by [0013](0013-proportional-delivery-paths.md).** A middle-path change gets a reviewed and
+> approved brief in place of the intent, the spec and the plan; every other change keeps the intent approval, spec
 > review and tiers below.
 
-> **Amended (2026-11-11, #1311) by [0021](0021-delegation-and-severity.md).** The spec reviewer runs at Deep unless the
-> user selects Max, not on the most capable model rung every time; the labelled self-read on a host that cannot dispatch
-> now covers the plan review too.
+> **Amended (2026-11-11) by [0021](0021-delegation-and-severity.md).** The spec reviewer runs at Deep unless the user
+> selects Max, not on the most capable model rung every time; the labelled self-read on a host that cannot dispatch now
+> covers the plan review too.
 
-> **Amended (2026-10-17, #1111).** The trail is now `state.tsv`, written by `flow`, so the `events.tsv` rows and the
+> **Amended (2026-10-17).** The trail is now `state.tsv`, written by `flow`, so the `events.tsv` rows and the
 > `next-owner` header field named below no longer exist. An `approve intent.md` row goes to `state.tsv`, and the next
 > phase is the first word of the current row's `next` (see `skills/execute/references/flow-state.md`). The chain-state
 > code under `go/hooks/internal/chain` is gone. This record keeps its original wording for the decision it made.

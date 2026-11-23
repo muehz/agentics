@@ -513,7 +513,7 @@ an already-published release, in either state, skips enrichment. Workflow concur
 
 Agent-written highlights reach a published release before any person reads them. That is accepted: threat detection must
 succeed and the 12000-byte cap applies before the adapter writes, and a wrong body is edited by hand afterward. In
-pre-release mode the release is never marked latest, and the maintainer reads the notes when promoting (#698).
+pre-release mode the release is never marked latest, and the maintainer reads the notes when promoting.
 
 The `level` job, preparation, and the agent have read-only repository permissions. The `release` job's own token is
 read-only as well; it writes the release commit and tag only through the App token. The `stage` job, which publishes the

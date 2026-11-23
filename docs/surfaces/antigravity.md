@@ -55,7 +55,7 @@ Current rollout status:
 
 - All 26 `SKILL.md` bodies are under Antigravity's 24,000-byte load cap with zero `SKILL.md` validator warnings,
   enforced by CI (`ci-antigravity-native.ts`).
-- Native Antigravity pre-tool hooks are shipped via repository-root `hooks.json` (`#1655`).
+- Agentics registers native Antigravity pre-tool hooks in the repository's root `hooks.json`.
 
 `agy plugin validate` still emits one warning for repository-root `AGENTS.md` because Antigravity plugins load plugin
 rules only from `rules/`. Agentics keeps `AGENTS.md` at the repository root as its canonical contributor-agent

@@ -221,11 +221,8 @@ trusted is decided in record 0018. This record decides only what the trail recor
        audit's claim that the review has no owner no longer holds as written:
        `skills/execute/references/aggregate-wave-review.md:81` names "the lane that merges last". That owner cannot act,
        because a lane stops at its draft pull request and cannot know it is last, so the text is replaced.
-    5. **Mode.** `mode=pair` waives the controller audit only for the branch its `enter run` row names in `branch=`.
-       (Amended 2026-11-18, #1145: no mode waives the controller audit. Pair runs record commit evidence since #1540,
-       and gate audits every branch the same way; a trail written before that evidence existed is audited too. Amended
-       2026-11-19, #1397: an unrecorded commit is an Important finding of lane `audit`, and accepting it writes an
-       attested `commit user` row; no question asks whether it was intended.)
+    5. **Mode.** Gate performs the controller audit in every mode, including `pair`. An unrecorded commit is an
+       Important finding in the `audit` lane. Accepting it writes an attested `commit user` row.
     6. **Merged lanes.** Two lanes that each record divergences merge without changing hashed text, under the approval
        rule above, so the merged `plan.md` keeps its approval.
 

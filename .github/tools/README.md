@@ -192,7 +192,7 @@ credentials, so the host session token never reaches another vendor.
 ### Why there is no hook-trust bypass
 
 Codex has a flag, `--dangerously-bypass-hook-trust`, that runs hooks without the persisted-trust check. A headless run
-needs no trust prompt answered, so this tool does not pass it (issue #1090). On 2026-10-20, with Codex 0.163.0 on
+needs no trust prompt answered, so this tool leaves the trust check enabled. On 2026-10-20, with Codex 0.163.0 on
 Windows, a throwaway `CODEX_HOME` held one untrusted user-level `PreToolUse` hook that appends to a file outside the
 workspace. Three runs of `codex exec -m gpt-6.1-sol --sandbox read-only` each finished in 7 to 8 seconds with exit 0.
 One run had no hook installed and was the control:

@@ -82,9 +82,8 @@ Command-guardian, release-guardian, and secrets-guardian inspect supported local
 They share the script snapshot and report the path and line of the command they inspected. See
 [Script invocation](#command-guardian-script-invocation).
 
-Default-on SessionStart, opt-in Stop, and the commit reminder inside PreToolUse remain future #1101 integration under
-the same event contract. No placeholder registrations are installed. The settings below cover the guard policy rules
-only; they define no keys for the future #1101 handlers.
+The settings below cover the guard policy rules. Workflow reminders at session start, on stop, and before a commit
+remain planned.
 
 ## Flow CLI
 

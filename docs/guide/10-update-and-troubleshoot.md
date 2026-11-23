@@ -61,7 +61,7 @@ Run `agy plugin uninstall agentics`, then `agy plugin install "/path/to/new/veri
 
 ### Cursor
 
-The Agentics Cursor plugin package was removed (#1175); there is nothing to update. See [Cursor](../surfaces/cursor.md).
+The Agentics Cursor plugin package is retired. See [Cursor](../surfaces/cursor.md).
 
 ### VS Code Copilot Chat
 
