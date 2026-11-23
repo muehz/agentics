@@ -8,6 +8,7 @@ import path from "node:path";
 import test from "node:test";
 import { promisify } from "node:util";
 import { Script } from "node:vm";
+import YAML from "yaml";
 import {
   inlineNodeScript,
   lookupWorkflowStep,
@@ -22,6 +23,28 @@ const TITLE = "Check the PR title";
 const MARKERS = "Check the release markers";
 const DESCRIPTION = "Check the change description";
 const REMINDERS = ".github/workflows/reminders.yml";
+const ACTIONS_LOCK = YAML.parse(
+  readFileSync(path.join(ROOT, ".github/workflows/actions.lock"), "utf8"),
+) as {
+  workflows: Record<string, string[]>;
+  dependencies: Record<string, { commit?: string }>;
+};
+function assertLockedAction(
+  workflowPath: string,
+  uses: string,
+  expectedAction: string,
+): void {
+  assert.match(uses, new RegExp(`^${expectedAction}@v\\d+\\.\\d+\\.\\d+$`));
+  assert.ok(
+    (ACTIONS_LOCK.workflows[workflowPath] ?? []).includes(uses),
+    `${uses} must be locked for ${workflowPath} in actions.lock`,
+  );
+  assert.match(
+    ACTIONS_LOCK.dependencies[uses]?.commit ?? "",
+    /^sha1-[0-9a-f]{40}$/,
+    `${uses} must resolve to a 40-hex commit in actions.lock`,
+  );
+}
 const validate = readFileSync(path.join(ROOT, VALIDATE), "utf8").replaceAll(
   "\r\n",
   "\n",
@@ -180,7 +203,7 @@ function runMetadata(
     (step) => (step.uses ? [step.uses] : []),
   );
   assert.equal(actionSteps.length, 1);
-  assert.match(actionSteps[0]!, /^actions\/setup-node@[0-9a-f]{40}$/);
+  assertLockedAction(VALIDATE, actionSteps[0]!, "actions/setup-node");
   assert.deepEqual(selected.step.env, expectedBindings);
   assert.doesNotMatch(selected.step.run!, /\$\{\{|github\.event/);
 
@@ -409,7 +432,7 @@ function reminderFixture(directory: string, issues: Issue[]) {
 }
 
 test("the checked reminder queries all issues and leaves an open or closed duplicate alone", async (t) => {
-  assert.match(reminder.step.uses!, /^actions\/github-script@[0-9a-f]{40}$/);
+  assertLockedAction(REMINDERS, reminder.step.uses!, "actions/github-script");
   assert.deepEqual(reminder.workflow.permissions, {
     contents: "read",
     issues: "write",

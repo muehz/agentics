@@ -37,6 +37,7 @@ interface ColdEntry {
 const VALIDATE = ".github/workflows/validate.yml";
 const COVERAGE = ".github/workflows/validate-coverage.yml";
 const MANUAL = ".github/workflows/validate-manual.yml";
+const VERIFY_LOCKFILE = ".github/workflows/verify-lockfile.yml";
 const CONFORMANCE_ACTION = ".github/actions/conformance/action.yml";
 const RELEASE_ACTION = ".github/actions/release/action.yml";
 
@@ -44,6 +45,16 @@ const RELEASE_ACTION = ".github/actions/release/action.yml";
 // it imports must load from Node built-ins and relative files alone. Paths are
 // relative to .github/tools/src.
 const COLD_ENTRIES: ColdEntry[] = [
+  {
+    module: "scripts/ci-actions-lock.ts",
+    sites: [
+      {
+        file: VERIFY_LOCKFILE,
+        job: "verify",
+        step: "Verify actions.lock and local-action allowlist",
+      },
+    ],
+  },
   {
     module: "scripts/ci-coverage-paths.ts",
     sites: [
