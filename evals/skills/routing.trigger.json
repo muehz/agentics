@@ -1,0 +1,125 @@
+{
+    "version": 3,
+    "queries": [
+        {
+            "id": "q-01",
+            "query": "There's a folder in the repo with an intent.md, a plan.md, and a state.tsv, but nobody can tell me if this thing is still being decomposed or if it already moved into execution. Figure out what phase owns it right now and pick up from there.",
+            "should_trigger": true,
+            "split": "development"
+        },
+        {
+            "id": "q-02",
+            "query": "Run /agentics:decompose on this spec for the notification batching feature. The requirements are settled and reviewed, so just slice it into ordered implementation tasks.",
+            "should_trigger": false,
+            "split": "development"
+        },
+        {
+            "id": "q-03",
+            "query": "Let's get going on #512, the webhook endpoint for partner refunds. I have no idea whether anyone already started on it, so check what exists and take it from wherever it actually stands.",
+            "should_trigger": true,
+            "split": "development"
+        },
+        {
+            "id": "q-04",
+            "query": "Continue implementing the approved plan for the search index rebuild. Everything in plan.md is still accurate, so just keep working through the remaining tasks in order.",
+            "should_trigger": false,
+            "split": "development"
+        },
+        {
+            "id": "q-05",
+            "query": "The payments retry queue started dropping messages sometime after Tuesday's deploy, and nobody has found the root cause yet. Reproduce the failure and trace it back to the actual defect before we talk about a fix.",
+            "should_trigger": false,
+            "split": "development"
+        },
+        {
+            "id": "q-06",
+            "query": "Work #742. The issue just has a checklist of things somebody wants changed about the onboarding flow, and it isn't clear yet whether that's still an open question or a done deal ready to build.",
+            "should_trigger": true,
+            "split": "development"
+        },
+        {
+            "id": "q-07",
+            "query": "Pick the caching-layer work back up where we left off yesterday and keep it moving. I don't remember whether the plan was ever signed off.",
+            "should_trigger": true,
+            "split": "development"
+        },
+        {
+            "id": "q-08",
+            "query": "Gate this branch before we merge the rate-limiter change. Produce the branch completion artifact and confirm the checks are clean.",
+            "should_trigger": false,
+            "split": "development"
+        },
+        {
+            "id": "q-09",
+            "query": "I picked this project back up after two months away and I genuinely can't tell from the folder contents whether the direction is still open for debate or whether it already has an accepted design waiting on task breakdown. Tell me which stage this actually needs next.",
+            "should_trigger": true,
+            "split": "development"
+        },
+        {
+            "id": "q-10",
+            "query": "Add input validation to the /submit-order handler so it rejects malformed payloads with a 400 instead of crashing. The endpoint and the expected error shape are already spelled out in the approved spec.",
+            "should_trigger": false,
+            "split": "development"
+        },
+        {
+            "id": "q-11",
+            "query": "Let's build the saved-searches feature we talked about this morning: users save a query and get a nightly email of new matches. Get it started properly.",
+            "should_trigger": true,
+            "split": "development"
+        },
+        {
+            "id": "q-12",
+            "query": "What do you think about #973? I'm not asking anyone to start on it yet. I just want your honest read on whether the local-context mapping it proposes is worth the effort compared with the other routing issues.",
+            "should_trigger": false,
+            "split": "development"
+        },
+        {
+            "id": "q-13",
+            "query": "There's a half-finished feature branch with commits going back three weeks, a plan.md that only covers the first two tasks, and open questions scribbled in a comment thread that were never resolved. Nobody agrees anymore whether this needs more design work or just needs someone to keep implementing.",
+            "should_trigger": true,
+            "split": "holdout"
+        },
+        {
+            "id": "q-14",
+            "query": "Write the solution spec for the new tenant-isolation feature now that the team has agreed on the requirements: describe the interfaces, the failure behavior, and the acceptance criteria.",
+            "should_trigger": false,
+            "split": "holdout"
+        },
+        {
+            "id": "q-15",
+            "query": "The export job silently produces truncated CSV files for large accounts, and support has three tickets about it with no clear trigger condition identified yet. Reproduce it and find out exactly where the truncation happens before anyone touches the code.",
+            "should_trigger": false,
+            "split": "holdout"
+        },
+        {
+            "id": "q-16",
+            "query": "Implement issue #1207. It's the one about letting admins export the audit log as CSV; start it however it needs to be started.",
+            "should_trigger": true,
+            "split": "holdout"
+        },
+        {
+            "id": "q-17",
+            "query": "Work #918. Read the linked issue and take it through whichever step of the chain it actually needs next, starting from intent if that's still open.",
+            "should_trigger": true,
+            "split": "holdout"
+        },
+        {
+            "id": "q-18",
+            "query": "The billing reconciliation workstream has a checklist someone wrote a month ago, a handful of merged PRs that only address part of it, and no one currently agrees whether the remaining checklist items are still the plan or need to be rethought first. Tell me what actually owns this next.",
+            "should_trigger": true,
+            "split": "holdout"
+        },
+        {
+            "id": "q-19",
+            "query": "Implement the rate card update described in the approved plan for the billing service. The tasks are already broken out and scoped to the billing module alone, so just work through them in order.",
+            "should_trigger": false,
+            "split": "holdout"
+        },
+        {
+            "id": "q-20",
+            "query": "Use intent for #941. I want the problem and the success measure for the audit-log retention change captured properly before anyone talks about a solution or picks a phase for me.",
+            "should_trigger": false,
+            "split": "holdout"
+        }
+    ]
+}

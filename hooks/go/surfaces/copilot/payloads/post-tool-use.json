@@ -1,0 +1,14 @@
+{
+  "sessionId": "copilot-session-1",
+  "timestamp": 1777831012000,
+  "cwd": "/tmp/agentics-copilot-fixture",
+  "toolName": "create",
+  "toolArgs": {
+    "path": "/tmp/agentics-copilot-fixture/fixture.json",
+    "file_text": "{\"a\":1}\n"
+  },
+  "toolResult": {
+    "resultType": "success",
+    "textResultForLlm": "fixture"
+  }
+}

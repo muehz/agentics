@@ -1,0 +1,125 @@
+{
+    "version": 2,
+    "queries": [
+        {
+            "id": "q-01",
+            "query": "This feature branch picked up a pile of AI narration comments while we iterated: step-by-step 'now we loop over the items' lines and a commented-out old implementation. Strip the low-value comments before I open the PR.",
+            "should_trigger": true,
+            "split": "development"
+        },
+        {
+            "id": "q-02",
+            "query": "Can you check whether the tests in the pricing package actually prove anything? I suspect a few of them can't fail no matter what the code does.",
+            "should_trigger": true,
+            "split": "development"
+        },
+        {
+            "id": "q-03",
+            "query": "Decomment src/billing/ for me. Keep the license headers and anything explaining an upstream bug, but the rest of the chatter has to go.",
+            "should_trigger": true,
+            "split": "development"
+        },
+        {
+            "id": "q-04",
+            "query": "Some of the tests in the auth module look tautological to me, like comparing a value with itself or only asserting that a mock was called. Find the ones that prove nothing and confirm it by mutating the code.",
+            "should_trigger": true,
+            "split": "development"
+        },
+        {
+            "id": "q-05",
+            "query": "Go through the comments in the files I changed on this branch and remove the ones that just narrate what the code does. Every comment that survives should explain a constraint we can't change.",
+            "should_trigger": true,
+            "split": "development"
+        },
+        {
+            "id": "q-06",
+            "query": "Our ledger tests have been green for two years and I'm no longer convinced they would catch a regression. Find out which of them would still pass if the code they test were broken.",
+            "should_trigger": true,
+            "split": "development"
+        },
+        {
+            "id": "q-07",
+            "query": "We're adding a refund-window check to the orders service. Write the failing test for the 30-day cutoff first, then implement the check until it passes.",
+            "should_trigger": false,
+            "split": "development"
+        },
+        {
+            "id": "q-08",
+            "query": "Review PR #512 for bugs and security problems before I merge it; the session-token handling in the middleware is what worries me most.",
+            "should_trigger": false,
+            "split": "development"
+        },
+        {
+            "id": "q-09",
+            "query": "Users are randomly getting a 500 from the search endpoint since yesterday afternoon. Find the root cause before anyone touches the code.",
+            "should_trigger": false,
+            "split": "development"
+        },
+        {
+            "id": "q-10",
+            "query": "The README for the CLI is months out of date. Refresh it against the current commands and flags, and fix the installation section.",
+            "should_trigger": false,
+            "split": "development"
+        },
+        {
+            "id": "q-11",
+            "query": "Run a mutation-testing tool across the whole repo and give me the overall mutation score and kill ratio for the quarterly quality report.",
+            "should_trigger": false,
+            "split": "development"
+        },
+        {
+            "id": "q-12",
+            "query": "The comment above the retry helper in client.go says the 37 ms sleep works around a load-balancer quirk. Explain why that comment says what it says: dig through the history and tell me where the number came from.",
+            "should_trigger": false,
+            "split": "development"
+        },
+        {
+            "id": "q-13",
+            "query": "There's a lot of commented-out code and 'TODO: this is a hack' notes in the scheduler. Clean up the comments so only the ones that earn their place are left.",
+            "should_trigger": true,
+            "split": "holdout"
+        },
+        {
+            "id": "q-14",
+            "query": "I want proof, not opinions: which of the tests in internal/rates would keep passing if someone changed the rounding logic? Use mutation to show it.",
+            "should_trigger": true,
+            "split": "holdout"
+        },
+        {
+            "id": "q-15",
+            "query": "Run a decomment pass over the files touched on this branch; the agent that wrote them narrated every line.",
+            "should_trigger": true,
+            "split": "holdout"
+        },
+        {
+            "id": "q-16",
+            "query": "Check whether the tests I added to the cart package this week prove anything. A couple of them feel like they'd pass even if the code were wrong.",
+            "should_trigger": true,
+            "split": "holdout"
+        },
+        {
+            "id": "q-17",
+            "query": "Write a test for the new discount-code parser that covers stacked codes and an expired code.",
+            "should_trigger": false,
+            "split": "holdout"
+        },
+        {
+            "id": "q-18",
+            "query": "Review the diff on this branch before I merge it. I'm worried about the error handling in the uploader.",
+            "should_trigger": false,
+            "split": "holdout"
+        },
+        {
+            "id": "q-19",
+            "query": "TestCheckoutTotals started failing after this morning's merge and nobody knows why. Debug it and find what broke.",
+            "should_trigger": false,
+            "split": "holdout"
+        },
+        {
+            "id": "q-20",
+            "query": "Delete the dead code in legacy/. Nothing has called those helpers since the v2 API shipped.",
+            "should_trigger": false,
+            "split": "holdout"
+        }
+    ]
+}

@@ -1,0 +1,2 @@
+rule	category	scenario	digest	detail
+eval-bank-scenario-criterion	edge	Flow state selects the phase from the current row	7b6fa30258a8fbc4	-

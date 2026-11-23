@@ -1,0 +1,13 @@
+path	tool	digest	reason	rule	note
+gate/references/branch/tidy.md	Bash	2ad3c651b72c	command_parse_limit	Command-guardian threat categories	PRE_INDEX='<the tree id the collection reported>'
+gate/references/branch/tidy.md	Bash	aa53153a7c23	command_parse_limit	Command-guardian threat categories	git write-tree
+ops/references/examples/example-database-failover-runbook.md	Bash	5715330a8324	commands	Release-guardian threat categories	kubectl scale deployment/<service>-writer -n <namespace> --replicas=<original-co
+ops/references/examples/example-database-failover-runbook.md	Bash	ade690678fdc	commands	Release-guardian threat categories	kubectl set env deployment/<service>-writer -n <namespace> DB_HOST=<new-primary-
+ops/references/examples/example-database-failover-runbook.md	Bash	bac1efe78d56	commands	Release-guardian threat categories	kubectl get deployment/<service>-writer -n <namespace> -o jsonpath='{.spec.repli
+ops/references/examples/example-database-failover-runbook.md	Bash	e4013a9b1aa3	commands	Release-guardian threat categories	kubectl scale statefulset/<primary-statefulset> -n <namespace> --replicas=0
+triage/references/pull-requests/checkmarx/checkmarx-remediation-patterns-actions-js.md	Write	7611c62e82bd	secrets-guardian	Secrets-guardian two directions, one event	# Before (test fixture)
+triage/references/pull-requests/checkmarx/checkmarx-remediation-patterns-generic.md	Write	276894a22c5b	secrets-guardian	Secrets-guardian two directions, one event	# Python — Before
+triage/references/pull-requests/checkmarx/checkmarx-remediation-patterns-generic.md	Write	7e4fcc4632cb	secrets-guardian	Secrets-guardian two directions, one event	// Go — Before
+triage/references/pull-requests/checkmarx/checkmarx-remediation-patterns-generic.md	Write	cda6a3915d95	secrets-guardian	Secrets-guardian two directions, one event	// Java — Before
+triage/references/pull-requests/checkmarx/checkmarx-remediation-patterns-generic.md	Write	ea2af4336b62	secrets-guardian	Secrets-guardian two directions, one event	// Node.js — Before
+triage/references/subagent-contract.md	Bash	34204d18466a	command_parse_limit	Command-guardian threat categories	out=$(bash harness.sh 2>&1); rc=$?

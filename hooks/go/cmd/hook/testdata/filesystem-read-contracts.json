@@ -1,0 +1,33 @@
+{
+  "source": {
+    "repository": "modelcontextprotocol/servers",
+    "commit": "18ce19763999dcf7697b00c86c3a427f01eb2919",
+    "path": "src/filesystem/index.ts"
+  },
+  "tools": [
+    {
+      "name": "read_file",
+      "requiredField": "path",
+      "fieldType": "string",
+      "example": { "path": ".env" }
+    },
+    {
+      "name": "read_text_file",
+      "requiredField": "path",
+      "fieldType": "string",
+      "example": { "path": ".pgpass" }
+    },
+    {
+      "name": "read_media_file",
+      "requiredField": "path",
+      "fieldType": "string",
+      "example": { "path": "id_ed25519" }
+    },
+    {
+      "name": "read_multiple_files",
+      "requiredField": "paths",
+      "fieldType": "nonempty string array",
+      "example": { "paths": ["README.md", ".env"] }
+    }
+  ]
+}

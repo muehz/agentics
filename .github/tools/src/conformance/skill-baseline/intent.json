@@ -1,0 +1,7 @@
+[
+    {
+        "rule": "skill-frontmatter-key",
+        "path": "skills/intent/SKILL.md",
+        "key": "version"
+    }
+]

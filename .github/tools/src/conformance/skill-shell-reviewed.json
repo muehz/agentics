@@ -1,0 +1,16 @@
+[
+    {
+        "path": "skills/git/references/branch.md",
+        "heading": "5. Create and announce",
+        "key": "name='<name>'",
+        "count": 1,
+        "reason": "The controller generates this work-item branch from lowercase ASCII letters, digits, hyphens, and slash separators. Each component starts with a letter or digit, and supplied names use scratch data."
+    },
+    {
+        "path": "skills/git/references/branch.md",
+        "heading": "5. Create and announce",
+        "key": "$name = '<name>'",
+        "count": 1,
+        "reason": "The controller generates this work-item branch from lowercase ASCII letters, digits, hyphens, and slash separators. Each component starts with a letter or digit, and supplied names use scratch data."
+    }
+]

@@ -1,0 +1,14 @@
+{
+    "sessionId": "copilot-session-1",
+    "timestamp": 1777831012000,
+    "cwd": "/tmp/agentics-copilot-fixture",
+    "toolName": "mcp__github__create_pull_request",
+    "toolArgs": {
+        "owner": "muehz",
+        "repo": "agentics",
+        "title": "Ship it",
+        "head": "feature",
+        "base": "main",
+        "body": "Opened without draft: true."
+    }
+}

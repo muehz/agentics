@@ -1,0 +1,6 @@
+f6db96cdc9ec70bd6c1ebd42798af7be1195fcc638641e23d9c4868e25bfab06  bin/agx-darwin-amd64
+04d0baacc19faa2e9affc39d57b0baaf320c388aa37dd66e403b00ac634622cf  bin/agx-darwin-arm64
+43a2630434593e29676814899531d108efbcf5c72edf93eb19dfed1a5070551c  bin/agx-linux-amd64
+43eb0894691e0146da318402f4f2e6fc2f2c0bd7223afa273d46f3dcbcc4e1ab  bin/agx-linux-arm64
+89108b5c01c94dbd9cc3a22ca0f9cbc19a97223d61a20ce9a925c6166e723825  bin/agx-windows-amd64.exe
+a16a98a256e6c6afc4b12b5ae82323b58cedee9363855ee3cc9926f1d64849cb  bin/agx-windows-arm64.exe

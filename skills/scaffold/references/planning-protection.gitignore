@@ -1,0 +1,25 @@
+# BEGIN AGENTICS PLANNING PROTECTION
+# Planning discovery only: tracked files and force-adds need native validation.
+/{{PARENT}}/*
+!/{{PARENT}}/history.md
+/{{PARENT}}/history.md/
+!/{{PARENT}}/unassigned/
+/{{PARENT}}/unassigned/*
+!/{{PARENT}}/unassigned/state.tsv
+/{{PARENT}}/unassigned/state.tsv/
+!/{{PARENT}}/[0-9][0-9][0-9][0-9]-[01][0-9]/
+/{{PARENT}}/[0-9][0-9][0-9][0-9]-[01][0-9]/*
+!/{{PARENT}}/[0-9][0-9][0-9][0-9]-[01][0-9]/*/
+/{{PARENT}}/[0-9][0-9][0-9][0-9]-[01][0-9]/*/*
+!/{{PARENT}}/[0-9][0-9][0-9][0-9]-[01][0-9]/*/intent.md
+!/{{PARENT}}/[0-9][0-9][0-9][0-9]-[01][0-9]/*/spec.md
+!/{{PARENT}}/[0-9][0-9][0-9][0-9]-[01][0-9]/*/plan.md
+!/{{PARENT}}/[0-9][0-9][0-9][0-9]-[01][0-9]/*/state.tsv
+/{{PARENT}}/[0-9][0-9][0-9][0-9]-[01][0-9]/*/intent.md/
+/{{PARENT}}/[0-9][0-9][0-9][0-9]-[01][0-9]/*/spec.md/
+/{{PARENT}}/[0-9][0-9][0-9][0-9]-[01][0-9]/*/plan.md/
+/{{PARENT}}/[0-9][0-9][0-9][0-9]-[01][0-9]/*/state.tsv/
+# Exclude months outside 01 through 12.
+/{{PARENT}}/[0-9][0-9][0-9][0-9]-00/
+/{{PARENT}}/[0-9][0-9][0-9][0-9]-1[3-9]/
+# END AGENTICS PLANNING PROTECTION

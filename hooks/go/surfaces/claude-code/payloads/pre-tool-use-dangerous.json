@@ -1,0 +1,13 @@
+{
+    "hook_event_name": "PreToolUse",
+    "session_id": "claude-code-session-1",
+    "turn_id": "claude-code-turn-3",
+    "cwd": "/tmp/agentics-claude-code-fixture",
+    "tool_name": "Bash",
+    "tool_input": {
+        "command": "rm -rf /"
+    },
+    "unsupported_future_field": {
+        "preserve_failure_mode": "ignored"
+    }
+}

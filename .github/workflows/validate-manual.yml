@@ -1,0 +1,272 @@
+name: Manual
+
+# Called by validate.yml on manual dispatch only, never run on its own. These jobs run on macOS and Windows runners,
+# which cost several times an Ubuntu minute. Grouping them means every other run shows one skipped Manual entry.
+
+on:
+  workflow_call:
+    inputs:
+      cache:
+        description: The cache input of the manual validate run
+        type: string
+        default: ""
+
+permissions:
+  contents: read
+
+jobs:
+  validate-windows-dispatch:
+    name: Windows hook dispatch
+    runs-on: windows-latest
+    env:
+      AGX_REQUIRED_INTERPRETERS: powershell
+    defaults:
+      run:
+        shell: pwsh
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 26.12.1
+
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version-file: hooks/go/go.mod
+          cache: ${{ inputs.cache != 'cold' }}
+          cache-dependency-path: hooks/go/go.mod
+
+      # #525: the cmd assertions below run a binary this job built, not one
+      # from git, and the build must reproduce hooks/SHA256SUMS. make comes
+      # from the runner image; its absence fails here, not as a later
+      # missing-binary posture. -B forces all six builds; see go-suite.
+      - name: Build the hook binaries from source
+        shell: bash
+        run: |
+          make --version
+          rm -f hooks/bin/agx-windows-amd64.exe
+          make -B -C hooks/go build-all
+          git diff --exit-code -- hooks/ bin/
+
+      # cmd.exe runs hooks/run-hook.cmd, whose fast path execs the
+      # agx-windows-amd64.exe this job built, without Bash. This is
+      # the only tracked coverage of the cmd half and of the Windows binary.
+      # The assertions below cover the current Claude provider contract: a
+      # PreToolUse denial exits 2 with an empty stdout and its reason on
+      # stderr; benign input exits 0 silently.
+      - name: cmd dispatches the built binary and denies
+        env:
+          CLAUDE_PLUGIN_ROOT: ${{ github.workspace }}
+          CLAUDE_PLUGIN_DATA: ${{ runner.temp }}\guardian-block
+        run: |
+          $fixture = "hooks\go\surfaces\claude-code\payloads\pre-tool-use-dangerous.json"
+          $stdout = cmd /c "`"hooks\run-hook.cmd`" claude-code command-guardian --mode block < `"$fixture`"" 2>"$env:RUNNER_TEMP\deny.err"
+          $code = $LASTEXITCODE
+          $stderr = Get-Content -Raw "$env:RUNNER_TEMP\deny.err" -ErrorAction SilentlyContinue
+          if ($code -ne 2) { Write-Host "$stdout`n$stderr"; throw "Claude PreToolUse deny should exit 2, got $code" }
+          if ("$stdout".Trim() -ne "") { throw "deny wrote to stdout: $stdout" }
+          foreach ($needle in 'destructive_file_ops', 'Remove only specific, verified paths instead of the filesystem root.') {
+            if ($stderr -notlike "*$needle*") { Write-Host $stderr; throw "missing '$needle' in deny stderr" }
+          }
+          Write-Host "PASS: built .exe dispatched via cmd, denied with the pinned reason"
+          exit 0
+
+      - name: benign payload passes silently through the binary
+        env:
+          CLAUDE_PLUGIN_ROOT: ${{ github.workspace }}
+          CLAUDE_PLUGIN_DATA: ${{ runner.temp }}\guardian-pass
+        run: |
+          $fixture = "hooks\go\surfaces\claude-code\payloads\pre-tool-use.json"
+          $out = cmd /c "`"hooks\run-hook.cmd`" claude-code command-guardian --mode block < `"$fixture`"" 2>&1 | Out-String
+          if ($LASTEXITCODE -ne 0) { Write-Host $out; throw "benign pass should exit 0, got $LASTEXITCODE" }
+          if ($out.Trim() -ne "") { Write-Host $out; throw "benign pass should be silent" }
+          Write-Host "PASS: benign payload exits 0, silent"
+
+      # With the executable hidden, this verifies the missing-binary posture,
+      # which the cmd half applies directly - no bash is involved on Windows:
+      # command-guardian fails closed (exit 2 plus a diagnostic).
+      # AGX_NO_FETCH keeps the dispatcher off the network: with a
+      # published release for this version, the fetch path would restore the
+      # hidden binary and the posture under test would never apply.
+      - name: missing binary fails closed for the guard
+        env:
+          CLAUDE_PLUGIN_ROOT: ${{ github.workspace }}
+          CLAUDE_PLUGIN_DATA: ${{ runner.temp }}\posture
+          AGX_NO_FETCH: "1"
+        run: |
+          Rename-Item "hooks\bin\agx-windows-amd64.exe" "agx-windows-amd64.exe.hidden"
+          try {
+            $fixture = "hooks\go\surfaces\claude-code\payloads\pre-tool-use.json"
+            $out = cmd /c "`"hooks\run-hook.cmd`" claude-code command-guardian --mode block < `"$fixture`"" 2>&1 | Out-String
+            if ($LASTEXITCODE -ne 2) { Write-Host $out; throw "guard should fail closed at exit 2, got $LASTEXITCODE" }
+            if ($out -notlike "*failing closed*") { Write-Host $out; throw "missing the fail-closed diagnostic" }
+            Write-Host "PASS: guard fails closed"
+          } finally {
+            Rename-Item "hooks\bin\agx-windows-amd64.exe.hidden" "agx-windows-amd64.exe"
+          }
+          exit 0
+
+      # The fetch path's only Windows coverage: the dispatcher tests stage a
+      # plugin with no binary and run cmd.exe -> run-hook.cmd -> Windows
+      # PowerShell -> fetch-hook.ps1 against a local release stand-in.
+      - name: cmd fetches a missing binary through fetch-hook.ps1
+        run: |
+          go test -C hooks/go ./internal/conformance -run '^TestDispatcher' -count=1 -v
+          if ($LASTEXITCODE -ne 0) { throw 'Windows fetch path checks failed' }
+
+      # The step's shell: only starts node. AGX_TWIN_POWERSHELL names the PowerShell the .ps1 twin cases spawn, so
+      # this run proves them under Windows PowerShell 5.1; the pull-request runs prove them under PowerShell 7 only.
+      # Both tests import only built-ins, so the job needs no npm ci.
+      - name: Twin tables under Windows PowerShell 5.1
+        env:
+          AGX_TWIN_POWERSHELL: powershell
+        run: node --test .github/tools/src/entrypoint/polluter.test.ts .github/tools/src/scripts/scaffold-protection.test.ts
+
+  # #571: native CI proof for the two newest hook platforms, Intel macOS and
+  # Windows ARM64. validate-windows-dispatch above only ever runs on an x64
+  # Windows runner; it does not prove the binaries this repo now builds for
+  # darwin-amd64 and windows-arm64 actually run, natively, on a host of that
+  # shape. This job is deliberately light: it builds, confirms the runner is
+  # really the target architecture, runs the native binary directly, and
+  # dispatches one deny and one allow through the run-hook.cmd polyglot - it
+  # does not duplicate the deeper dispatch coverage that job already owns.
+  #
+  # windows-11-arm is a GitHub-hosted partner runner label; its availability
+  # on a private repository is NOT guaranteed the way ubuntu-latest and
+  # macos-15-intel are. If this job never queues on windows-11-arm here, that is
+  # the first thing to check, not a bug in the steps below.
+  native-hook-smoke:
+    name: Native hook smoke
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-15-intel, windows-11-arm]
+    env:
+      GOTOOLCHAIN: local
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+
+      # The Windows leg asks for ARM64 Node by name, so the architecture check below reads an ARM64 process: an x64
+      # runner cannot start that Node at all, and an ARM64 one never reports AMD64 through an emulated Node.
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 26.12.1
+          architecture: ${{ matrix.os == 'windows-11-arm' && 'arm64' || '' }}
+
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version-file: hooks/go/go.mod
+          cache: ${{ inputs.cache != 'cold' }}
+          cache-dependency-path: hooks/go/go.mod
+
+      # Build and verify only the binary for this native host.
+      - name: Build the hook binaries from source
+        shell: bash
+        run: node .github/tools/src/scripts/ci-native-smoke.ts build
+
+      # This is the fact the job exists to prove: the runner is really the
+      # target architecture, not an emulated or mislabeled one.
+      - name: Confirm the runner is the target architecture (macOS)
+        if: runner.os == 'macOS'
+        shell: bash
+        run: node .github/tools/src/scripts/ci-native-smoke.ts arch macos
+
+      # The module reads PROCESSOR_ARCHITECTURE from its own Node process, so this proves the runner only because
+      # the setup-node step above installs ARM64 Node on windows-11-arm; an emulated x64 Node would report AMD64.
+      - name: Confirm the runner is the target architecture (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: node .github/tools/src/scripts/ci-native-smoke.ts arch windows
+
+      # AGX_SOURCE_DIGEST=1 makes the binary print its embedded source
+      # digest and exit 0 instead of running as a hook - the smallest proof
+      # that this exact native binary executes on this host at all.
+      - name: Run the native binary directly (macOS)
+        if: runner.os == 'macOS'
+        shell: bash
+        env:
+          AGX_SOURCE_DIGEST: "1"
+        run: |
+          hooks/bin/agx-darwin-amd64
+          echo "PASS: native darwin-amd64 binary ran and reported its source digest"
+
+      - name: Run the native binary directly (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        env:
+          AGX_SOURCE_DIGEST: "1"
+        run: |
+          & "hooks\bin\agx-windows-arm64.exe"
+          if ($LASTEXITCODE -ne 0) { throw "native windows-arm64 binary should exit 0, got $LASTEXITCODE" }
+          Write-Host "PASS: native windows-arm64 binary ran and reported its source digest"
+
+      # Dispatcher smoke: the same command-guardian deny/benign contract
+      # validate-windows-dispatch covers, proving run-hook.cmd's polyglot path
+      # (bash here, cmd on Windows) reaches a native binary end to end on each
+      # new platform, not just that the binary builds and runs standalone. The
+      # other architecture's binary is removed and fetching is off, so a
+      # dispatcher that picked the wrong binary fails closed on the benign
+      # payload instead of passing on an emulated one.
+      - name: command-guardian dispatch smoke (macOS)
+        if: runner.os == 'macOS'
+        shell: bash
+        env:
+          CLAUDE_PLUGIN_ROOT: ${{ github.workspace }}
+          CLAUDE_PLUGIN_DATA: ${{ runner.temp }}/native-hook-smoke
+          AGX_NO_FETCH: "1"
+        run: |
+          rm -f hooks/bin/agx-darwin-arm64
+          DENY='{"hook_event_name":"PreToolUse","session_id":"smoke","cwd":".","tool_name":"Bash","tool_input":{"command":"rm -rf /"}}'
+          BENIGN='{"hook_event_name":"PreToolUse","session_id":"smoke","cwd":".","tool_name":"Bash","tool_input":{"command":"git status"}}'
+
+          if printf '%s' "$DENY" | bash hooks/run-hook.cmd claude-code command-guardian --mode block; then
+            code=0
+          else
+            code=$?
+          fi
+          if [ "$code" -ne 2 ]; then
+            echo "::error::deny payload should exit 2, got $code"
+            exit 1
+          fi
+
+          if printf '%s' "$BENIGN" | bash hooks/run-hook.cmd claude-code command-guardian --mode block; then
+            code=0
+          else
+            code=$?
+          fi
+          if [ "$code" -ne 0 ]; then
+            echo "::error::benign payload should exit 0, got $code"
+            exit 1
+          fi
+          echo "PASS: dispatcher denies the destructive command and allows the benign one"
+
+      - name: command-guardian dispatch smoke (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        env:
+          CLAUDE_PLUGIN_ROOT: ${{ github.workspace }}
+          CLAUDE_PLUGIN_DATA: ${{ runner.temp }}\native-hook-smoke
+          AGX_NO_FETCH: "1"
+        run: |
+          if (Test-Path -LiteralPath "hooks\bin\agx-windows-amd64.exe") {
+            Remove-Item -Force -LiteralPath "hooks\bin\agx-windows-amd64.exe"
+          }
+          $deny ='{"hook_event_name":"PreToolUse","session_id":"smoke","cwd":".","tool_name":"Bash","tool_input":{"command":"rm -rf /"}}'
+          $benign = '{"hook_event_name":"PreToolUse","session_id":"smoke","cwd":".","tool_name":"Bash","tool_input":{"command":"git status"}}'
+          $denyFile = Join-Path $env:RUNNER_TEMP 'native-hook-smoke-deny.json'
+          $benignFile = Join-Path $env:RUNNER_TEMP 'native-hook-smoke-benign.json'
+          Set-Content -NoNewline -Path $denyFile -Value $deny
+          Set-Content -NoNewline -Path $benignFile -Value $benign
+
+          $out = cmd /c "`"hooks\run-hook.cmd`" claude-code command-guardian --mode block < `"$denyFile`"" 2>&1 | Out-String
+          if ($LASTEXITCODE -ne 2) { Write-Host $out; throw "deny payload should exit 2, got $LASTEXITCODE" }
+
+          $out = cmd /c "`"hooks\run-hook.cmd`" claude-code command-guardian --mode block < `"$benignFile`"" 2>&1 | Out-String
+          if ($LASTEXITCODE -ne 0) { Write-Host $out; throw "benign payload should exit 0, got $LASTEXITCODE" }
+
+          Write-Host "PASS: dispatcher denies the destructive command and allows the benign one"

@@ -1,0 +1,14 @@
+# Directories the source digest skips: none of their code ships in a hook
+# binary, so an edit here must not stale the committed binaries.
+# One module-relative directory per line; hookprovenance.ExcludeList owns the
+# rules, and a closure test checks this list against what the binaries import.
+cmd/hooktool
+cmd/sourcedigest
+internal/conformance
+internal/hookbuild
+internal/hookcost
+internal/hookprovenance
+internal/hookspec/hookspectest
+internal/hookutil/hookutiltest
+internal/hosttest
+internal/settings/settingstest

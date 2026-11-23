@@ -1,0 +1,7 @@
+[
+    {
+        "rule": "skill-frontmatter-key",
+        "path": "skills/review/SKILL.md",
+        "key": "version"
+    }
+]

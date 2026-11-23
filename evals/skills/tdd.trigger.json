@@ -1,0 +1,125 @@
+{
+    "version": 2,
+    "queries": [
+        {
+            "id": "q-01",
+            "query": "We're about to add rate limiting to the API gateway. Use TDD for this: write the failing test for the request-count ceiling first, then implement the limiter until it passes.",
+            "should_trigger": true,
+            "split": "development"
+        },
+        {
+            "id": "q-02",
+            "query": "Add support for CSV export to the reporting service, and make sure it's covered with tests for the delimiter edge cases before you call it done.",
+            "should_trigger": true,
+            "split": "development"
+        },
+        {
+            "id": "q-03",
+            "query": "We finally tracked down why the retry loop double-charges customers on timeout; it's the shared counter not being reset. Write a regression test that reproduces the double charge, then apply the one-line fix.",
+            "should_trigger": true,
+            "split": "development"
+        },
+        {
+            "id": "q-04",
+            "query": "Implement the new password-reset token expiry using test-first development. Write the test describing the 15-minute cutoff, confirm it fails, then add the expiry check until the test passes.",
+            "should_trigger": true,
+            "split": "development"
+        },
+        {
+            "id": "q-05",
+            "query": "Add the missing null check for the shipping address parser; customers with a blank apartment field are crashing checkout right now. Write the failing test that reproduces the crash first, then patch the parser until it passes.",
+            "should_trigger": true,
+            "split": "development"
+        },
+        {
+            "id": "q-06",
+            "query": "Practice test-driven development while building the new discount-code validator. Draft the test cases for the stacking rules first, confirm they fail, then write the validator until every case passes.",
+            "should_trigger": true,
+            "split": "development"
+        },
+        {
+            "id": "q-07",
+            "query": "Users are intermittently getting logged out mid-session and we don't know why yet. Investigate the session store, trace the request path, and find the root cause before anyone touches the code.",
+            "should_trigger": false,
+            "split": "development"
+        },
+        {
+            "id": "q-08",
+            "query": "Across the whole platform our test coverage policy is inconsistent between teams. Define the org-wide test strategy: which layers need contract tests versus e2e, and set the quality gates for release qualification.",
+            "should_trigger": false,
+            "split": "development"
+        },
+        {
+            "id": "q-09",
+            "query": "Review the tests added in PR #482 for the checkout refactor. I want to know if the new suite actually covers the discount-stacking edge cases or just re-tests the happy path.",
+            "should_trigger": false,
+            "split": "development"
+        },
+        {
+            "id": "q-10",
+            "query": "The plan for the notification-retry rework was approved yesterday. Work through the plan's tasks in order and implement each one, starting with the queue consumer change.",
+            "should_trigger": false,
+            "split": "development"
+        },
+        {
+            "id": "q-11",
+            "query": "Build a verification skill for this repo that can launch the staging app, click through the signup flow, and capture screenshots proving the new onboarding screen renders correctly.",
+            "should_trigger": false,
+            "split": "development"
+        },
+        {
+            "id": "q-12",
+            "query": "Our checkout tests all pass, but I suspect most of them would still pass if the discount code were broken. Mutate the code and show me which assertions survive.",
+            "should_trigger": false,
+            "split": "development"
+        },
+        {
+            "id": "q-13",
+            "query": "Add multi-currency support to the invoicing service. Cover it with tests before you touch the calculation logic, especially the rounding rules for JPY.",
+            "should_trigger": true,
+            "split": "holdout"
+        },
+        {
+            "id": "q-14",
+            "query": "We know the cause of the duplicate webhook deliveries now: the idempotency key isn't checked before the retry. Write a test that reproduces the duplicate, then fix the idempotency check.",
+            "should_trigger": true,
+            "split": "holdout"
+        },
+        {
+            "id": "q-15",
+            "query": "We're adding a tiered-pricing calculator and want to do it properly this time. Use test-driven development: start with the failing tests for each tier boundary, then build the calculator until they all pass.",
+            "should_trigger": true,
+            "split": "holdout"
+        },
+        {
+            "id": "q-16",
+            "query": "parseDuration in the config loader has no tests at all. Add tests that pin down how it handles empty strings, negative values, and units it does not recognize, without changing the parser.",
+            "should_trigger": true,
+            "split": "holdout"
+        },
+        {
+            "id": "q-17",
+            "query": "Something changed in the nightly batch job about a week ago and now it's silently dropping roughly 2% of records without any error logged. I need to know which pipeline stage is eating them and why before we touch anything.",
+            "should_trigger": false,
+            "split": "holdout"
+        },
+        {
+            "id": "q-18",
+            "query": "Last week's sign-off greenlit splitting the monolith's billing module. Start pulling the billing package out per the plan's task list, and don't deviate from the sequencing that was already agreed.",
+            "should_trigger": false,
+            "split": "holdout"
+        },
+        {
+            "id": "q-19",
+            "query": "CI has been red on the checkout test suite since Tuesday's merge, and nobody has been able to say why yet. Dig into the failing runs, isolate which change introduced the break, and pin down the actual root cause before anyone attempts a fix.",
+            "should_trigger": false,
+            "split": "holdout"
+        },
+        {
+            "id": "q-20",
+            "query": "The verification skill we generated for the checkout app hasn't been reconciled with the product in months, and two of its driven steps click through screens that no longer exist. Audit it against the live app, fix the stale steps, and refresh the feature map so it drives the real flows again.",
+            "should_trigger": false,
+            "split": "holdout"
+        }
+    ]
+}

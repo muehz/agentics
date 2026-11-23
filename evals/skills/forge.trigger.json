@@ -1,0 +1,125 @@
+{
+    "version": 2,
+    "queries": [
+        {
+            "id": "q-01",
+            "query": "Agents in this repository keep editing generated files under gen/ even though our instructions say not to. Write a Claude Code hook that blocks any edit to that directory and tells the agent which source file to change instead.",
+            "should_trigger": true,
+            "split": "development"
+        },
+        {
+            "id": "q-02",
+            "query": "The install instructions in our README still describe the retired package manager. Reconcile that section against the current scripts and fix the command examples and links so a new contributor can follow it.",
+            "should_trigger": false,
+            "split": "development"
+        },
+        {
+            "id": "q-03",
+            "query": "Turn our repeated localization release procedure into an invocable Agentics skill. It should gather the target locales, check translation completeness, identify blockers, and produce a reviewable release checklist with clear entry and exit conditions.",
+            "should_trigger": true,
+            "split": "development"
+        },
+        {
+            "id": "q-04",
+            "query": "The new plugin repository is empty apart from its source folder. Set up the README, contribution guide, code of conduct, and issue templates so outside contributors have the basic project governance they need.",
+            "should_trigger": false,
+            "split": "development"
+        },
+        {
+            "id": "q-05",
+            "query": "Add an Agentics .instructions.md asset for database migration files. We need persistent rules scoped to that directory about reversible changes, compatibility during rolling deployments, and the evidence authors must leave for reviewers.",
+            "should_trigger": true,
+            "split": "development"
+        },
+        {
+            "id": "q-06",
+            "query": "The bot left six findings on the pull request that changes our review agent, and two checks are red. Triage which findings are real and which failures belong to this patch, then give me the ordered fixes and draft replies to the human reviewer.",
+            "should_trigger": false,
+            "split": "development"
+        },
+        {
+            "id": "q-07",
+            "query": "Build an MCP server for Agentics that exposes our local deployment catalog to assistant clients. Start with read-only tools to list environments and retrieve a deployment record, with explicit input schemas and useful errors for unknown identifiers.",
+            "should_trigger": true,
+            "split": "development"
+        },
+        {
+            "id": "q-08",
+            "query": "Review the branch diff for the MCP catalog service before we merge it. Focus on authorization mistakes, unbounded queries, and error paths; report concrete defects against the changed code with file references.",
+            "should_trigger": false,
+            "split": "development"
+        },
+        {
+            "id": "q-09",
+            "query": "Our existing Agentics release skill gives uneven results across projects. Design a structured evaluation with normal, ambiguous, boundary, and hostile requests, score the responses against the skill rubric, and show which criteria vary most before recommending revisions.",
+            "should_trigger": true,
+            "split": "development"
+        },
+        {
+            "id": "q-10",
+            "query": "The team has settled the requirements for an approval dashboard that displays agent runs. Write its solution spec: roles, visible states, data interfaces, failure behavior, and acceptance criteria. Implementation planning comes after the spec is approved.",
+            "should_trigger": false,
+            "split": "development"
+        },
+        {
+            "id": "q-11",
+            "query": "We finally finished the migration after several dead ends and two corrections to how you delegated. Review this session for lessons that would help future Agentics runs, separate durable guidance from one-off circumstances, and propose where the accepted lessons should go in our existing assets.",
+            "should_trigger": true,
+            "split": "development"
+        },
+        {
+            "id": "q-12",
+            "query": "In skills/release/SKILL.md the final checklist links to the old deployment guide. Replace that single link with docs/deployments.md and leave the workflow wording alone; this is just repairing the broken reference.",
+            "should_trigger": false,
+            "split": "development"
+        },
+        {
+            "id": "q-13",
+            "query": "Our Agentics research agent's charter lets it mix sourced findings with its own guesses and its handoff omits unanswered questions. Redesign those parts of the .agent.md contract, including how it records uncertainty and when it hands control back.",
+            "should_trigger": true,
+            "split": "holdout"
+        },
+        {
+            "id": "q-14",
+            "query": "Try this one prompt against the deployment skill: a user asks to deploy while the health endpoint is unavailable. I only need to see how one test assistant responds to that case, without a scenario suite or a scored evaluation report.",
+            "should_trigger": false,
+            "split": "holdout"
+        },
+        {
+            "id": "q-15",
+            "query": "Our AGENTS.md has grown to three hundred lines of rules that agents no longer follow, and half of them repeat what our lint already enforces. Rewrite it so it keeps only the rules agents need, points to where the code lives, and drops the rest.",
+            "should_trigger": true,
+            "split": "holdout"
+        },
+        {
+            "id": "q-16",
+            "query": "I am returning to the agent rollout after a week away. Reconstruct where we left off from the handoff, recent commits, and open issues, verify what is still current, and tell me the next unfinished step.",
+            "should_trigger": false,
+            "split": "holdout"
+        },
+        {
+            "id": "q-17",
+            "query": "Evaluate the existing Agentics instructions for API handlers across several representative and adversarial tasks. I want a rubric-based scorecard with mean scores, spread between cases, cited evidence, and a release or revision recommendation for the instruction asset.",
+            "should_trigger": true,
+            "split": "holdout"
+        },
+        {
+            "id": "q-18",
+            "query": "Write an operational runbook under runbooks/ for recovering the MCP service after a failed certificate rotation. Include how the on-call engineer confirms the failure, restores service, verifies recovery, and decides when to escalate.",
+            "should_trigger": false,
+            "split": "holdout"
+        },
+        {
+            "id": "q-19",
+            "query": "Before we leave this session, mine the debugging and review exchanges for repeatable improvements to Agentics. We wasted time on a mistaken assumption twice; identify whether that lesson belongs in an agent, a skill, or an instruction, and bring me the proposed asset changes for review.",
+            "should_trigger": true,
+            "split": "holdout"
+        },
+        {
+            "id": "q-20",
+            "query": "The MCP server started returning invalid JSON after yesterday's transport refactor. Trace a failing request through serialization, reproduce the fault, and identify the root cause before changing the implementation.",
+            "should_trigger": false,
+            "split": "holdout"
+        }
+    ]
+}

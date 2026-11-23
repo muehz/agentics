@@ -1,0 +1,125 @@
+{
+    "version": 2,
+    "queries": [
+        {
+            "id": "q-01",
+            "query": "We're planning the migration off the legacy inventory API and I want to sequence it so we update every caller before we ever delete the old endpoints. Before I sketch that plan, scan the engineering principles index and tell me which ones bear on ordering a migration like this.",
+            "should_trigger": true,
+            "split": "development"
+        },
+        {
+            "id": "q-02",
+            "query": "Before anyone designs anything, help me write down the problem we are solving with the new invoice export, who it is for, and what done looks like, so we can agree on the direction.",
+            "should_trigger": false,
+            "split": "development"
+        },
+        {
+            "id": "q-03",
+            "query": "I'm about to split this three-service refactor across two subagents and want their task briefs to carry the right constraints. Which engineering principles should each subagent's brief cite so they don't rediscover them independently?",
+            "should_trigger": true,
+            "split": "development"
+        },
+        {
+            "id": "q-04",
+            "query": "Here's our plan for cutting the monolith's billing module into its own deployable service. Poke holes in it - what assumptions about the shared database are shaky, and where does the rollout plan handwave over the cutover risk?",
+            "should_trigger": false,
+            "split": "development"
+        },
+        {
+            "id": "q-05",
+            "query": "I'm designing the boundary between the new event-bus consumer and the existing order-processing worker. Check this design against the principles index and tell me which principles actually change a decision here before I start writing the interface.",
+            "should_trigger": true,
+            "split": "development"
+        },
+        {
+            "id": "q-06",
+            "query": "Review the open pull request that touches our auth middleware for bugs and security issues before we merge it. I want concrete defects tied to specific lines, not general commentary on the approach.",
+            "should_trigger": false,
+            "split": "development"
+        },
+        {
+            "id": "q-07",
+            "query": "We're refactoring the checkout flow to remove the old discount-calculation path and I don't want to guess which practices apply. Give me the principles shortlist for this refactor and cite only the ones that would actually change something we do.",
+            "should_trigger": true,
+            "split": "development"
+        },
+        {
+            "id": "q-08",
+            "query": "The laziness-protocol principle file under references/ hasn't been touched since before we added the self-test convention. Author the rewritten principle text, including new self-test questions, so it matches the current format.",
+            "should_trigger": false,
+            "split": "development"
+        },
+        {
+            "id": "q-09",
+            "query": "I'm debugging an intermittent race condition in the job scheduler and want to make sure I'm not missing something obvious before I start changing code. Scan the principles index and tell me what applies to this kind of concurrency bug.",
+            "should_trigger": true,
+            "split": "development"
+        },
+        {
+            "id": "q-10",
+            "query": "I'm about to design this caching layer's interface and seams before writing any of the implementation. Help me work out the right abstraction boundary and where the coupling with the existing repository layer should live.",
+            "should_trigger": false,
+            "split": "development"
+        },
+        {
+            "id": "q-11",
+            "query": "I have a diff that removes the retry loop around the flaky downstream call. Run the self-test for the laziness-protocol principle against this diff so I know whether it actually satisfies the principle before I cite it in the PR description.",
+            "should_trigger": true,
+            "split": "development"
+        },
+        {
+            "id": "q-12",
+            "query": "Before we start building the new rate-limiter, I want someone to stress-test the design doc itself. Tell me what edge cases it's missing and where the throughput assumptions look unrealistic.",
+            "should_trigger": false,
+            "split": "development"
+        },
+        {
+            "id": "q-13",
+            "query": "We're designing the schema migration that adds tenant isolation to the reporting database. Before I write the migration scripts, which engineering principles from the index should inform how I sequence the schema changes and backfills?",
+            "should_trigger": true,
+            "split": "holdout"
+        },
+        {
+            "id": "q-14",
+            "query": "We keep arguing about what the team-permissions feature is even for. Capture the problem, the outcome we want, and what is out of scope so the team can agree on it before planning starts.",
+            "should_trigger": false,
+            "split": "holdout"
+        },
+        {
+            "id": "q-15",
+            "query": "I'm handing off the search-reindexing project to two subagents working in parallel on ingestion and query-side changes respectively. Before I write their briefs, which principles should both subagents be carrying so their work stays consistent?",
+            "should_trigger": true,
+            "split": "holdout"
+        },
+        {
+            "id": "q-16",
+            "query": "Review this branch diff that changes how we validate webhook signatures. I need a verdict on whether it's safe to merge, with specific findings against the changed lines.",
+            "should_trigger": false,
+            "split": "holdout"
+        },
+        {
+            "id": "q-17",
+            "query": "We're mid-migration from the old queue library to the new one and a subtle ordering bug just showed up in production. Before I start patching, tell me which principles in the index bear on debugging an issue that surfaced during a migration like this.",
+            "should_trigger": true,
+            "split": "holdout"
+        },
+        {
+            "id": "q-18",
+            "query": "The fix-root-causes principle file needs a rewrite because its self-test no longer matches how we actually diagnose incidents. Author the updated principle file and its self-test section.",
+            "should_trigger": false,
+            "split": "holdout"
+        },
+        {
+            "id": "q-19",
+            "query": "I'm sketching the architecture for a new notification fan-out service and want to avoid principles I'd only discover after the fact. Scan the index and shortlist what applies before I commit to the design.",
+            "should_trigger": true,
+            "split": "holdout"
+        },
+        {
+            "id": "q-20",
+            "query": "This billing module feels impossible to extend without breaking something else every time. Help me find the tightly-coupled seams and figure out where a deepening refactor would actually pay off.",
+            "should_trigger": false,
+            "split": "holdout"
+        }
+    ]
+}

@@ -1,0 +1,163 @@
+[
+    {
+        "tool": "gremlins",
+        "file": "hooks/go/internal/flow/close.go",
+        "mutator": "CONDITIONALS_BOUNDARY",
+        "source": "if len(header) > 0 && (header[len(header)-1] == \"missing\" || header[len(header)-1] == \"ambiguous\") {",
+        "reason": "A cat-file batch header has fields for an object or a nonempty requested name plus missing/ambiguous, so len(header) is never zero for a valid Git response. Both predicates take the same branch."
+    },
+    {
+        "tool": "gremlins",
+        "file": "hooks/go/internal/flow/close.go",
+        "mutator": "CONDITIONALS_BOUNDARY",
+        "source": "if err != nil || size < 0 || size >= len(out) {",
+        "reason": "This remaining boundary mutant changes size >= len(out) to size > len(out). Git batch framing includes the body plus a following newline, so a valid body size is strictly less than remaining output length. The separate zero-size boundary mutant is killed by the empty-blob regression."
+    },
+    {
+        "tool": "gremlins",
+        "file": "hooks/go/internal/flow/closedcache.go",
+        "mutator": "CONDITIONALS_BOUNDARY",
+        "source": "if dead := total - len(live); dead > 0 && 2*dead >= total {",
+        "reason": "The changed dead > 0 guard differs only with zero dead lines and total zero, including a blank-only cache. Compaction can replace ignored blank bytes with empty bytes and change private cache metadata, but both represent an empty hint cache: loaded entries, flow state, ledger, command output, exit status, and Git-spawn count are unchanged. Hint-file whitespace/identity is not a contract."
+    },
+    {
+        "tool": "gremlins",
+        "file": "hooks/go/internal/flow/artifact.go",
+        "mutator": "CONDITIONALS_BOUNDARY",
+        "source": "if run < 3 || (text[0] == '`' && bytes.IndexByte(text[run:], '`') >= 0) {",
+        "reason": "run has already consumed every leading backtick. For a backtick opener the remaining suffix is empty or starts with a different character, so IndexByte of backtick in that suffix can be -1 or positive but cannot be zero."
+    },
+    {
+        "tool": "gremlins",
+        "file": "hooks/go/internal/flow/located.go",
+        "mutator": "CONDITIONALS_NEGATION",
+        "source": "if abs, err := filepath.Abs(path); err == nil {",
+        "reason": "For a command inside a Git repository, the folder root is the absolute repository top and flowFolder therefore returns an absolute path; filepath.Abs returns that same path. Outside a repository appendLedger/readLedger have no ledger, so this normalization cannot change a stored consent key."
+    },
+    {
+        "tool": "gremlins",
+        "file": "hooks/go/internal/flow/ledger.go",
+        "mutator": "CONDITIONALS_NEGATION",
+        "source": "if writeErr != nil {",
+        "reason": "All production callers discard appendLedger return values. The mutation changes only which already-computed write/close error is returned after the identical write and close; ledger bytes and external command output/status remain unchanged."
+    },
+    {
+        "tool": "gremlins",
+        "file": "hooks/go/internal/flow/ledger.go",
+        "mutator": "CONDITIONALS_BOUNDARY",
+        "source": "if fields[0] > entries[entry] {",
+        "reason": "At equality the stored timestamp lookup stays the same. An empty timestamp may insert an absent entry with an empty value, but production consumers use ordinary map lookups (missing also yields empty) and never membership tests or map iteration, so no consent decision changes."
+    },
+    {
+        "tool": "gremlins",
+        "file": "hooks/go/internal/flow/lookup.go",
+        "mutator": "CONDITIONALS_BOUNDARY",
+        "source": "if len(unique) > 1 {",
+        "reason": "The preceding len(unique) == 1 branch already returns the single match. At this guard len(unique) can be zero or greater than one, so changing > 1 to >= 1 cannot change an outcome."
+    },
+    {
+        "tool": "gremlins",
+        "file": "hooks/go/internal/flow/lookup.go",
+        "mutator": "CONDITIONALS_BOUNDARY",
+        "source": "if localRows := rowsOf(filepath.Join(local, \"state.tsv\")); len(localRows) > 0 {",
+        "reason": "With zero local rows the mutation sorts the committed rows again. rowsOf already returns them in timestamp order with stable tie order, so the extra stable sort changes no rows or output."
+    },
+    {
+        "tool": "gremlins",
+        "file": "hooks/go/internal/flow/status.go",
+        "mutator": "CONDITIONALS_BOUNDARY",
+        "source": "if row[0] > revoked[row[4]] {",
+        "reason": "At equality the target timestamp lookup stays the same. An empty timestamp may insert an absent map key with an empty value, but consumers read revoked[target] with missing-as-empty semantics, so every approval comparison is unchanged."
+    },
+    {
+        "tool": "gremlins",
+        "file": "hooks/go/internal/flow/status.go",
+        "mutator": "CONDITIONALS_BOUNDARY",
+        "source": "if elapsed := statusEpoch(r[0]) - statusEpoch(dispatched); elapsed > 0 {",
+        "reason": "The mutation only adds an elapsed value of zero to the nonnegative accumulated latency. The numeric total and formatted metrics are identical."
+    },
+    {
+        "tool": "gremlins",
+        "file": "hooks/go/internal/flow/status.go",
+        "mutator": "CONDITIONALS_BOUNDARY",
+        "source": "if len(keys) > 0 {",
+        "reason": "With no evidence keys the mutated branch creates an unused closure and then iterates an empty key slice. No Git lookup, mismatch, state write, or output changes."
+    },
+    {
+        "tool": "gremlins",
+        "file": "hooks/go/internal/flow/evidence.go",
+        "mutator": "CONDITIONALS_BOUNDARY",
+        "source": "for offset := 0; offset < len(text); {",
+        "reason": "At offset == len(text), searching the empty suffix for the nonempty fixed key returns -1 and breaks. The additional final loop iteration changes no result."
+    },
+    {
+        "tool": "gremlins",
+        "file": "hooks/go/internal/flow/status.go",
+        "mutator": "CONDITIONALS_BOUNDARY",
+        "source": "for end := len(text); end > 0; end-- {",
+        "reason": "The additional end == 0 iteration passes the empty string to ParseFloat, which fails, before the function returns the same zero. A successful nonempty prefix has already returned in either version."
+    },
+    {
+        "tool": "gremlins",
+        "file": "hooks/go/internal/flow/status.go",
+        "mutator": "CONDITIONALS_BOUNDARY",
+        "source": "if start >= len(text) {",
+        "reason": "When start equals the input length the mutated path passes an empty slice to statusNumber, which returns zero just as the original early return does."
+    },
+    {
+        "tool": "gremlins",
+        "file": "hooks/go/internal/flow/status.go",
+        "mutator": "CONDITIONALS_BOUNDARY",
+        "source": "if end > len(text) {",
+        "reason": "When end equals the input length, assigning end to that same length is a no-op. Every substring and parsed numeric field remains identical."
+    },
+    {
+        "tool": "gremlins",
+        "file": "hooks/go/internal/flow/located.go",
+        "mutator": "CONDITIONALS_NEGATION",
+        "source": "if abs, err := filepath.Abs(target); err == nil {",
+        "reason": "When common is nonempty, the flow root is the absolute Git repository top and flowFolder returns an absolute target; filepath.Abs returns the identical path. With no common directory insideStore returns before this guard."
+    },
+    {
+        "tool": "stryker",
+        "file": ".github/tools/src/conformance/domains/docs/model-ids.ts",
+        "mutator": "ArithmeticOperator",
+        "source": "const name = rel.slice(rel.lastIndexOf(\"/\") + 1);",
+        "reason": "Including the slash and a preceding path character in name leaves both suffix checks unchanged. The fixed root and descendant paths all contain an interior slash."
+    },
+    {
+        "tool": "stryker",
+        "file": ".github/tools/src/conformance/domains/docs/model-ids.ts",
+        "mutator": "MethodExpression",
+        "source": "const name = rel.slice(rel.lastIndexOf(\"/\") + 1);",
+        "reason": "A full path and its basename end with the same .go and _test.go suffixes. The private name has no other reader."
+    },
+    {
+        "tool": "stryker",
+        "file": ".github/tools/src/conformance/domains/docs/model-ids.ts",
+        "mutator": "AssignmentOperator",
+        "source": "sources += 1;",
+        "reason": "A nonzero source count remains nonzero with decrements, and the sole observation is whether the count equals zero."
+    },
+    {
+        "tool": "stryker",
+        "file": ".github/tools/src/conformance/domains/docs/model-ids.ts",
+        "mutator": "CallExpression",
+        "source": "visit(rel);",
+        "reason": "on a stable checkout. The non-directory root path is hooks/go, which the caller skips because its basename does not end in .go. Recursion visits only directory entries, so removing the call does not change a report."
+    },
+    {
+        "tool": "stryker",
+        "file": ".github/tools/src/conformance/run.ts",
+        "mutator": "ConditionalExpression",
+        "source": "staleReviewExit && report.status !== 0 && report.staleReviewOnly",
+        "reason": "reportDomain only sets staleReviewOnly on the status-1 path. A status-0 result always carries false."
+    },
+    {
+        "tool": "stryker",
+        "file": ".github/tools/src/peer/env.ts",
+        "mutator": "MethodExpression",
+        "source": "PREFIXES.some((prefix) => name.startsWith(prefix))",
+        "reason": "PREFIXES contains exactly one private prefix, so some and every apply the same predicate to the same entry."
+    }
+]

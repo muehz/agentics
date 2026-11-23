@@ -1,0 +1,823 @@
+name: Validate
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  schedule:
+    - cron: "17 6 * * 1"
+  workflow_dispatch:
+    inputs:
+      cache:
+        description: Cache state for full validation
+        type: choice
+        options: [normal, cold]
+        default: normal
+      windows-test-concurrency:
+        description: Test files run at once on each Windows TypeScript shard
+        type: choice
+        options: ["2", "4"]
+        default: "2"
+      fresh:
+        description: Ignore the saved Stryker results and test every mutant
+        type: boolean
+        default: false
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event_name == 'pull_request' && format('pr-{0}', github.event.pull_request.number) || github.event_name == 'push' && format('push-{0}', github.ref) || format('run-{0}-{1}', github.event_name, github.run_id) }}
+  # A newer push to the same ref cancels the older run. The scope job diffs a push from the last commit whose run
+  # succeeded, so the newer run covers what the cancelled one left unvalidated.
+  cancel-in-progress: ${{ github.event_name == 'pull_request' || github.event_name == 'push' }}
+
+permissions:
+  contents: read
+
+# No cache-mode key: GitHub accepts only a literal there, and an expression
+# makes it reject the whole file, so no job runs. One literal cannot give PRs
+# read access and trusted main runs write access, so trigger defaults apply;
+# a cold manual run turns caching off through each setup step's cache input.
+
+jobs:
+  scope:
+    name: Setup / Classify changes
+    runs-on: ubuntu-slim
+    # actions: read lets the job list this workflow's runs to find the last validated commit.
+    permissions:
+      contents: read
+      actions: read
+    outputs:
+      mode: ${{ steps.classify.outputs.mode }}
+      complete: ${{ steps.classify.outputs.complete }}
+      base: ${{ steps.classify.outputs.base }}
+      head: ${{ steps.classify.outputs.head }}
+      merge: ${{ steps.classify.outputs.merge }}
+      reason: ${{ steps.classify.outputs.reason }}
+      areas: ${{ steps.classify.outputs.areas }}
+      shards: ${{ steps.classify.outputs.shards }}
+      ts_shards: ${{ steps.classify.outputs.ts_shards }}
+      race: ${{ steps.classify.outputs.race }}
+      effective_selection: ${{ steps.selection.outputs.effective_selection }}
+      ts_coverage: ${{ steps.ts-coverage.outputs.run }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 26.12.1
+
+      # A push is scoped from the last commit whose push run of this workflow succeeded. With no such commit, or a
+      # failed lookup, the output is empty and the push runs in full.
+      - name: Find the last validated commit
+        id: last
+        if: github.event_name == 'push'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: node .github/tools/src/scripts/ci-last-green.ts >> "$GITHUB_OUTPUT"
+
+      - name: Classify immutable Git diff
+        id: classify
+        env:
+          AGX_CI_LAST_GREEN: ${{ steps.last.outputs.sha }}
+        run: node .github/tools/src/scripts/ci-scope.ts --repo "${GITHUB_WORKSPACE}" --event "${GITHUB_EVENT_PATH}"
+
+      # Prove the complete raw selection before any consumer narrows its jobs.
+      # A missing or inconsistent job output restores the full schedule.
+      - name: Publish validated test selection
+        id: selection
+        env:
+          AGX_CI_CLASSIFY_OUTPUTS: ${{ toJSON(steps.classify.outputs) }}
+          AGX_CI_CLASSIFY_OUTCOME: ${{ steps.classify.outcome }}
+        run: node .github/tools/src/scripts/ci-scope.ts --schedule
+
+      # A push runs TypeScript coverage only when it touches one of these paths. Like a workflow paths filter, the
+      # check compares the push with its `before` commit. When that commit is missing (a new branch, or a force push
+      # that dropped it), coverage runs.
+      - name: Match the TypeScript coverage paths
+        id: ts-coverage
+        if: github.event_name == 'push'
+        env:
+          BEFORE: ${{ github.event.before }}
+        run: node .github/tools/src/scripts/ci-coverage-paths.ts
+
+  # The PR title and description become this repository's change record.
+  #
+  # Pull requests squash into `main` with the PR title as the commit subject and
+  # the PR description as the commit body, so whatever this job passes is what
+  # `git log` will hold forever. There is no CHANGELOG.md to fall back on: before
+  # this guard existed, two version-moving pull requests merged with a completely
+  # empty body and left no record of the change anywhere but the file it touched.
+  #
+  # It runs on the same pull request events as every other job here, drafts
+  # included. An edit to the title or description alone starts no run, so the
+  # check reads them as of the last push; push again after editing them.
+  pr-metadata:
+    name: PR / Title and description
+    runs-on: ubuntu-slim
+    if: github.event_name == 'pull_request'
+    # The body arrives in the event payload. Nothing is read from the API.
+    permissions: {}
+    outputs:
+      level: ${{ steps.markers.outputs.level }}
+    steps:
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 26.12.1
+
+      # The title becomes the squash commit subject. Treat it as data on fork PRs.
+      - name: Check the PR title
+        env:
+          PR_TITLE: ${{ github.event.pull_request.title }}
+        run: |
+          node <<'NODE'
+          const title = process.env.PR_TITLE || "";
+          const fail = (message) => {
+            console.log(`::error::${message} See CONTRIBUTING.md: Commit Message Convention.`);
+            process.exit(1);
+          };
+          const match = /^([a-z]+)(?:\(([^()\s]+)\))?(!)?: (\S.*)$/u.exec(title);
+          if (!match || /[\r\n]/u.test(title) || title !== title.trim()) {
+            fail("PR title must use <type>(<scope>)<!>: <summary>, with optional scope and !.");
+          }
+          const types = new Set(["feat", "fix", "refactor", "docs", "test", "chore", "style", "ci", "perf", "build", "revert"]);
+          if (!types.has(match[1])) {
+            fail("PR title has an unsupported Conventional Commits type.");
+          }
+          // The release workflow reads a head whose subject is
+          // `chore(release): vX.Y.Z [skip ci]` as an unreleased release commit
+          // and pushes its tag, so no pull request may be titled that way.
+          if (match[1] === "chore" && match[2] === "release") {
+            fail("The chore(release): title is reserved for the release commit that the release workflow makes.");
+          }
+          if (/(?:^| )\(\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?(?:\+[0-9A-Za-z.-]+)?\)$/u.test(match[4])) {
+            fail("PR title must not end with a version; the release workflow computes it.");
+          }
+          const summary = match[4];
+          if (!summary || summary !== summary.trim() || !/^\p{Ll}/u.test(summary) || summary.endsWith(".")) {
+            fail("PR title summary must start in lower case and have no trailing period or whitespace.");
+          }
+          console.log("PR title: Conventional Commits format accepted.");
+          NODE
+
+      # A BREAKING CHANGE footer in the description is a major release, so the
+      # title must carry the ! that makes it visible in review. The level
+      # printed here previews what the release workflow computes from this
+      # squash commit; level-parity.test.ts holds it equal to the real
+      # analyzer.
+      - name: Check the release markers
+        id: markers
+        env:
+          PR_TITLE: ${{ github.event.pull_request.title }}
+          PR_BODY: ${{ github.event.pull_request.body }}
+        run: |
+          node <<'NODE'
+          const title = process.env.PR_TITLE || "";
+          const body = process.env.PR_BODY || "";
+          const match = /^([a-z]+)(?:\(([^()\s]+)\))?(!)?: /u.exec(title);
+          const breaking = Boolean(match && match[3]);
+          // The commit parser's note pattern: any case, an optional leading
+          // run of whitespace, | and *, then a colon or same-line whitespace.
+          const marker = /^[\s|*]*BREAKING[ -]CHANGE(?::|[^\S\r\n])+/im.test(body);
+          if (marker && !breaking) {
+            console.log(
+              "::error::A BREAKING CHANGE footer needs a ! in the title, so a major release is visible in review. See CONTRIBUTING.md: Commit Message Convention.",
+            );
+            process.exit(1);
+          }
+          const type = match ? match[1] : "";
+          let level = "none";
+          if (breaking) level = "major";
+          else if (type === "feat") level = "minor";
+          else if (type === "fix" || type === "perf") level = "patch";
+          console.log(`Release level: ${level}`);
+          // validation-summary shows the level on the run page.
+          const output = process.env.GITHUB_OUTPUT;
+          if (output) {
+            require("node:fs").appendFileSync(output, `level=${level}\n`);
+          }
+          NODE
+
+      # PR_BODY is passed through the environment, never interpolated into the
+      # script. A description is attacker-controlled text on a fork PR, and
+      # `${{ }}` interpolation would paste it into the shell as code.
+      - name: Check the change description
+        env:
+          PR_BODY: ${{ github.event.pull_request.body }}
+          PR_AUTHOR: ${{ github.event.pull_request.user.login }}
+        run: |
+          node <<'NODE'
+          // Dependabot writes its own changelog-shaped body with no `## What
+          // changed` heading. The author, not the actor, decides: a
+          // maintainer re-running a Dependabot PR must not change the
+          // outcome.
+          if (process.env.PR_AUTHOR === "dependabot[bot]") {
+            console.log("Change description: skipped for Dependabot, whose body is generated.");
+            process.exit(0);
+          }
+
+          const fail = (message, hint) => {
+            console.log(`::error::${message} ${hint}`);
+            process.exit(1);
+          };
+
+          // Template scaffolding is HTML comments, and an untouched template
+          // would otherwise read as a full description.
+          const body = (process.env.PR_BODY || "").replace(/\r\n/g, "\n");
+          const stripped = body.replace(/<!--[\s\S]*?-->/g, "");
+          const lines = stripped.split("\n");
+
+          const HINT =
+            "The PR description is the changelog: it becomes the commit body on squash. See .github/PULL_REQUEST_TEMPLATE.md.";
+
+          let start = -1;
+          for (let i = 0; i < lines.length; i++) {
+            if (/^##\s+What changed\s*$/i.test(lines[i])) {
+              start = i + 1;
+              break;
+            }
+          }
+          if (start === -1) {
+            fail("This pull request has no `## What changed` heading.", HINT);
+          }
+
+          let end = lines.length;
+          for (let i = start; i < lines.length; i++) {
+            if (/^##\s/.test(lines[i])) {
+              end = i;
+              break;
+            }
+          }
+
+          const section = lines.slice(start, end).join("\n").trim();
+          if (!section) {
+            fail("`## What changed` is empty.", HINT);
+          }
+
+          console.log("Change description: `## What changed` is present and not empty.");
+          NODE
+
+  # Semantic-release writes the plugin version in the release commit, so a
+  # pull request that edits it by hand would be overwritten or, worse, skew the
+  # computed level. The job reads the manifests with `git show` and parses them
+  # as data: nothing from the checkout is executed. The trigger is
+  # `pull_request`, so a fork's token is read-only and holds no secrets.
+  pr-version-fields:
+    name: PR / Version fields
+    runs-on: ubuntu-slim
+    if: github.event_name == 'pull_request'
+    permissions:
+      contents: read
+    steps:
+      # The full history is needed so the base commit is present for `git show`.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 26.12.1
+
+      # BASE_SHA comes from the event payload and is validated before it
+      # reaches git; it is the baseline only when HEAD is not a merge commit.
+      # A manifest that is deleted or unparsable fails closed:
+      # skipping it would let a version edit hide behind a broken file.
+      - name: Reject a changed version field
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: node .github/tools/src/scripts/ci-version-fields.ts
+
+  # Claude Code and Antigravity are the surfaces for which this workflow runs
+  # provider-native manifest validators. The remaining surface checks enter
+  # through the semantic jobs below; install commands are not treated as
+  # validation, and this workflow does not pin noninteractive Cursor or VS Code
+  # installers. The native jobs supplement rather than replace those checks.
+  validate-claude-native:
+    name: Check / Claude plugin (strict)
+    runs-on: ubuntu-slim
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 26.12.1
+
+      # Node 26 ships npm 11. The repository requires npm 12 (engines.npm),
+      # and no Node release carries it yet, so install the pinned version.
+      - name: Install npm 12
+        run: npm install --global --ignore-scripts npm@12.2.1
+
+      - name: Install pinned toolchain
+        run: npm ci --ignore-scripts
+
+      - name: PR title guard regressions
+        env:
+          AGX_REQUIRED_INTERPRETERS: bash
+        run: node --test .github/tools/src/scripts/pr-title.test.ts
+
+      # Runs on ubuntu-slim; Node comes from setup-node above, not the image,
+      # so the slim image's own Node version is irrelevant here.
+      #
+      # Pinned deliberately: `latest` would let an upstream release turn a
+      # passing PR red without a change to this repo. Roll it forward in a
+      # requirements review, not implicitly.
+      #
+      # npm 12 runs no dependency install scripts unless they are allowed, and
+      # this package's postinstall fetches its native binary. The allowance
+      # names exactly this pinned package, so the policy still blocks every
+      # other install script. Keep the two versions in step.
+      - name: Claude Code strict plugin validation
+        run: npx --yes --allow-scripts=@anthropic-ai/claude-code@2.1.220 @anthropic-ai/claude-code@2.1.220 plugin validate . --strict
+
+  validate-antigravity-native:
+    name: Check / Antigravity plugin
+    runs-on: ubuntu-slim
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 26.12.1
+
+      # Pinned to the released Linux x64 tarball and verified by SHA-512 before
+      # extraction, never piped from curl to a shell. Roll forward deliberately
+      # in a requirements review.
+      - name: Install pinned agy
+        env:
+          AGY_VERSION: 1.5.13-5999302598852608
+          AGY_URL: https://storage.googleapis.com/antigravity-public/antigravity-cli/1.5.13-5999302598852608/linux-x64/cli_linux_x64.tar.gz
+          AGY_SHA512: 014b37387703acab1f47cd532c8bb60167a6a3537b0f9891de03f1b1ffa9614307bc83c4b2f7551273b0877d722716b0cd9e26782f6b2a50705db4f05e18c68f
+        run: node .github/tools/src/scripts/ci-antigravity-native.ts install
+
+      - name: Antigravity plugin validation
+        run: node .github/tools/src/scripts/ci-antigravity-native.ts check
+
+  # Agentics's repository rules (.github/tools/src/conformance), one leg per area, so a failure names what it broke. The legs need
+  # no selector: each is cheap and runs on every event. The hooks leg passes --fast, which leaves the module tests and
+  # their 90% coverage floor to go-suite. It still checks gofmt and vet, rebuilds the runtimes and checks their manifest,
+  # verifies the generated launcher, and runs the dispatch smoke. ts-suite runs typecheck and checks area boundaries.
+  #
+  # `$/` is GitHub's self-repository reference: it resolves the action from this repository at the exact commit the
+  # run is on, so the action source can never drift from the workflow that calls it. `$/` needs runner 2.336.0+
+  # (github.com only, not GHES). The hooks leg cross-builds all six platform targets, so it runs on ubuntu-latest; the
+  # other legs fit on ubuntu-slim. No rule reads Git history, so every leg takes a shallow checkout.
+  conformance:
+    name: Check / ${{ matrix.label }}
+    runs-on: ${{ matrix.runner }}
+    permissions:
+      contents: read
+    env:
+      GOTOOLCHAIN: local
+      CGO_ENABLED: "0"
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { domain: skills, label: Skills, runner: ubuntu-slim }
+          - { domain: manifests, label: Manifests, runner: ubuntu-slim }
+          - { domain: docs, label: Docs, runner: ubuntu-slim }
+          - { domain: repo, label: Repo, runner: ubuntu-slim }
+          - { domain: hooks, label: Hooks, runner: ubuntu-latest }
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Reject tracked hook binaries and Windows launcher
+        if: matrix.domain == 'hooks'
+        shell: bash
+        run: 'tracked=$(git ls-files -- hooks/bin bin/agx.exe) && test -z "$tracked"'
+
+      - uses: $/.github/actions/conformance
+        with:
+          domain: ${{ matrix.domain }}
+          skip-module-tests: ${{ matrix.domain == 'hooks' }}
+          cache: ${{ inputs.cache != 'cold' }}
+
+      # The examples run even when a skill-only change skips ts-suite. The action has already installed Node and the
+      # pinned npm dependencies for the skills domain.
+      - name: Test the forge MCP safe-write examples
+        if: matrix.domain == 'skills'
+        run: node --test .github/tools/src/skill-examples/mcp-safe-write.test.ts
+
+  # Every Go test: the hooks module tests (internal/flow, the agx launcher and the hook binary included) with the 90%
+  # statement-coverage floor, the same tests under -race, and the native fuzz targets. It runs whenever a change reaches
+  # the hooks module (ci-areas.ts: hooks or skills), on a pull request too; race and fuzz run only when the hooks
+  # themselves change. A manual dispatch adds macOS and Windows test legs. The Ubuntu test leg records the profile the
+  # Go coverage report reads.
+  go-suite:
+    name: Test / Go
+    runs-on: ${{ matrix.os }}
+    needs: [scope]
+    if: >-
+      ${{ !cancelled() && !(needs.scope.result == 'success'
+      && needs.scope.outputs.effective_selection == format('{0}|{1}|{2}|{3}|{4}|{5}|{6}|{7}|{8}|{9}',
+      needs.scope.outputs.mode, needs.scope.outputs.complete,
+      needs.scope.outputs.base || '', needs.scope.outputs.head || '',
+      needs.scope.outputs.merge || '', needs.scope.outputs.reason,
+      needs.scope.outputs.areas || '', needs.scope.outputs.shards,
+      needs.scope.outputs.ts_shards, needs.scope.outputs.race)
+      && needs.scope.outputs.shards == '[]') }}
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        # xcode-27 is GitHub's public-preview macOS 27 arm64 image. If the label changes, this leg stops queuing.
+        os: ${{ fromJSON(github.event_name == 'workflow_dispatch' && '["ubuntu-latest", "xcode-27", "windows-latest"]' || '["ubuntu-latest"]') }}
+        # Run every check unless the complete validated selection disables race.
+        check: >-
+          ${{ fromJSON(needs.scope.result == 'success'
+          && needs.scope.outputs.effective_selection == format('{0}|{1}|{2}|{3}|{4}|{5}|{6}|{7}|{8}|{9}',
+          needs.scope.outputs.mode, needs.scope.outputs.complete,
+          needs.scope.outputs.base || '', needs.scope.outputs.head || '',
+          needs.scope.outputs.merge || '', needs.scope.outputs.reason,
+          needs.scope.outputs.areas || '', needs.scope.outputs.shards,
+          needs.scope.outputs.ts_shards, needs.scope.outputs.race)
+          && needs.scope.outputs.race == 'false' && '["tests"]' || '["tests", "race", "fuzz"]') }}
+        exclude:
+          - { os: xcode-27, check: race }
+          - { os: xcode-27, check: fuzz }
+          - { os: windows-latest, check: race }
+          - { os: windows-latest, check: fuzz }
+    env:
+      GOTOOLCHAIN: local
+      # Every runner has sh and bash, so a Go test that cannot find either fails here instead of skipping.
+      AGX_REQUIRED_INTERPRETERS: sh,bash
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 26.12.1
+
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version-file: hooks/go/go.mod
+          cache: ${{ inputs.cache != 'cold' }}
+          cache-dependency-path: |
+            hooks/go/go.mod
+
+      # Build every target once per OS and compare the regenerated manifest
+      # with the tracked one. The test suite consumes these generated binaries.
+      - name: Build hook binaries and check reproducibility
+        if: matrix.check == 'tests'
+        run: |
+          make --version
+          make -B -C hooks/go build-all
+          git diff --exit-code -- hooks/ bin/
+
+      # The Ubuntu leg records a statement-coverage profile with every package
+      # in the denominator, for the floor below and the Go coverage report.
+      # macOS and Windows legs run uninstrumented. CGO stays off, as in the
+      # hook audit that used to run these tests.
+      - name: Test the hooks module
+        if: matrix.check == 'tests'
+        env:
+          CGO_ENABLED: "0"
+          COVERAGE: ${{ matrix.os == 'ubuntu-latest' && '1' || '' }}
+        run: node .github/tools/src/scripts/ci-hooks-test.ts test
+
+      - name: Enforce the 90% coverage floor
+        if: matrix.check == 'tests' && matrix.os == 'ubuntu-latest'
+        run: node .github/tools/src/scripts/ci-hooks-test.ts floor
+
+      - name: Upload the coverage profile
+        if: matrix.check == 'tests' && matrix.os == 'ubuntu-latest'
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: go-coverage-profile-hooks
+          path: ${{ runner.temp }}/coverage/hooks.out
+          if-no-files-found: error
+          retention-days: 1
+
+      - name: Race hook packages
+        if: matrix.check == 'race'
+        env:
+          CGO_ENABLED: "1"
+        run: go test -C hooks/go -count=1 -race ./...
+
+      - name: Fuzz shell parsing
+        if: matrix.check == 'fuzz'
+        run: go test -C hooks/go -count=1 ./internal/shellwords -run '^$' -fuzz '^FuzzParse$' -fuzztime=30s
+
+      - name: Fuzz provider normalization
+        if: matrix.check == 'fuzz'
+        run: go test -C hooks/go -count=1 ./internal/provider -run '^$' -fuzz '^FuzzNormalize$' -fuzztime=30s
+
+      # A failing fuzz target writes its crashing input under the package's
+      # testdata/fuzz directory, which dies with the runner. Exporting it is the
+      # only way the failure stays reproducible off a red run.
+      - name: Upload fuzz crashers
+        if: failure() && matrix.check == 'fuzz'
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: fuzz-crashers
+          path: hooks/go/**/testdata/fuzz/**
+          if-no-files-found: ignore
+          retention-days: 14
+
+  # The only job that runs the tools node:test suite, the typecheck of every npm workspace and the area boundaries,
+  # scoped by the areas a change touches (ci-areas.ts). Automatic validation runs on Ubuntu. The ts-coverage job
+  # handles instrumentation separately. Manual dispatch adds the macOS and sharded Windows test runs.
+  ts-suite:
+    name: Test / TypeScript
+    runs-on: ${{ matrix.os }}
+    needs: [scope]
+    if: >-
+      ${{ !cancelled() && !(needs.scope.result == 'success'
+      && needs.scope.outputs.effective_selection == format('{0}|{1}|{2}|{3}|{4}|{5}|{6}|{7}|{8}|{9}',
+      needs.scope.outputs.mode, needs.scope.outputs.complete,
+      needs.scope.outputs.base || '', needs.scope.outputs.head || '',
+      needs.scope.outputs.merge || '', needs.scope.outputs.reason,
+      needs.scope.outputs.areas || '', needs.scope.outputs.shards,
+      needs.scope.outputs.ts_shards, needs.scope.outputs.race)
+      && needs.scope.outputs.ts_shards == '[]') }}
+    permissions:
+      contents: read
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      max-parallel: 3
+      matrix:
+        os: ${{ fromJSON(github.event_name == 'workflow_dispatch' && '["ubuntu-latest", "xcode-27", "windows-latest"]' || '["ubuntu-latest"]') }}
+        workspace: >-
+          ${{ fromJSON(needs.scope.result == 'success'
+          && needs.scope.outputs.effective_selection == format('{0}|{1}|{2}|{3}|{4}|{5}|{6}|{7}|{8}|{9}',
+          needs.scope.outputs.mode, needs.scope.outputs.complete,
+          needs.scope.outputs.base || '', needs.scope.outputs.head || '',
+          needs.scope.outputs.merge || '', needs.scope.outputs.reason,
+          needs.scope.outputs.areas || '', needs.scope.outputs.shards,
+          needs.scope.outputs.ts_shards, needs.scope.outputs.race)
+          && needs.scope.outputs.ts_shards || '["ts-tools"]') }}
+        shard: [1, 2, 3, 4]
+        exclude:
+          - { os: ubuntu-latest, shard: 2 }
+          - { os: ubuntu-latest, shard: 3 }
+          - { os: ubuntu-latest, shard: 4 }
+          - { os: xcode-27, shard: 2 }
+          - { os: xcode-27, shard: 3 }
+          - { os: xcode-27, shard: 4 }
+          - { workspace: ts-tools, shard: 4 }
+    env:
+      WORKSPACE: ${{ matrix.workspace == 'ts-tools' && 'tools' || '' }}
+      # A test whose interpreter is listed fails instead of skipping when it is missing. The macOS image has no pwsh.
+      AGX_REQUIRED_INTERPRETERS: ${{ matrix.os == 'xcode-27' && 'sh,bash' || 'sh,bash,pwsh' }}
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 26.12.1
+
+      - name: Install npm 12
+        run: npm install --global --ignore-scripts npm@12.2.1
+
+      - name: Install the pinned TypeScript toolchain
+        run: npm ci --ignore-scripts
+
+      - name: Install the pinned release tooling
+        run: npm ci --ignore-scripts --prefix .github/release
+
+      # The migrated tools script tests build Go fixtures.
+      - name: Set up the TypeScript fixture toolchain
+        uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version-file: hooks/go/go.mod
+          cache: ${{ inputs.cache != 'cold' }}
+          cache-dependency-path: hooks/go/go.mod
+
+      - name: Typecheck every npm workspace
+        if: runner.os == 'Linux'
+        run: npm run test:typecheck
+
+      # A rule the CLI cannot evaluate prints a SKIP line; with the pinned toolchain installed above, none should.
+      - name: Check the area boundaries
+        if: runner.os == 'Linux'
+        run: npm run test:boundaries
+
+      - name: Test the TypeScript workspace
+        env:
+          RUNNER_LABEL: ${{ matrix.os }}
+          TEST_SHARD: ${{ matrix.shard }}
+          TEST_CONCURRENCY: ${{ inputs.windows-test-concurrency || '2' }}
+        run: node .github/tools/src/scripts/ci-ts-test.ts
+
+  # Coverage reporting, never on a pull request: the jobs live in validate-coverage.yml so a pull request shows one
+  # skipped entry. They gate nothing, so validation-summary does not wait on them. The caller's token caps the called
+  # jobs' tokens, so it holds code-quality: write for the two upload jobs; every called job narrows its own token.
+  coverage:
+    name: Coverage
+    needs: [scope, go-suite]
+    if: ${{ !cancelled() && github.event_name != 'pull_request' }}
+    permissions:
+      contents: read
+      code-quality: write
+    uses: ./.github/workflows/validate-coverage.yml
+    with:
+      cache: ${{ inputs.cache }}
+      go-suite-result: ${{ needs.go-suite.result }}
+      shards: >-
+        ${{ needs.scope.result == 'success'
+        && needs.scope.outputs.effective_selection == format('{0}|{1}|{2}|{3}|{4}|{5}|{6}|{7}|{8}|{9}',
+        needs.scope.outputs.mode, needs.scope.outputs.complete,
+        needs.scope.outputs.base || '', needs.scope.outputs.head || '',
+        needs.scope.outputs.merge || '', needs.scope.outputs.reason,
+        needs.scope.outputs.areas || '', needs.scope.outputs.shards,
+        needs.scope.outputs.ts_shards, needs.scope.outputs.race)
+        && needs.scope.outputs.shards || '["hooks"]' }}
+      ts-coverage: ${{ needs.scope.outputs.ts_coverage }}
+
+  # CHECK-ONLY, FOR EVERY PR. Fixing happens locally: the husky pre-commit
+  # hook (.github/husky/pre-commit -> lint-staged -> prettier) formats staged
+  # files before they ever reach a commit. This job is the backstop for the ways a
+  # hook can be missed — a contributor who never ran `npm install`, a
+  # `--no-verify` commit, a GitHub web-UI edit — so it must stay even though
+  # the hook does the real work.
+  #
+  # One job serves same-repo branches and forks alike: it holds a read-only
+  # token and never pushes, so checking out untrusted fork code (prettier
+  # loads config from the checkout) reaches nothing.
+  #
+  # `npm ci` installs the exact prettier the lockfile pins — the same binary
+  # the hook runs — so local and CI cannot disagree on a version.
+  # `--ignore-scripts` keeps dependency lifecycle scripts (including our own
+  # `prepare` -> install-hooks.ts) out of CI; prettier needs none of them.
+  #
+  # `--no-config` is NOT an option here: it also disables .editorconfig,
+  # which is where this repo's indent rules live, and 134 files would drift.
+  #
+  # .prettierignore is load-bearing. It excludes test fixtures and goldens the
+  # Go suites compare byte for byte — several are malformed JSON on purpose,
+  # and prettier ERRORS rather than warns on those.
+  format:
+    name: Check / Format
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 26.12.1
+
+      - name: Install npm 12
+        run: npm install --global --ignore-scripts npm@12.2.1
+
+      - name: Install pinned toolchain
+        run: npm ci --ignore-scripts
+
+      - name: Check formatting
+        run: |
+          if ! npm run format:check; then
+            echo "::error::Formatting drift. Run 'npm install' once to activate the pre-commit hook, or run 'npm run format' and commit the result."
+            exit 1
+          fi
+
+  # This job runs shellcheck once over every tracked *.sh file by glob (git
+  # ls-files '*.sh'), so a newly added script is covered by default without
+  # this job needing an edit (#545). It excludes the hook corpus's frozen
+  # copies of the retired Bash maintainer entrypoint and its stage check: they
+  # source libraries that no longer exist, so -x cannot follow them and
+  # shellcheck reports variables that only those libraries read. The other
+  # corpus scripts are still checked. -S style is the strictest severity; the
+  # scripts are clean at it today, so anything looser would bank no ground.
+  #
+  # shellcheck is pinned to a release tarball and checksum rather than taken
+  # from the runner image or apt. An image refresh must not turn a passing pull
+  # request red on its own. It installs under RUNNER_TEMP, so no step needs
+  # elevated privileges. shellcheck is not installed on the primary dev
+  # machine, so the pinned Docker image is the local repro.
+  shellcheck:
+    name: Check / Shellcheck
+    runs-on: ubuntu-slim
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 26.12.1
+
+      - name: Install pinned shellcheck
+        env:
+          SHELLCHECK_VERSION: v0.11.0
+          SHELLCHECK_SHA256: 8c3be12b05d5c177a04c29e3c78ce89ac86f1595681cab149b65b97c4e227198
+        run: node .github/tools/src/scripts/ci-shellcheck.ts install
+
+      - name: Check shell scripts
+        run: node .github/tools/src/scripts/ci-shellcheck.ts check
+
+  # GitHub runs each *.lock.yml, never the *.md source; gh-aw compiles one
+  # into the other. Nothing else ties the reviewed source to the executed
+  # YAML, so an edit to a source can silently strand its lock at an older
+  # compile. This happened once: nine commits changed release.md while the
+  # lock stayed at its pre-change compile. Recompile every gh-aw workflow
+  # here and fail on any change, including a lock that was never committed.
+  #
+  # gh-aw is pinned to the same release the lock headers record
+  # (compiler_version), downloaded as a bare binary and checksum-verified,
+  # like shellcheck above. The binary runs standalone, without gh dispatching
+  # it, and a drift check needs no GitHub auth: every action pin it would
+  # resolve is already cached in .github/aw/actions-lock.json.
+  gh-aw-lock-drift:
+    name: Check / gh-aw lock drift
+    runs-on: ubuntu-slim
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 26.12.1
+
+      - name: Install pinned gh-aw
+        env:
+          GH_AW_VERSION: v1.0.1
+          GH_AW_SHA256: 746d0b41d5fb87e2c010b8ac23a464436bb745ff89fbd19a3456431942c37652
+        run: node .github/tools/src/scripts/ci-gh-aw.ts install
+
+      - name: Recompile and diff the locks
+        run: node .github/tools/src/scripts/ci-gh-aw.ts check
+        env:
+          GH_AW_VERSION: v1.0.1
+
+  # The macOS and Windows hook checks in validate-manual.yml run only on manual dispatch, never on a pull request, a
+  # push to main or the weekly schedule. A dispatch is never scoped, so it runs them in full. validation-summary
+  # expects exactly that split.
+  manual:
+    name: Manual
+    needs: [scope]
+    if: ${{ !cancelled() && github.event_name == 'workflow_dispatch' }}
+    uses: ./.github/workflows/validate-manual.yml
+    with:
+      cache: ${{ inputs.cache }}
+
+  # Report-only mutation testing in validate-mutation.yml. No job fails because a mutant survived, and validation-summary
+  # does not wait on it. Manual dispatch only: a full run takes many runner hours.
+  mutation:
+    name: Mutation
+    if: github.event_name == 'workflow_dispatch'
+    uses: ./.github/workflows/validate-mutation.yml
+    with:
+      fresh: ${{ inputs.fresh }}
+
+  validation-summary:
+    name: Summary
+    runs-on: ubuntu-slim
+    needs:
+      [
+        scope,
+        pr-metadata,
+        pr-version-fields,
+        validate-claude-native,
+        validate-antigravity-native,
+        conformance,
+        go-suite,
+        ts-suite,
+        format,
+        shellcheck,
+        gh-aw-lock-drift,
+        manual,
+      ]
+    if: ${{ !cancelled() }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 26.12.1
+
+      - name: Report expected and actual jobs
+        env:
+          AGX_CI_NEEDS_JSON: ${{ toJSON(needs) }}
+        run: node .github/tools/src/scripts/ci-summary.ts --needs-env AGX_CI_NEEDS_JSON --event-name-env GITHUB_EVENT_NAME --summary-env GITHUB_STEP_SUMMARY

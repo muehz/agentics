@@ -1,0 +1,29 @@
+{
+    "$schema": "https://antigravity.google/schemas/v1/plugin.json",
+    "name": "agentics",
+    "displayName": "Agentics",
+    "version": "1.231.0",
+    "description": "Governed engineering workflows, pre-tool safety guardians, and 26 skills for planning, execution, review, and release gates.",
+    "suggestedPrompts": [
+        "Use Agentics skills to route this task before editing.",
+        "Use Agentics skills to review this design or implementation.",
+        "Use Agentics decompose to turn this approved design into implementation tasks."
+    ],
+    "author": {
+        "name": "Zachary Muehlich",
+        "url": "https://github.com/muehz"
+    },
+    "homepage": "https://github.com/muehz/agentics",
+    "repository": "https://github.com/muehz/agentics",
+    "license": "MIT",
+    "keywords": [
+        "agentics",
+        "governance",
+        "workflow",
+        "routing",
+        "validation",
+        "skills",
+        "hooks",
+        "engineering"
+    ]
+}

@@ -1,0 +1,7 @@
+[
+    {
+        "rule": "skill-frontmatter-key",
+        "path": "skills/recall/SKILL.md",
+        "key": "version"
+    }
+]

@@ -1,0 +1,7 @@
+[
+    {
+        "rule": "skill-frontmatter-key",
+        "path": "skills/threat-model/SKILL.md",
+        "key": "version"
+    }
+]

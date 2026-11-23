@@ -1,0 +1,26 @@
+{
+  "hookEventName": "PreToolUse",
+  "conversationId": "antigravity-session-1",
+  "turnId": "antigravity-turn-9",
+  "cwd": "/tmp/agentics-antigravity-fixture",
+  "toolCall": {
+    "name": "multi_replace_file_content",
+    "args": {
+      "TargetFile": "/tmp/agentics-antigravity-fixture/app.txt",
+      "ReplacementChunks": [
+        {
+          "TargetContent": "first old",
+          "ReplacementContent": "first new",
+          "StartLine": 1,
+          "EndLine": 1
+        },
+        {
+          "TargetContent": "second old",
+          "ReplacementContent": "second new",
+          "StartLine": 5,
+          "EndLine": 5
+        }
+      ]
+    }
+  }
+}

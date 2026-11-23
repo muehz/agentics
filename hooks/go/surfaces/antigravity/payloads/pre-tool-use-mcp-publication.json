@@ -1,0 +1,17 @@
+{
+  "hookEventName": "PreToolUse",
+  "conversationId": "antigravity-session-1",
+  "turnId": "antigravity-turn-4",
+  "cwd": "/tmp/agentics-antigravity-fixture",
+  "toolCall": {
+    "name": "mcp__github__create_pull_request",
+    "args": {
+      "owner": "muehz",
+      "repo": "agentics",
+      "title": "Ship it",
+      "head": "feature",
+      "base": "main",
+      "body": "Opened without draft: true."
+    }
+  }
+}

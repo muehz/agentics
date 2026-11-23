@@ -1,0 +1,176 @@
+name: agentics-release
+description: >
+  Run one subcommand of the TypeScript release command in .github/tools/src/release on
+  a pinned Node. Mirrors .github/actions/conformance; release.md is the only
+  consumer.
+# Call sites, so a workflow does not have to guess the input set:
+#
+# | Job            | command      | repo                     | Other inputs                                    |
+# | -------------- | ------------ | ------------------------ | ----------------------------------------------- |
+# | prepare        | check-commit | none                     | sha, tag, parent, author                        |
+# | prepare, stage | bundle       | target checkout          | sha, tag, out                                   |
+# | stage          | context      | ${{ github.repository }} | sha, tag, baseline, out: release-context, token |
+# | stage          | verify       | none                     | assets, tag                                     |
+# | stage          | stage        | ${{ github.repository }} | sha, tag, assets, notes, token, prerelease      |
+# | level          | resume-check | none                     | sha, published                                  |
+# | release        | resume-check | none                     | sha, published                                  |
+#
+# The two API commands take ${{ github.repository }}, never a literal slug.
+# bundle reads the selected target from repo and builds the verifier from checkout.
+# verify reads only the local assets directory and needs neither the checkout
+# nor a repo of either shape.
+inputs:
+  command:
+    description: bundle | context | verify | stage | resume-check | check-commit | asset-roster
+    required: true
+  checkout:
+    description: Path to the agentics checkout
+    required: false
+    default: ${{ github.workspace }}
+  repo:
+    description: >
+      OWNER/REPO for context and stage. A checkout path for bundle, which
+      falls back to the checkout input when this is empty.
+    required: false
+    default: ""
+  sha:
+    description: Full target SHA
+    required: false
+    default: ""
+  tag:
+    description: Release tag, with its v prefix
+    required: false
+    default: ""
+  parent:
+    description: >
+      Full SHA of the head the release commit was made on, for check-commit.
+      Empty skips the parent equality check.
+    required: false
+    default: ""
+  author:
+    description: Expected author and committer name of the release commit, for check-commit
+    required: false
+    default: ""
+  main-ref:
+    description: The fetched main ref bundle checks ancestry against
+    required: false
+    default: refs/remotes/origin/main
+  published:
+    description: File listing the published release tags, one per line, for resume-check
+    required: false
+    default: ""
+  assets:
+    description: Directory holding the ten release assets
+    required: false
+    default: ""
+  notes:
+    description: File holding the release body
+    required: false
+    default: ""
+  baseline:
+    description: >
+      File holding the baseline notes, for context. An empty file falls back
+      to a list of the squash subjects in the range.
+    required: false
+    default: ""
+  token:
+    description: >
+      GitHub token for context and stage. It reaches the command as
+      GH_TOKEN. bundle reads only the checkout and needs none.
+    required: false
+    default: ""
+  prerelease:
+    description: >
+      true publishes a non-latest pre-release and false a real release that
+      is marked latest. Only stage reads it, and it rejects any other value.
+    required: false
+    default: "false"
+  out:
+    description: Output directory for bundle and context
+    required: false
+    default: ""
+outputs:
+  mode:
+    description: analyze, resume, or released, as resume-check decided
+    value: ${{ steps.run.outputs.mode }}
+  resume_tag:
+    description: The tag of the head when the head is a release commit, as resume-check read it; empty otherwise
+    value: ${{ steps.run.outputs.resume_tag }}
+  release_id:
+    description: The numeric release id stage pinned
+    value: ${{ steps.run.outputs.release_id }}
+  published:
+    description: true when the release was already published, as a release or a pre-release, before this run
+    value: ${{ steps.run.outputs.published }}
+runs:
+  using: composite
+  steps:
+    # Node is pinned to the version release.md pins, by the same setup-node
+    # SHA, so every command runs on it: resume-check works before a job's own
+    # Node step, and prepare and stage stop using whatever Node the runner
+    # image carries. release.md calls this action more than once per job, so
+    # the first install records the version in GITHUB_ENV and a later call for
+    # that version skips setup-node, the way the Go cache marker below does.
+    - name: Set up Node
+      if: env.AGX_NODE_SETUP != '26.12.1'
+      uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+      with:
+        node-version: 26.12.1
+    - name: Record the Node setup
+      shell: bash
+      run: printf 'AGX_NODE_SETUP=%s\n' 26.12.1 >> "$GITHUB_ENV"
+    # Go is needed only by bundle. Reuse the toolchain installed for trusted
+    # conformance in prepare. The independent stage starts with a fresh build cache.
+    - name: Set up Go
+      if: inputs.command == 'bundle' && env.AGX_GO_CACHE_RESTORED != format('{0}/hooks/go/go.mod', inputs.checkout)
+      uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+      with:
+        go-version-file: ${{ inputs.checkout }}/hooks/go/go.mod
+        cache: false
+    # Recorded only when setup-go ran or was skipped for a bundle call. A
+    # command that never needed Go must not claim the cache was restored, or a
+    # later bundle call in the job would skip setup-go and find no toolchain.
+    - name: Record the restored cache
+      if: inputs.command == 'bundle'
+      shell: bash
+      env:
+        GO_MOD: ${{ inputs.checkout }}/hooks/go/go.mod
+      run: printf 'AGX_GO_CACHE_RESTORED=%s\n' "$GO_MOD" >> "$GITHUB_ENV"
+    - name: Build the hook verifier
+      shell: bash
+      env:
+        CHECKOUT: ${{ inputs.checkout }}
+        COMMAND: ${{ inputs.command }}
+      run: |
+        if [ "$COMMAND" = bundle ]; then
+          go build -C "$CHECKOUT/hooks/go" -trimpath -o "${RUNNER_TEMP}/hooktool" ./cmd/hooktool
+        fi
+    # Every input reaches this step through env, so no value is spliced into
+    # the shell as code. ci-release-run.ts, loaded from the checkout and not
+    # the workspace, turns that env into the release command's arguments and
+    # runs cli.ts from the same checkout. A command that produces an output
+    # writes it through writeOutputs in github.ts, which fills $GITHUB_OUTPUT
+    # itself.
+    - name: Run
+      id: run
+      shell: bash
+      env:
+        COMMAND: ${{ inputs.command }}
+        CHECKOUT: ${{ inputs.checkout }}
+        REPO: ${{ inputs.repo }}
+        SHA: ${{ inputs.sha }}
+        TAG: ${{ inputs.tag }}
+        MAIN_REF: ${{ inputs.main-ref }}
+        ASSETS: ${{ inputs.assets }}
+        NOTES: ${{ inputs.notes }}
+        BASELINE: ${{ inputs.baseline }}
+        OUT: ${{ inputs.out }}
+        PUBLISHED: ${{ inputs.published }}
+        PARENT: ${{ inputs.parent }}
+        AUTHOR: ${{ inputs.author }}
+        PRERELEASE: ${{ inputs.prerelease }}
+        # An input, not an inherited variable. GitHub does not document
+        # whether a run step inside a composite action sees the env of the
+        # step that called it, so the two API commands must not rely on it.
+        GH_TOKEN: ${{ inputs.token }}
+      run: node "$CHECKOUT/.github/tools/src/scripts/ci-release-run.ts"

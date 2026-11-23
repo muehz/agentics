@@ -1,0 +1,22 @@
+{
+    "name": "muehz",
+    "interface": {
+        "displayName": "muehz",
+        "description": "Agentics single-plugin marketplace for Codex."
+    },
+    "plugins": [
+        {
+            "name": "agentics",
+            "source": {
+                "source": "local",
+                "path": "./"
+            },
+            "policy": {
+                "installation": "AVAILABLE",
+                "authentication": "ON_INSTALL"
+            },
+            "category": "Engineering",
+            "description": "Workflows and guardrails for AI coding assistants, working toward an enterprise governance baseline. Provides pre-tool hooks and workflow routing."
+        }
+    ]
+}

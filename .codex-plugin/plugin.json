@@ -1,0 +1,37 @@
+{
+    "name": "agentics",
+    "version": "1.231.0",
+    "description": "Agentics workflows and guardrails for AI coding assistants, working toward an enterprise governance baseline. Codex support is skills-first and packages Agentics skills and conservative verified hooks.",
+    "author": {
+        "name": "Zachary Muehlich"
+    },
+    "repository": "https://github.com/muehz/agentics",
+    "license": "MIT",
+    "keywords": [
+        "agentics",
+        "governance",
+        "orchestration",
+        "workflow",
+        "hooks",
+        "skills",
+        "mcp",
+        "codex"
+    ],
+    "skills": "./skills/",
+    "hooks": "./hooks/hooks.codex.json",
+    "interface": {
+        "displayName": "Agentics",
+        "shortDescription": "Agentics skills, hooks, and governance for Codex.",
+        "longDescription": "Agentics packages cross-agent governance workflows for Codex, including native Agentics skills and conservative verified hooks. Codex uses native skills by default.",
+        "developerName": "Zachary Muehlich",
+        "category": "Engineering",
+        "capabilities": ["Read", "Write"],
+        "websiteURL": "https://github.com/muehz/agentics",
+        "defaultPrompt": [
+            "Use Agentics skills to route this task before editing.",
+            "Use Agentics skills to review this design or implementation.",
+            "Use Agentics decompose to turn this approved design into implementation tasks."
+        ],
+        "brandColor": "#2563EB"
+    }
+}

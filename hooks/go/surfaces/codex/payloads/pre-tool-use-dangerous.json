@@ -1,0 +1,17 @@
+{
+    "hook_event_name": "PreToolUse",
+    "session_id": "codex-session-1",
+    "turn_id": "codex-turn-3",
+    "cwd": "/tmp/agentics-codex-fixture",
+    "transcript_path": null,
+    "model": "gpt-5.6-sol",
+    "permission_mode": "default",
+    "tool_name": "Bash",
+    "tool_use_id": "codex-tool-use-3",
+    "tool_input": {
+        "command": "rm -rf /"
+    },
+    "unsupported_future_field": {
+        "preserve_failure_mode": "ignored"
+    }
+}

@@ -1,0 +1,15 @@
+{
+  "hookEventName": "PreToolUse",
+  "conversationId": "antigravity-session-1",
+  "turnId": "antigravity-turn-3",
+  "cwd": "/tmp/agentics-antigravity-fixture",
+  "workspacePaths": ["/tmp/agentics-antigravity-fixture"],
+  "toolCall": {
+    "name": "run_command",
+    "args": {
+      "CommandLine": "rm -rf /",
+      "Cwd": "/tmp/agentics-antigravity-fixture",
+      "WaitMsBeforeAsync": 5000
+    }
+  }
+}

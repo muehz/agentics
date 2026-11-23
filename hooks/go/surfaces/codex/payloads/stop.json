@@ -1,0 +1,11 @@
+{
+  "hook_event_name": "Stop",
+  "session_id": "codex-session-1",
+  "turn_id": "codex-turn-1",
+  "cwd": "/tmp/agentics-codex-fixture",
+  "transcript_path": "/tmp/agentics-codex-fixture/transcript.jsonl",
+  "last_assistant_message": "Codex hook fixture completed.",
+  "model": "gpt-5.5",
+  "permission_mode": "default",
+  "stop_hook_active": false
+}

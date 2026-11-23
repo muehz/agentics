@@ -1,0 +1,2 @@
+echo "$(echo $(git status))"
+rm x

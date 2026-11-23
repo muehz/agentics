@@ -1,0 +1,7 @@
+[
+    {
+        "rule": "skill-frontmatter-key",
+        "path": "skills/hillclimb/SKILL.md",
+        "key": "version"
+    }
+]

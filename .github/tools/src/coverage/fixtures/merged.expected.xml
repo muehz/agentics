@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE coverage SYSTEM "http://cobertura.sourceforge.net/xml/coverage-04.dtd">
+<coverage line-rate="0.60000000" branch-rate="0.50000000" version="" timestamp="0" lines-covered="3" lines-valid="5" branches-covered="1" branches-valid="2" complexity="0">
+  <sources>
+    <source>.</source>
+  </sources>
+  <packages>
+    <package name="typescript" line-rate="0.60000000" branch-rate="0.50000000" complexity="0">
+      <classes>
+        <class name="main.ts" filename=".github/tools/src/cli/main.ts" line-rate="0.50000000" branch-rate="0.50000000" complexity="0">
+          <methods/>
+          <lines>
+            <line number="10" hits="5" branch="true" condition-coverage="50% (1/2)"/>
+            <line number="11" hits="0" branch="false"/>
+          </lines>
+        </class>
+        <class name="sample.ts" filename=".github/tools/src/sample.ts" line-rate="0.50000000" branch-rate="0.00000000" complexity="0">
+          <methods/>
+          <lines>
+            <line number="1" hits="2" branch="false"/>
+            <line number="2" hits="0" branch="false"/>
+          </lines>
+        </class>
+        <class name="shared.ts" filename=".github/tools/src/shared.ts" line-rate="1.00000000" branch-rate="0.00000000" complexity="0">
+          <methods/>
+          <lines>
+            <line number="5" hits="1" branch="false"/>
+          </lines>
+        </class>
+      </classes>
+    </package>
+  </packages>
+</coverage>

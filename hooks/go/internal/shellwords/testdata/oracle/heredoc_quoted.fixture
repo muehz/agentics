@@ -1,0 +1,4 @@
+cat <<'EOF'
+git status
+EOF
+rm x

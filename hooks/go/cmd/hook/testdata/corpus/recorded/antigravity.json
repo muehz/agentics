@@ -1,0 +1,177 @@
+{
+  "command-guardian/allowlist-empty-entries-are-skipped": {
+    "exit": 0,
+    "stdout": "{\"decision\":\"allow\"}\n",
+    "stderr": ""
+  },
+  "command-guardian/allowlist-env-suppresses-context": {
+    "exit": 0,
+    "stdout": "{\"decision\":\"allow\"}\n",
+    "stderr": ""
+  },
+  "command-guardian/argv-extra-arg-rejected": {
+    "exit": 0,
+    "stdout": "{\"decision\":\"allow\"}\n",
+    "stderr": "antigravity: command-guardian: flag provided but not defined: -bogus\n"
+  },
+  "command-guardian/argv-no-args-rejected": {
+    "exit": 0,
+    "stdout": "{\"decision\":\"allow\"}\n",
+    "stderr": "antigravity: command-guardian: --mode must be block\n"
+  },
+  "command-guardian/argv-wrong-mode-rejected": {
+    "exit": 0,
+    "stdout": "{\"decision\":\"allow\"}\n",
+    "stderr": "antigravity: command-guardian: --mode must be block\n"
+  },
+  "command-guardian/context-info-only-threat": {
+    "exit": 0,
+    "stdout": "{\"decision\":\"allow\"}\n",
+    "stderr": ""
+  },
+  "command-guardian/deny-destructive": {
+    "exit": 0,
+    "stdout": "{\"decision\":\"deny\",\"reason\":\"1 blocking threat(s) detected: destructive_file_ops - Remove only specific, verified paths instead of the filesystem root. If the user still wants to delete the root, tell the user that agents cannot perform this action and ask them to run it manually in their own terminal.\"}\n",
+    "stderr": ""
+  },
+  "command-guardian/deny-mcp-publication": {
+    "exit": 0,
+    "stdout": "{\"decision\":\"deny\",\"reason\":\"1 blocking threat(s) detected: unsafe_publication - Set draft: true. If the user wants the pull request ready for review, tell them that agents cannot publish it as ready and ask them to mark it ready in the pull request UI or with 'gh pr ready'.\\n\\nSetting: policy.draft_prs. To allow this, ask the user to set it to false in .agentics/hooks.json in the repository root or ~/.agentics/hooks.json; an agent must not edit those files.\"}\n",
+    "stderr": ""
+  },
+  "command-guardian/empty-stdin": {
+    "exit": 0,
+    "stdout": "{\"decision\":\"allow\"}\n",
+    "stderr": "antigravity: malformed PreToolUse payload: payload is not valid JSON: EOF\n"
+  },
+  "command-guardian/env-mode-unknown-value-blocks": {
+    "exit": 0,
+    "stdout": "{\"decision\":\"deny\",\"reason\":\"command-guardian: COMMAND_GUARD_MODE=\\\"blcok\\\" is not warn or block; using block\\n\\n1 blocking threat(s) detected: destructive_file_ops - Remove only specific, verified paths instead of the filesystem root. If the user still wants to delete the root, tell the user that agents cannot perform this action and ask them to run it manually in their own terminal.\"}\n",
+    "stderr": ""
+  },
+  "command-guardian/env-mode-warn-overrides-config": {
+    "exit": 0,
+    "stdout": "{\"decision\":\"allow\"}\n",
+    "stderr": ""
+  },
+  "command-guardian/error-log-file-is-a-directory": {
+    "exit": 0,
+    "stdout": "{\"decision\":\"allow\"}\n",
+    "stderr": "\n🛡️  Tool Guardian: 1 threat(s) detected in 'Bash' invocation\n\n  CATEGORY                 SEVERITY   MATCH                                    SUGGESTION\n  --------                 --------   -----                                    ----------\n  command_reformulation    info       rm ./build                               In a git repo, prefer 'git clean -f <path>' for non-ignored untracked files; targeted rm remains appropriate for ignored build artifacts.\n\ncommand-guardian refused to append guard.log: a linked path component or a non-regular guard.log would redirect the write\n"
+  },
+  "command-guardian/malformed-payload": {
+    "exit": 0,
+    "stdout": "{\"decision\":\"allow\"}\n",
+    "stderr": "antigravity: malformed PreToolUse payload: payload is not valid JSON: unexpected EOF\n"
+  },
+  "command-guardian/pass-benign": {
+    "exit": 0,
+    "stdout": "{\"decision\":\"allow\"}\n",
+    "stderr": ""
+  },
+  "command-guardian/skip-env": {
+    "exit": 0,
+    "stdout": "{\"decision\":\"allow\"}\n",
+    "stderr": ""
+  },
+  "command-guardian/undecodable-tool-input-fails-closed": {
+    "exit": 0,
+    "stdout": "{\"decision\":\"deny\",\"reason\":\"command-guardian could not extract normalized input\"}\n",
+    "stderr": ""
+  },
+  "command-guardian/wrong-event-payload": {
+    "exit": 0,
+    "stdout": "{\"decision\":\"allow\"}\n",
+    "stderr": "antigravity: malformed PreToolUse payload: expected Antigravity PreToolUse payload\n"
+  },
+  "release-guardian/deny-configured-environment": {
+    "exit": 0,
+    "stdout": "{\"decision\":\"deny\",\"reason\":\"kubectl apply is a production-shaped deploy command (kubernetes_deploy); run /agentics:gate change ($agentics:gate change on Codex) and set the release record in the host environment\\n\\nSetting: policy.require_deploy_record. To allow this, ask the user to set it to false in .agentics/hooks.json in the repository root or ~/.agentics/hooks.json; an agent must not edit those files.\"}\n",
+    "stderr": ""
+  },
+  "release-guardian/deny-unauthorized": {
+    "exit": 0,
+    "stdout": "{\"decision\":\"deny\",\"reason\":\"kubectl apply is a production-shaped deploy command (kubernetes_deploy); run /agentics:gate change ($agentics:gate change on Codex) and set the release record in the host environment\\n\\nSetting: policy.require_deploy_record. To allow this, ask the user to set it to false in .agentics/hooks.json in the repository root or ~/.agentics/hooks.json; an agent must not edit those files.\"}\n",
+    "stderr": ""
+  },
+  "release-guardian/deny-unreadable-input": {
+    "exit": 0,
+    "stdout": "{\"decision\":\"deny\",\"reason\":\"release-guardian could not read normalized input; run /agentics:gate change ($agentics:gate change on Codex) and set the release record in the host environment\"}\n",
+    "stderr": ""
+  },
+  "release-guardian/pass-authorized": {
+    "exit": 0,
+    "stdout": "{\"decision\":\"allow\"}\n",
+    "stderr": ""
+  },
+  "release-guardian/pass-benign": {
+    "exit": 0,
+    "stdout": "{\"decision\":\"allow\"}\n",
+    "stderr": ""
+  },
+  "release-guardian/pass-unconfigured-environment": {
+    "exit": 0,
+    "stdout": "{\"decision\":\"allow\"}\n",
+    "stderr": ""
+  },
+  "secrets-guardian/allowlist-env": {
+    "exit": 0,
+    "stdout": "{\"decision\":\"allow\"}\n",
+    "stderr": ""
+  },
+  "secrets-guardian/argv-wrong-mode-rejected": {
+    "exit": 0,
+    "stdout": "{\"decision\":\"allow\"}\n",
+    "stderr": "antigravity: secrets-guardian: --mode must be block\n"
+  },
+  "secrets-guardian/deny-local-credential-read": {
+    "exit": 0,
+    "stdout": "{\"decision\":\"deny\",\"reason\":\"1 credential file read(s) blocked — this content would enter the transcript:\\n- /tmp/corpus/.env (dotenv, critical)\\nRead the committed template (.env.example) instead, or ask the user for the one value you need\"}\n",
+    "stderr": ""
+  },
+  "secrets-guardian/deny-mcp-credential-read": {
+    "exit": 0,
+    "stdout": "{\"decision\":\"deny\",\"reason\":\"1 credential file read(s) blocked — this content would enter the transcript:\\n- .env (dotenv, critical)\\nRead the committed template (.env.example) instead, or ask the user for the one value you need\"}\n",
+    "stderr": ""
+  },
+  "secrets-guardian/deny-powershell-call-reader": {
+    "exit": 0,
+    "stdout": "{\"decision\":\"deny\",\"reason\":\"1 credential file read(s) blocked — this content would enter the transcript:\\n- .env (dotenv, critical)\\nRead the committed template (.env.example) instead, or ask the user for the one value you need\"}\n",
+    "stderr": ""
+  },
+  "secrets-guardian/deny-powershell-qualified-reader": {
+    "exit": 0,
+    "stdout": "{\"decision\":\"deny\",\"reason\":\"1 credential file read(s) blocked — this content would enter the transcript:\\n- .env (dotenv, critical)\\nRead the committed template (.env.example) instead, or ask the user for the one value you need\"}\n",
+    "stderr": ""
+  },
+  "secrets-guardian/empty-stdin": {
+    "exit": 0,
+    "stdout": "{\"decision\":\"allow\"}\n",
+    "stderr": "antigravity: malformed PreToolUse payload: payload is not valid JSON: EOF\n"
+  },
+  "secrets-guardian/malformed-payload": {
+    "exit": 0,
+    "stdout": "{\"decision\":\"allow\"}\n",
+    "stderr": "antigravity: malformed PreToolUse payload: payload is not valid JSON: unexpected EOF\n"
+  },
+  "secrets-guardian/pass-benign": {
+    "exit": 0,
+    "stdout": "{\"decision\":\"allow\"}\n",
+    "stderr": ""
+  },
+  "secrets-guardian/pass-powershell-call-qualified-template": {
+    "exit": 0,
+    "stdout": "{\"decision\":\"allow\"}\n",
+    "stderr": ""
+  },
+  "secrets-guardian/post-event-is-ignored": {
+    "exit": 0,
+    "stdout": "{\"decision\":\"allow\"}\n",
+    "stderr": "antigravity: malformed PreToolUse payload: expected Antigravity PreToolUse payload\n"
+  },
+  "secrets-guardian/skip-env": {
+    "exit": 0,
+    "stdout": "{\"decision\":\"allow\"}\n",
+    "stderr": ""
+  }
+}

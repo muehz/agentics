@@ -1,0 +1,133 @@
+name: agentics-conformance
+description: >
+  Run the TypeScript conformance suite from a trusted Agentics checkout against a
+  named checkout. The auditor input names the checkout that supplies the suite
+  (.github/tools/src/conformance/cli.ts), its npm dependencies, and the hook verifier
+  built from its hooks/go module; the repo input names the checkout under
+  audit. A workflow that checks out more than one copy of the repository can
+  therefore audit one copy with code from another, and the audited checkout
+  never supplies auditor code. This local composite action is the shared CI
+  entry point (validate.yml, reminders.yml, and release.md
+  through its compiled release.lock.yml consume it).
+inputs:
+  repo:
+    description: Path to the agentics checkout to audit
+    required: false
+    default: ${{ github.workspace }}
+  auditor:
+    description: >
+      The trusted Agentics checkout that supplies the suite and the hook verifier.
+      Absolute, or relative to the workspace.
+    required: false
+    default: ${{ github.workspace }}
+  domain:
+    description: Conformance domain to run (all, manifests, hooks, skills, docs, repo)
+    required: false
+    default: all
+  allow-stale-review:
+    description: Report exclusively stale docs reviews through the stale-review output
+    required: false
+    default: "false"
+  cache:
+    description: Use setup-go dependency caching; set false to skip both restore and save
+    required: false
+    default: "true"
+  skip-module-tests:
+    description: >
+      Pass --fast, which leaves the hooks module tests and their coverage floor
+      out of the hooks domain. Only a caller that runs those tests elsewhere
+      sets it.
+    required: false
+    default: "false"
+outputs:
+  stale-review:
+    description: Whether docs failed exclusively because reviews are stale
+    value: ${{ steps.conformance.outputs.stale-review }}
+runs:
+  using: composite
+  steps:
+    # The suite runs on the Node version release.md pins, by the same
+    # setup-node SHA and the same AGX_NODE_SETUP marker as
+    # .github/actions/release. A job that calls both actions, or this one
+    # twice, installs Node once: the first install records the version in
+    # GITHUB_ENV and a later call for that version skips setup-node.
+    - name: Set up Node
+      if: env.AGX_NODE_SETUP != '26.12.1'
+      uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+      with:
+        node-version: 26.12.1
+    - name: Record the Node setup
+      shell: bash
+      run: printf 'AGX_NODE_SETUP=%s\n' 26.12.1 >> "$GITHUB_ENV"
+    # Go builds the trusted verifier from the auditor's hooks module and runs
+    # the audited checkout's hook checks. Both hook module definitions belong
+    # in the cache identity when the auditor and audited checkout differ.
+    # The pinned action separates caches by OS, architecture and toolchain.
+    #
+    # setup-go restores its cache with tar, and tar reports one error per file
+    # that an earlier restore in the job already extracted. The first restore
+    # records the auditor's hooks go.mod in AGX_GO_CACHE_RESTORED, the same
+    # marker .github/actions/release records for its checkout, and a later
+    # call for that go.mod skips setup-go. Go stays on PATH, because setup-go
+    # writes to GITHUB_PATH, and the module cache is already in place.
+    - name: Set up Go
+      if: env.AGX_GO_CACHE_RESTORED != format('{0}/hooks/go/go.mod', inputs.auditor)
+      uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+      with:
+        go-version-file: ${{ inputs.auditor }}/hooks/go/go.mod
+        cache: ${{ inputs.cache }}
+        cache-dependency-path: |
+          ${{ inputs.repo }}/hooks/go/go.mod
+          ${{ inputs.auditor }}/hooks/go/go.mod
+    - name: Record the restored cache
+      shell: bash
+      env:
+        GO_MOD: ${{ inputs.auditor }}/hooks/go/go.mod
+      run: printf 'AGX_GO_CACHE_RESTORED=%s\n' "$GO_MOD" >> "$GITHUB_ENV"
+    # The auditor check is the first step that touches the auditor, ahead of
+    # the dependency install. It stays inline because it guards the checkout
+    # that supplies the module the later steps run: an auditor without the
+    # TypeScript CLI cannot run the suite, so nothing from it runs at all.
+    - name: Check the auditor
+      shell: bash
+      env:
+        AGX_CONFORMANCE_AUDITOR: ${{ inputs.auditor }}
+      run: |
+        if [ ! -f "$AGX_CONFORMANCE_AUDITOR/.github/tools/src/conformance/cli.ts" ]; then
+          printf 'conformance action: %s has no .github/tools/src/conformance/cli.ts\n' "$AGX_CONFORMANCE_AUDITOR" >&2
+          exit 1
+        fi
+    # The install and run steps hand their inputs to ci-conformance.ts through
+    # the env and load it from the auditor, never from the audited workspace.
+    #
+    # Only the all and skills domains load the auditor's npm dependencies, so
+    # other domains make no npm call at all. The repository requires npm
+    # 12.2.1 or later and Node 26 bundles npm 11, so an older npm is replaced
+    # first. Both installs pass --ignore-scripts, and npm ci reads the
+    # auditor's lockfile, never the audited checkout's. An auditor that
+    # already holds node_modules is used as it is. The module imports only
+    # Node built-ins and the built-ins-only common.ts, because it runs before
+    # that install.
+    - name: Install the auditor's dependencies
+      shell: bash
+      env:
+        AGX_CONFORMANCE_AUDITOR: ${{ inputs.auditor }}
+        AGX_CONFORMANCE_DOMAIN: ${{ inputs.domain }}
+      run: node "$AGX_CONFORMANCE_AUDITOR/.github/tools/src/scripts/ci-conformance.ts" install
+    # The run builds the hook verifier from the auditor's hooks module, so a
+    # hooktool committed in the audited checkout never runs as the verifier,
+    # and then runs the CLI from the auditor, so the eval and conformance
+    # rules that judge the audited checkout come from the trusted copy. The
+    # audited checkout still runs its own code inside the audit (its Go
+    # module tests and its committed hook binary), which the auditor treats
+    # as untrusted.
+    - name: Run conformance
+      id: conformance
+      shell: bash
+      env:
+        AGX_CONFORMANCE_DOMAIN: ${{ inputs.domain }}
+        AGX_CONFORMANCE_REPO: ${{ inputs.repo }}
+        AGX_CONFORMANCE_AUDITOR: ${{ inputs.auditor }}
+        AGX_ALLOW_STALE_REVIEW: ${{ inputs.allow-stale-review }}
+        AGX_SKIP_MODULE_TESTS: ${{ inputs.skip-module-tests }}
+      run: node "$AGX_CONFORMANCE_AUDITOR/.github/tools/src/scripts/ci-conformance.ts" run

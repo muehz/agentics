@@ -1,0 +1,125 @@
+{
+    "version": 3,
+    "queries": [
+        {
+            "id": "q-01",
+            "query": "Our onboarding flow drops about a third of new users somewhere between signup and their first successful action, and nobody agrees on why. I want to lay out the problem, what success would actually look like, and the constraints we're operating under before anyone starts sketching a fix. Let's pin down scope and the open decisions first.",
+            "should_trigger": true,
+            "split": "development"
+        },
+        {
+            "id": "q-02",
+            "query": "We've agreed the notification service needs a retry queue with exponential backoff; that decision is final. Now I need the actual interface: the message schema, the retry policy parameters, failure handling, and the acceptance criteria a reviewer would check against. Write that up as the solution definition.",
+            "should_trigger": false,
+            "split": "development"
+        },
+        {
+            "id": "q-03",
+            "query": "Let's work #482 today. It's been sitting in the backlog for two sprints and I think it's finally time to move on it, but I haven't looked closely at what it actually needs yet.",
+            "should_trigger": false,
+            "split": "development"
+        },
+        {
+            "id": "q-04",
+            "query": "Checkout abandonment roughly doubled for mobile users this quarter, and product, design, and engineering each have a different theory. Before anyone proposes a fix, help me pin down what problem we are actually solving and how we will know it is solved.",
+            "should_trigger": true,
+            "split": "development"
+        },
+        {
+            "id": "q-05",
+            "query": "There is a typo in CONTRIBUTING.md: it says \"recieve\" in the section on pull requests. Fix the spelling, nothing else needs to change.",
+            "should_trigger": false,
+            "split": "development"
+        },
+        {
+            "id": "q-06",
+            "query": "We already have a plan.md for the search reindexing rollout with slices and an order of operations. Before we execute it I want someone to poke holes in it: unrealistic assumptions, missing edge cases, anything that smells like handwaving. Stress-test the plan as written.",
+            "should_trigger": false,
+            "split": "development"
+        },
+        {
+            "id": "q-07",
+            "query": "I wrote down a checklist for migrating the auth tokens: rotate the signing key, update the validators, backfill old sessions, then flip the feature flag. Someone should actually treat this as the plan and get the work moving instead of leaving it sitting in a doc.",
+            "should_trigger": true,
+            "split": "development"
+        },
+        {
+            "id": "q-08",
+            "query": "Users started reporting 500 errors on checkout right after this morning's deploy, and the error rate is climbing. I need someone to trace what's actually failing in the request path and find the root cause before we touch any code.",
+            "should_trigger": false,
+            "split": "development"
+        },
+        {
+            "id": "q-09",
+            "query": "Add cursor-based pagination to the admin users list so it stops timing out on tenants with more than fifty thousand accounts. Keep the existing filters working and make the page size configurable. This needs to actually happen this week.",
+            "should_trigger": true,
+            "split": "development"
+        },
+        {
+            "id": "q-10",
+            "query": "I've been wondering whether we should eventually let teams define their own alerting thresholds instead of the global defaults we ship today. I'm not asking anyone to build anything yet, I just want to think out loud about whether that's even a good direction before it goes anywhere.",
+            "should_trigger": false,
+            "split": "development"
+        },
+        {
+            "id": "q-11",
+            "query": "Make the CSV importer skip blank rows instead of rejecting the whole file. It is one change to the parser and its row validator, probably around seventy lines, and nothing public or stored changes. Get it written up so it can be built.",
+            "should_trigger": true,
+            "split": "development"
+        },
+        {
+            "id": "q-12",
+            "query": "Use intent for #611. The issue only says 'make onboarding emails smarter', and I want the problem, the people it serves, and what counts as success written down before anyone designs anything.",
+            "should_trigger": true,
+            "split": "development"
+        },
+        {
+            "id": "q-13",
+            "query": "Let's work #337 — I know the title says it's just a checklist for the cache eviction cleanup, but I haven't actually looked at whether that's still the right scope. Can we start on it properly?",
+            "should_trigger": false,
+            "split": "holdout"
+        },
+        {
+            "id": "q-14",
+            "query": "The design doc for the multi-region failover feature got approved in yesterday's review, assumptions and all. Now someone needs to turn that into a concrete sequence of implementation tasks with dependencies mapped out so we can start assigning work. Slice it into a delivery plan.",
+            "should_trigger": false,
+            "split": "holdout"
+        },
+        {
+            "id": "q-15",
+            "query": "Please implement issue #904 before the release cutoff on Friday. It's about adding a retry queue to the background worker, and I want it actually built, not just discussed again.",
+            "should_trigger": false,
+            "split": "holdout"
+        },
+        {
+            "id": "q-16",
+            "query": "I want teams to be able to set their own SLO targets instead of the global ones. Help me nail down the problem, who it is for, and what success looks like before anyone writes a design for it.",
+            "should_trigger": true,
+            "split": "holdout"
+        },
+        {
+            "id": "q-17",
+            "query": "I have a checklist from last quarter for decommissioning the old email service: notify downstream teams, redirect the DNS entries, archive the mailbox data, then shut down the servers. Treat that as the actual plan and get it moving, we're out of time to keep deferring it.",
+            "should_trigger": true,
+            "split": "holdout"
+        },
+        {
+            "id": "q-18",
+            "query": "The nightly batch job has been silently dropping about five percent of records for the past week and nobody noticed until finance flagged mismatched totals. I need someone to dig into where those records are getting lost and why, before we talk about any fix.",
+            "should_trigger": false,
+            "split": "holdout"
+        },
+        {
+            "id": "q-19",
+            "query": "Add a rate limiter in front of the public search endpoint so one client can't starve everyone else. Make it configurable per API key and have it degrade gracefully instead of hard failing. Get this in before the next traffic spike.",
+            "should_trigger": true,
+            "split": "holdout"
+        },
+        {
+            "id": "q-20",
+            "query": "Run intent on #870 before anyone builds the retry queue. I want the direction captured and challenged first: why the worker needs retries, what failure we are preventing, and what is explicitly out of scope.",
+            "should_trigger": true,
+            "split": "holdout"
+        }
+    ]
+}

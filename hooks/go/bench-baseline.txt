@@ -1,0 +1,10 @@
+# hook latency baseline, recorded 2026-11-20 on windows/amd64 with go1.27.4; compare with `make -C hooks/go bench`
+# recorded on wpc by an agent on a shared, heavily loaded Windows host at the user's request; the budget may be loose, so re-record it on an idle machine
+BenchmarkCommandGuardian	1	17542 ns/op
+BenchmarkReleaseGuardian	1	13057 ns/op
+BenchmarkSecretsGuardian	1	16896 ns/op
+BenchmarkSecretsGuardianWrite64KB	1	2347466 ns/op
+BenchmarkCommandGuardianSevenSegments	1	41232 ns/op
+BenchmarkCommandGuardianNonASCII	1	29214 ns/op
+BenchmarkScriptCall	1	8035323 ns/op
+BenchmarkScriptCallGrouped	1	17153236 ns/op

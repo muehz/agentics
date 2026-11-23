@@ -1,0 +1,118 @@
+#!/bin/sh
+# Provision through the installed dispatcher, then exec the verified native
+# image in the caller's directory with the original arguments and streams.
+unavailable() {
+  printf 'agx: %s\n' "${1:-cannot provision runtime; check the installed plugin and runtime cache}" >&2
+  exit 126
+}
+
+# Git Bash can receive a native backslash path in $0.
+case $0 in
+  *[/\\]*) agx_dir=${0%[/\\]*} ;;
+  *)       agx_dir=. ;;
+esac
+[ ! -L "$0" ] && [ ! -L "$agx_dir" ] || unavailable
+[ ! -L "$agx_dir/../hooks" ] || unavailable
+agx_hooks=$(CDPATH= cd -P -- "$agx_dir/../hooks" && pwd -P) || unavailable
+[ ! -L "$agx_hooks/run-hook.cmd" ] && [ -f "$agx_hooks/run-hook.cmd" ] || unavailable
+
+# Command substitution drops trailing LFs and some shells silently discard
+# NULs. Compare the parsed line against the original bytes before using it.
+agx_response=$(command -p mktemp "${TMPDIR:-/tmp}/agx-resolution.XXXXXXXX") || unavailable
+trap 'command -p rm -f -- "$agx_response"' 0
+trap 'exit 126' HUP INT TERM
+# Git for Windows keeps curl outside the POSIX system search path. Use the
+# native side of the same dispatcher there so both launchers share its cache.
+agx_windows=false
+case $(command -p uname -s) in
+  CYGWIN*|MINGW*|MSYS*) agx_windows=true ;;
+esac
+if "$agx_windows"; then
+  case ${SYSTEMROOT:-} in [A-Za-z]:\\*|[A-Za-z]:/*) ;; *) unavailable ;; esac
+  [ "$SYSTEMROOT" -ef '//?/GLOBALROOT/SystemRoot' ] || unavailable
+  agx_native_hooks=$(command -p cygpath -aw -- "$agx_hooks") || unavailable
+  case $agx_native_hooks in [A-Za-z]:\\*) ;; *) unavailable ;; esac
+  [ ! -L "$agx_hooks/fetch-hook.ps1" ] && [ -f "$agx_hooks/fetch-hook.ps1" ] || unavailable
+  (
+    CDPATH= cd -P -- "$agx_hooks" || exit 1
+    case "${PROCESSOR_ARCHITECTURE:-}:${PROCESSOR_ARCHITEW6432:-}:${PROCESSOR_IDENTIFIER:-}" in
+      *ARM64*|*ARMv8*) PROCESSOR_ARCHITECTURE=ARM64 ;;
+      *) PROCESSOR_ARCHITECTURE=AMD64 ;;
+    esac
+    export PROCESSOR_ARCHITECTURE
+    unset PROCESSOR_ARCHITEW6432 PROCESSOR_IDENTIFIER ERRORLEVEL
+    MSYS2_ARG_CONV_EXCL='*' "$SYSTEMROOT/System32/cmd.exe" /d /e:on /v:off /c '.\run-hook.cmd' --provision-only
+  ) </dev/null >"$agx_response" || unavailable
+else
+  BASH_ENV= ENV= command -p bash "$agx_hooks/run-hook.cmd" --provision-only </dev/null >"$agx_response" || unavailable
+fi
+IFS= read -r BIN <"$agx_response" || unavailable
+printf '%s\n' "$BIN" | command -p cmp -s - "$agx_response" || unavailable
+case $BIN in *"$(printf '\r')"*) unavailable ;; esac
+# UTF-16 has no representation for invalid UTF-8 scalars.
+command -p iconv -f UTF-8 -t UTF-16LE "$agx_response" >/dev/null 2>&1 || unavailable "invalid UTF-8 in provision-only response"
+
+if "$agx_windows"; then
+  case $BIN in [A-Za-z]:\\*|\\\\*) ;; *) unavailable ;; esac
+  BIN=$(command -p cygpath -u -- "$BIN") || unavailable
+fi
+case $BIN in /*) ;; *) unavailable ;; esac
+name=${BIN##*/}
+case $name in
+  agx-linux-amd64|agx-linux-arm64) cache_root=${XDG_CACHE_HOME:-${HOME:+$HOME/.cache}} ;;
+  agx-darwin-amd64|agx-darwin-arm64) cache_root=${HOME:+$HOME/Library/Caches} ;;
+  agx-windows-amd64.exe|agx-windows-arm64.exe)
+    cache_root=
+    if [ -n "${LOCALAPPDATA:-}" ]; then
+      cache_root=$(command -p cygpath -u -- "$LOCALAPPDATA") || unavailable
+    fi ;;
+  *) unavailable ;;
+esac
+if [ "$BIN" != "$agx_hooks/bin/$name" ]; then
+  case $cache_root in /*) ;; *) unavailable ;; esac
+  prefix=${cache_root%/}/agentics/
+  case $BIN in "$prefix"*/*/"$name") ;; *) unavailable ;; esac
+  entry=${BIN#"$prefix"}
+  version=${entry%%/*}
+  rest=${entry#*/}
+  digest=${rest%/*}
+  case $version in ''|.|..|*[!A-Za-z0-9.+-]*) unavailable ;; esac
+  case $digest in *[!0-9a-f]*) unavailable ;; esac
+  [ "${#digest}" = 64 ] || unavailable
+fi
+command -p rm -f -- "$agx_response" || unavailable
+trap - 0 HUP INT TERM
+
+if [ ! -f "$BIN" ]; then
+  printf 'agx: binary missing at %s\n' "$BIN" >&2
+  exit 126
+fi
+if [ ! -x "$BIN" ]; then
+  printf 'agx: cannot run %s: not executable\n' "$BIN" >&2
+  exit 126
+fi
+
+# sh runs a file the kernel rejects as a script, so an empty or truncated
+# binary would "succeed" without doing anything. Exec only a native image:
+# ELF, Mach-O (thin in either byte order, or universal) or PE. A file that
+# cannot be inspected is refused rather than run blind.
+if [ ! -s "$BIN" ]; then
+  printf 'agx: cannot run %s: empty file\n' "$BIN" >&2
+  exit 126
+fi
+agx_magic=$(command -p od -An -tx1 -N4 -- "$BIN" 2>/dev/null) || agx_magic=
+agx_hex=
+for agx_byte in $agx_magic; do
+  agx_hex=$agx_hex$agx_byte
+done
+if [ -z "$agx_hex" ]; then
+  printf 'agx: cannot run %s: cannot inspect the file\n' "$BIN" >&2
+  exit 126
+fi
+case $agx_hex in
+  7f454c46|cffaedfe|cefaedfe|feedfacf|feedface|cafebabe|bebafeca|4d5a*) ;;
+  *)
+    printf 'agx: cannot run %s: not an executable image\n' "$BIN" >&2
+    exit 126 ;;
+esac
+exec "$BIN" "$@"

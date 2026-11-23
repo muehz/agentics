@@ -1,0 +1,15 @@
+# CODEOWNERS for Agentics Repository (agentics)
+#
+# These owners will be automatically requested for review when someone opens
+# a pull request that modifies code in specific paths.
+#
+# More info: https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
+
+# Global owner for all files - the repository owner reviews everything
+* @zacharymuehlich
+
+# One entry per area. The owner is the same today; a separate owner for an area is a one-line change here.
+/hooks/ @zacharymuehlich
+/evals/ @zacharymuehlich
+/.github/tools/ @zacharymuehlich
+/skills/ @zacharymuehlich

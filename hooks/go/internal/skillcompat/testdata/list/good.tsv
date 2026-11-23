@@ -1,0 +1,2 @@
+path	tool	digest	reason	rule	note
+demo/guide.md	Bash	f80c35de4baf	destructive_git_ops	Command-guardian threat categories	the guide shows the command it warns against

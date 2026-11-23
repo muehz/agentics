@@ -1,0 +1,12 @@
+[
+    {
+        "rule": "skill-frontmatter-key",
+        "path": "skills/execute/SKILL.md",
+        "key": "version"
+    },
+    {
+        "rule": "skill-xref-mode",
+        "path": "skills/execute/references/standing-orders.md",
+        "key": "/agentics:execute on"
+    }
+]

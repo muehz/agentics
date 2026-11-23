@@ -1,0 +1,125 @@
+{
+    "version": 4,
+    "queries": [
+        {
+            "id": "q-01",
+            "query": "The three of us signed off on the migration plan yesterday and there are no open questions left. Go ahead and implement it now, starting with the schema migration task first.",
+            "should_trigger": true,
+            "split": "development"
+        },
+        {
+            "id": "q-02",
+            "query": "We have a resolved intent for the migration but no plan yet. Break it down into ordered, testable implementation tasks before anyone touches code.",
+            "should_trigger": false,
+            "split": "development"
+        },
+        {
+            "id": "q-03",
+            "query": "The plan lists four tasks that don't depend on each other: the API client, the CLI wrapper, the docs page, and the test harness. Run these four independent tasks in parallel through isolated subagents and report back when each wave finishes.",
+            "should_trigger": true,
+            "split": "development"
+        },
+        {
+            "id": "q-04",
+            "query": "Every task on the board is marked done and CI is green. Before we call this branch complete, verify the schema changes, run the completion checklist, and close the branch record.",
+            "should_trigger": false,
+            "split": "development"
+        },
+        {
+            "id": "q-05",
+            "query": "Here's one task, fully specified: change the default page size from 25 to 50 in src/api/paging.ts only, and it's done when npm test -- api/paging passes. Go ahead and implement it now.",
+            "should_trigger": true,
+            "split": "development"
+        },
+        {
+            "id": "q-06",
+            "query": "I want to add a single new feature, a rate limiter for the ingest endpoint. There's no plan document for this, just write the tests first before any implementation code.",
+            "should_trigger": false,
+            "split": "development"
+        },
+        {
+            "id": "q-07",
+            "query": "We're not sure whether the caching layer should use Redis or an in-process LRU cache. Race three approaches at this task in parallel and pick the best one after cross-judging the results.",
+            "should_trigger": true,
+            "split": "development"
+        },
+        {
+            "id": "q-08",
+            "query": "The catalog service PR is ready for merge. Review this PR diff for authorization mistakes, unbounded queries, and error handling gaps, and report concrete defects with file references.",
+            "should_trigger": false,
+            "split": "development"
+        },
+        {
+            "id": "q-09",
+            "query": "The refactor plan for the billing module got approved this morning. Execute it in pair mode: work through it with me here in this session and stop at the end of each wave so I can review before you continue.",
+            "should_trigger": true,
+            "split": "development"
+        },
+        {
+            "id": "q-10",
+            "query": "Before we commit to this plan, the assumptions about downstream consumers still feel shaky. Poke holes in it and make sure the plan holds up under adversarial questioning first.",
+            "should_trigger": false,
+            "split": "development"
+        },
+        {
+            "id": "q-11",
+            "query": "We approved the plan and started executing it yesterday, finishing wave 1 with the database changes. Continue executing the approved plan from wave 2 onward with the remaining independent tasks.",
+            "should_trigger": true,
+            "split": "development"
+        },
+        {
+            "id": "q-12",
+            "query": "We're still discussing whether this plan's approach to retries is even right. Don't start implementing anything yet, just help us keep debating the open questions.",
+            "should_trigger": false,
+            "split": "development"
+        },
+        {
+            "id": "q-13",
+            "query": "The brief for the CSV quoting change was approved this morning and it holds a single task. Run that task through implementation and review now.",
+            "should_trigger": true,
+            "split": "holdout"
+        },
+        {
+            "id": "q-14",
+            "query": "The spec for the approval dashboard was just signed off. Slice it into vertical delivery tasks with dependencies noted, but hold off on running anything until that breakdown is reviewed.",
+            "should_trigger": false,
+            "split": "holdout"
+        },
+        {
+            "id": "q-15",
+            "query": "The plan is approved but its three tasks touch the same config file in sequence, so they can't run at once. Execute it one task after another instead of trying to parallelize them.",
+            "should_trigger": true,
+            "split": "holdout"
+        },
+        {
+            "id": "q-16",
+            "query": "We're partway through implementing the migration and want a lightweight checkpoint on the data before continuing. Check the schema integrity and output quality now, this isn't a completion review.",
+            "should_trigger": false,
+            "split": "holdout"
+        },
+        {
+            "id": "q-17",
+            "query": "The approved plan lists just this one task: a small config-file change, with an explicit go-ahead from the team. Execute it; one implementer and one reviewer are plenty for something this small.",
+            "should_trigger": true,
+            "split": "holdout"
+        },
+        {
+            "id": "q-18",
+            "query": "We have a rough idea about consolidating our logging pipelines but haven't captured the problem, scope, or constraints yet. Help me work through what we're actually trying to solve before anything gets planned.",
+            "should_trigger": false,
+            "split": "holdout"
+        },
+        {
+            "id": "q-19",
+            "query": "The decomposed plan has five independent tasks ready to go with an explicit go-ahead from the lead. Dispatch parallel subagents across all five and fall back to one task at a time only where dependencies show up.",
+            "should_trigger": true,
+            "split": "holdout"
+        },
+        {
+            "id": "q-20",
+            "query": "The export tests started failing this morning and nobody knows why yet. Figure out what is actually breaking before anyone changes any code.",
+            "should_trigger": false,
+            "split": "holdout"
+        }
+    ]
+}

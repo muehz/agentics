@@ -1,0 +1,113 @@
+name: Reminders
+
+# Scheduled reminders that open tracking issues. Deliberately separate from PR
+# CI: dates never break pull requests. Each job runs on its own schedule, and a
+# manual dispatch runs both.
+
+on:
+  schedule:
+    - cron: "0 9 * * 1" # Surface review: 09:00 UTC every Monday
+    - cron: "0 9 1 * *" # Third-party review: 09:00 UTC on the first day of each month
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  # Weekly staleness check on the upstream review ledger
+  # (docs/surfaces/README.md). When any surface's requirements review exceeds
+  # the 30-day budget, opens (or comments on) a tracking issue.
+  check-ledger-staleness:
+    name: Check Upstream Review Ledger Staleness
+    runs-on: ubuntu-slim
+    if: github.event_name == 'workflow_dispatch' || github.event.schedule == '0 9 * * 1'
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      # The conformance suite's docs domain owns the ledger rules; the max-age
+      # knob arms its staleness check exactly as the retired bash harness did.
+      # Only typed stale-review failures open an issue. Setup, audit, and
+      # structural failures remain failed runs; detail stays in the step log.
+      - name: Run staleness check
+        id: staleness
+        env:
+          AGX_LEDGER_MAX_AGE_DAYS: "30"
+        uses: $/.github/actions/conformance
+        with:
+          domain: docs
+          allow-stale-review: "true"
+
+      - name: Open or update tracking issue
+        if: steps.staleness.outputs.stale-review == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: node .github/tools/src/scripts/ci-reminders.ts
+
+  open-review-issue:
+    name: Open Monthly Third-Party Review Issue
+    runs-on: ubuntu-slim
+    if: github.event_name == 'workflow_dispatch' || github.event.schedule == '0 9 1 * *'
+    concurrency:
+      group: third-party-review-reminder
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Open monthly tracking issue
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        with:
+          script: |
+            const fs = require('node:fs');
+            const month = new Date().toISOString().slice(0, 7);
+            const title = `Third-party reference repos review — ${month}`;
+            const issues = await github.paginate(github.rest.issues.listForRepo, {
+              ...context.repo, state: 'all', per_page: 100,
+            });
+            const existing = issues.find(issue => !issue.pull_request && issue.title === title);
+            if (existing) {
+              core.info(`Monthly review already tracked in #${existing.number} (${existing.state}).`);
+              return;
+            }
+
+            const notices = fs.readFileSync('THIRD_PARTY_NOTICES.md', 'utf8');
+            const sources = [...notices.matchAll(/^Source repository: <https:\/\/github\.com\/([\w.-]+\/[\w.-]+)>/gm)]
+              .map(match => match[1]);
+            const nested = [...notices.matchAll(/^\*\*Note on `([\w.-]+\/[\w.-]+)`/gm)]
+              .map(match => match[1]);
+            const repos = [...new Set([...sources, ...nested])].sort();
+            if (repos.length === 0) {
+              throw new Error('No reference repositories found in THIRD_PARTY_NOTICES.md');
+            }
+            const root = `${process.env.GITHUB_SERVER_URL}/${context.repo.owner}/${context.repo.repo}`;
+            const source = `${root}/blob/${context.sha}`;
+            const body = [
+              `Review the third-party reference repositories for ${month} for improvements worth bringing into Agentics.`,
+              '',
+              `Source list and provenance: [THIRD_PARTY_NOTICES.md](${source}/THIRD_PARTY_NOTICES.md).`,
+              `Evaluate fit against the [Agentics charter](${source}/docs/CHARTER.md).`,
+              '',
+              '## Repository checklist',
+              '',
+              ...repos.map(repo => `- [ ] [${repo}](https://github.com/${repo})`),
+              '',
+              'For cursor/plugins, focus on pstack, the plugin referenced by Agentics.',
+              '',
+              '## Review playbook',
+              '',
+              '1. Find the previous monthly review (including closed issues). Compare commits, releases, and relevant source changes since its recorded revisions. For a first review, use the provenance revisions where available and record the current upstream revision.',
+              '2. For each repo, record the revision reviewed, links to useful upstream changes, the Agentics assets affected, and an adopt, defer, or skip recommendation with a reason. Record no relevant changes explicitly, and leave inaccessible repos unchecked with the blocker noted.',
+              '3. Check license and attribution requirements before recommending copied or adapted material. Source-available document skills excluded by THIRD_PARTY_NOTICES.md remain excluded.',
+              '4. Create and link separate follow-up issues for worthwhile improvements, with the evidence, proposed scope, and acceptance checks. Link existing follow-ups instead of duplicating them. Adoption follows the normal Agentics intent and review process.',
+              '5. Close this issue once every repo has a recorded disposition; carry unresolved blockers into the next review.',
+              '',
+              '## Findings and follow-ups',
+              '',
+              '| Repository | Reviewed revision | Upstream evidence | Agentics assets affected | License / attribution | Recommendation and reason | Follow-up |',
+              '| --- | --- | --- | --- | --- | --- | --- |',
+              '',
+              `Workflow run: ${root}/actions/runs/${context.runId}`,
+            ].join('\n');
+            const { data: issue } = await github.rest.issues.create({ ...context.repo, title, body });
+            core.info(`Created monthly review #${issue.number}.`);

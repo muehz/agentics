@@ -1,0 +1,7 @@
+[
+    {
+        "rule": "skill-frontmatter-key",
+        "path": "skills/gate/SKILL.md",
+        "key": "version"
+    }
+]

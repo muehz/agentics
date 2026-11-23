@@ -1,0 +1,125 @@
+{
+    "version": 2,
+    "queries": [
+        {
+            "id": "q-01",
+            "query": "I just finished the feature branch for the payments retry logic. Run the completion check so I have an artifact before I open the PR.",
+            "should_trigger": true,
+            "split": "development"
+        },
+        {
+            "id": "q-02",
+            "query": "Review this diff for bugs and security issues before we consider merging. Focus on concrete defects in the changed code, like authorization mistakes or unbounded queries.",
+            "should_trigger": false,
+            "split": "development"
+        },
+        {
+            "id": "q-03",
+            "query": "Before I merge this branch, is it actually ready? Please run whatever verification produces a record I can point to.",
+            "should_trigger": true,
+            "split": "development"
+        },
+        {
+            "id": "q-04",
+            "query": "The plan for the caching layer is approved. Go ahead and implement the remaining tasks from the plan; we already know what to build.",
+            "should_trigger": false,
+            "split": "development"
+        },
+        {
+            "id": "q-05",
+            "query": "We're deploying to production tomorrow morning. Run the release gate now so we have the artifact ready ahead of the change window.",
+            "should_trigger": true,
+            "split": "development"
+        },
+        {
+            "id": "q-06",
+            "query": "CI has been failing intermittently on the integration suite since last night's merge. Find the root cause before we touch any code.",
+            "should_trigger": false,
+            "split": "development"
+        },
+        {
+            "id": "q-07",
+            "query": "I need to touch the production load balancer config for this infra change. Prepare the change record before I submit it for approval.",
+            "should_trigger": true,
+            "split": "development"
+        },
+        {
+            "id": "q-08",
+            "query": "This PR has three failing checks and a growing list of review comments. Work through them and tell me which are real.",
+            "should_trigger": false,
+            "split": "development"
+        },
+        {
+            "id": "q-09",
+            "query": "I'm partway through the schema migration and want to keep moving without losing track of data integrity. Give me a quick mid-work checkpoint on the schema and the data so far before I continue to the next table.",
+            "should_trigger": true,
+            "split": "development"
+        },
+        {
+            "id": "q-10",
+            "query": "Just curious, roughly where does this branch stand right now? No need to verify or wrap anything up, I just want a sense of progress.",
+            "should_trigger": false,
+            "split": "development"
+        },
+        {
+            "id": "q-11",
+            "query": "The authentication rework has been sitting for two days and everyone keeps telling me it's basically finished. Tell me whether it's actually done, with evidence I can check for myself.",
+            "should_trigger": true,
+            "split": "development"
+        },
+        {
+            "id": "q-12",
+            "query": "The gate run on my branch flagged an Important finding in src/retry.ts. Patch the code so the finding goes away.",
+            "should_trigger": false,
+            "split": "development"
+        },
+        {
+            "id": "q-13",
+            "query": "I'm done with this piece of work. Close it out for me here, however that's supposed to happen at this stage — I just want it wrapped up properly.",
+            "should_trigger": true,
+            "split": "holdout"
+        },
+        {
+            "id": "q-14",
+            "query": "PR #301 is approved and green. Merge it into main for me now.",
+            "should_trigger": false,
+            "split": "holdout"
+        },
+        {
+            "id": "q-15",
+            "query": "I fixed the finding the gate raised on the retry branch. Run the gate again so I can open the draft PR.",
+            "should_trigger": true,
+            "split": "holdout"
+        },
+        {
+            "id": "q-16",
+            "query": "We're about to start building the bulk export feature and I want to do this properly. Write the tests for the expected behavior first, before any of us touches the implementation code.",
+            "should_trigger": false,
+            "split": "holdout"
+        },
+        {
+            "id": "q-17",
+            "query": "This is a production infrastructure change to the DNS routing rules. Prepare the change record we'll need for the change advisory board.",
+            "should_trigger": true,
+            "split": "holdout"
+        },
+        {
+            "id": "q-18",
+            "query": "The outage from last night is fully resolved and traffic has been steady for hours. Write up the blameless postmortem, covering the timeline, contributing factors, and the follow-up actions we owe the team.",
+            "should_trigger": false,
+            "split": "holdout"
+        },
+        {
+            "id": "q-19",
+            "query": "This batch job has been running for a while and I want to make sure nothing has silently gone sideways before I keep going. Do a quick checkpoint on where things stand so far before I move on to the next stage.",
+            "should_trigger": true,
+            "split": "holdout"
+        },
+        {
+            "id": "q-20",
+            "query": "We're still going back and forth on which approach to take for the notification pipeline and haven't settled on one yet. Keep exploring the options with me; nothing here is ready to be locked in or finished.",
+            "should_trigger": false,
+            "split": "holdout"
+        }
+    ]
+}

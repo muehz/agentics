@@ -1,0 +1,107 @@
+version: 2
+
+updates:
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    # gh-aw compiles the github/gh-aw-actions pins into every *.lock.yml from
+    # .github/aw/actions-lock.json, and gh-aw Lock Drift requires each lock to
+    # match a fresh compile. Bump them by upgrading gh-aw and recompiling,
+    # never by a Dependabot edit to a lock.
+    ignore:
+      - dependency-name: "github/gh-aw-actions*"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    cooldown:
+      default-days: 7
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: "chore(deps)"
+    groups:
+      actions-major:
+        patterns:
+          - "*"
+        update-types:
+          - "major"
+      actions-minor-patch:
+        patterns:
+          - "*"
+        update-types:
+          - "minor"
+          - "patch"
+
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    cooldown:
+      default-days: 7
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: "chore(deps)"
+    groups:
+      npm-major:
+        patterns:
+          - "*"
+        update-types:
+          - "major"
+      npm-minor-patch:
+        patterns:
+          - "*"
+        update-types:
+          - "minor"
+          - "patch"
+
+  - package-ecosystem: "npm"
+    directory: "/.github/release"
+    # The release preset is held at major 9: 10.x needs conventional-changelog-writer
+    # 9, which release-notes-generator 14 does not use. Move it by hand, with the
+    # config.test.ts pin, once a generator release supports writer 9.
+    ignore:
+      - dependency-name: "conventional-changelog-conventionalcommits"
+        update-types: ["version-update:semver-major"]
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    cooldown:
+      default-days: 7
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: "chore(deps)"
+    groups:
+      release-npm-major:
+        patterns:
+          - "*"
+        update-types:
+          - "major"
+      release-npm-minor-patch:
+        patterns:
+          - "*"
+        update-types:
+          - "minor"
+          - "patch"
+
+  - package-ecosystem: "gomod"
+    directories:
+      - "/hooks/go"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    cooldown:
+      default-days: 7
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: "chore(deps)"
+    groups:
+      go-major:
+        patterns:
+          - "*"
+        update-types:
+          - "major"
+      go-minor-patch:
+        patterns:
+          - "*"
+        update-types:
+          - "minor"
+          - "patch"

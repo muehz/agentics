@@ -1,0 +1,58 @@
+[
+    {
+        "path": "hooks/run-hook.cmd",
+        "reason": "cmd and sh polyglot launcher that starts the hook binary before any Node runtime is guaranteed"
+    },
+    {
+        "path": "hooks/fetch-hook.ps1",
+        "reason": "Windows half of the launcher's fetch path; runs on a bare PowerShell with no Node"
+    },
+    {
+        "path": "bin/agx",
+        "reason": "POSIX sh launcher that Claude Code's Bash tool and Git Bash run for a bare agx"
+    },
+    {
+        "path": ".github/scripts/cloud-setup.sh",
+        "reason": "cloud bootstrap that installs Node, so it must run before Node exists"
+    },
+    {
+        "path": "hooks/go/internal/shellwords/testdata/flow.sh",
+        "reason": "fixture the Go shell-words tests parse as input; its bytes are the test data"
+    },
+    {
+        "path": "hooks/go/cmd/hook/testdata/corpus/scripts/plugin.sh",
+        "reason": "frozen copy of a removed script that the hook corpus replays as input"
+    },
+    {
+        "path": "hooks/go/cmd/hook/testdata/corpus/scripts/source-digest.sh",
+        "reason": "frozen copy of a removed script that the hook corpus replays as input"
+    },
+    {
+        "path": "hooks/go/cmd/hook/testdata/corpus/scripts/verify-stage.sh",
+        "reason": "frozen copy of a removed script that the hook corpus replays as input"
+    },
+    {
+        "path": "skills/diagnose/references/find-polluter.sh",
+        "reason": "POSIX sh twin of the PowerShell helper, kept so the skill runs on hosts without PowerShell"
+    },
+    {
+        "path": "skills/diagnose/references/find-polluter.ps1",
+        "reason": "PowerShell twin of the sh helper, kept so the skill runs on Windows without a POSIX shell"
+    },
+    {
+        "path": "skills/scaffold/scripts/planning-protection.sh",
+        "reason": "POSIX sh twin of the PowerShell helper, kept so the skill runs on hosts without PowerShell"
+    },
+    {
+        "path": "skills/scaffold/scripts/planning-protection.ps1",
+        "reason": "PowerShell twin of the sh helper, kept so the skill runs on Windows without a POSIX shell"
+    },
+    {
+        "path": ".github/tools/src/peer/testing/fake-claude.sh",
+        "reason": "removed with the peer tool, #1638"
+    },
+    {
+        "path": ".github/tools/src/peer/testing/fake-codex.sh",
+        "reason": "removed with the peer tool, #1638"
+    }
+]

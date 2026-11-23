@@ -1,0 +1,23 @@
+{
+    "agentics": {
+        "PreToolUse": [
+            {
+                "matcher": "*",
+                "hooks": [
+                    {
+                        "type": "command",
+                        "command": "\"./hooks/run-hook.cmd\" antigravity pre-tool",
+                        "timeout": 25
+                    }
+                ]
+            }
+        ],
+        "SessionStart": [
+            {
+                "type": "command",
+                "command": "\"./hooks/run-hook.cmd\" antigravity startup",
+                "timeout": 25
+            }
+        ]
+    }
+}

@@ -1,0 +1,15 @@
+{
+    "hook_event_name": "PreToolUse",
+    "session_id": "claude-code-session-1",
+    "turn_id": "claude-code-turn-4",
+    "cwd": "/tmp/agentics-claude-code-fixture",
+    "tool_name": "mcp__github__create_pull_request",
+    "tool_input": {
+        "owner": "muehz",
+        "repo": "agentics",
+        "title": "Ship it",
+        "head": "feature",
+        "base": "main",
+        "body": "Opened without draft: true."
+    }
+}

@@ -1,0 +1,7 @@
+[
+    {
+        "rule": "skill-frontmatter-key",
+        "path": "skills/decompose/SKILL.md",
+        "key": "version"
+    }
+]

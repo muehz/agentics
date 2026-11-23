@@ -1,0 +1,3 @@
+path	tool	digest	reason	rule	note
+demo/guide.md	Bash	ecb33f773d47	destructive_git_ops	Command-guardian threat categories	first
+demo/guide.md	Bash	f80c35de4baf	destructive_git_ops	a line without its note

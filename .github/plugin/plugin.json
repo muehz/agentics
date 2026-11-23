@@ -1,0 +1,52 @@
+{
+    "name": "agentics",
+    "description": "Workflows and guardrails for GitHub Copilot CLI, working toward an enterprise governance baseline. Provides native Copilot plugin metadata, skills, and hooks.",
+    "version": "1.231.0",
+    "author": {
+        "name": "Zachary Muehlich"
+    },
+    "repository": "https://github.com/muehz/agentics",
+    "keywords": [
+        "agentics",
+        "governance",
+        "enterprise",
+        "framework",
+        "routing",
+        "validation",
+        "workflow",
+        "authoring",
+        "skills",
+        "configuration",
+        "copilot"
+    ],
+    "category": "framework",
+    "skills": [
+        "./skills/decompose",
+        "./skills/review",
+        "./skills/git",
+        "./skills/challenge",
+        "./skills/diagnose",
+        "./skills/ops",
+        "./skills/docs",
+        "./skills/gate",
+        "./skills/intent",
+        "./skills/execute",
+        "./skills/forge",
+        "./skills/spec",
+        "./skills/prototype",
+        "./skills/deepen",
+        "./skills/routing",
+        "./skills/scaffold",
+        "./skills/threat-model",
+        "./skills/tdd",
+        "./skills/triage",
+        "./skills/gh",
+        "./skills/handoff",
+        "./skills/explain",
+        "./skills/recall",
+        "./skills/zealot",
+        "./skills/principles",
+        "./skills/hillclimb"
+    ],
+    "hooks": "./hooks/hooks.copilot.json"
+}

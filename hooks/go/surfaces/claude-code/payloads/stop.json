@@ -1,0 +1,13 @@
+{
+    "hook_event_name": "Stop",
+    "session_id": "claude-code-session-1",
+    "cwd": "/tmp/agentics-claude-code-fixture",
+    "transcript_path": "/tmp/agentics-claude-code-fixture/transcript.jsonl",
+    "permission_mode": "default",
+    "stop_hook_active": false,
+    "last_assistant_message": "Claude Code hook fixture completed.",
+    "model": "provider-field-ignored-by-claude-adapter",
+    "unsupported_future_field": {
+        "preserve_failure_mode": "ignored"
+    }
+}

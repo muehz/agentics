@@ -1,0 +1,12 @@
+{
+    "overrides": [
+        {
+            "files": "*.md",
+            "excludeFiles": [".github/workflows/release.md", "**/SKILL.md"],
+            "options": {
+                "proseWrap": "always",
+                "printWidth": 120
+            }
+        }
+    ]
+}

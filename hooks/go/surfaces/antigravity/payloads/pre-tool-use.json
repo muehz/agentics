@@ -1,0 +1,20 @@
+{
+  "hookEventName": "PreToolUse",
+  "conversationId": "antigravity-session-1",
+  "turnId": "antigravity-turn-2",
+  "cwd": "/tmp/agentics-antigravity-fixture",
+  "workspacePaths": ["/tmp/agentics-antigravity-fixture"],
+  "transcriptPath": "/tmp/agentics-antigravity-fixture/transcript.jsonl",
+  "modelName": "gemini-3.6-flash-medium",
+  "toolCall": {
+    "name": "run_command",
+    "args": {
+      "CommandLine": "git status --short",
+      "Cwd": "/tmp/agentics-antigravity-fixture",
+      "WaitMsBeforeAsync": 5000
+    }
+  },
+  "unsupportedFutureField": {
+    "preserveFailureMode": "ignored"
+  }
+}

@@ -1,0 +1,45 @@
+{
+    "name": "agentics-tooling",
+    "private": true,
+    "workspaces": [
+        ".github/tools"
+    ],
+    "description": "Maintainer-only toolchain: husky pre-commit + lint-staged (prettier and gofmt) and Stryker mutation testing. Not part of the shipped plugin.",
+    "engines": {
+        "node": "^22.23.5 || ^24.22.3 || >=26.12.1",
+        "npm": ">=12.2.1"
+    },
+    "scripts": {
+        "prepare": "node .github/tools/src/scripts/install-hooks.ts",
+        "worktree:setup": "node .github/tools/src/scripts/setup-worktree.ts",
+        "plugin:setup": "node .github/tools/src/plugin/cli.ts",
+        "plugin:status": "node .github/tools/src/plugin/cli.ts --status",
+        "plugin:teardown": "node .github/tools/src/plugin/cli.ts --teardown",
+        "plugin:validate": "node .github/tools/src/plugin/cli.ts --validate",
+        "plugin:validate:fast": "node .github/tools/src/plugin/cli.ts --validate --fast",
+        "plugin:vscode": "node .github/tools/src/plugin/cli.ts --vscode",
+        "test:tools": "npm --prefix .github/tools test",
+        "test:tools:coverage": "npm --prefix .github/tools run test:coverage",
+        "test:hooks": "go test -C hooks/go ./...",
+        "test:typecheck": "npm run typecheck --workspaces --if-present",
+        "test:boundaries": "node .github/tools/src/boundaries/cli.ts --repo .",
+        "test:mutation": "node .github/tools/src/scripts/mutation-stryker.ts",
+        "format": "prettier --write .",
+        "format:check": "prettier --check .",
+        "typecheck": "npm run typecheck --workspaces --if-present"
+    },
+    "devDependencies": {
+        "@stryker-mutator/core": "10.1.1",
+        "@stryker-mutator/tap-runner": "10.1.1",
+        "@types/node": "26.6.6",
+        "husky": "9.1.7",
+        "lint-staged": "17.6.0",
+        "prettier": "3.9.10",
+        "typescript": "7.0.2",
+        "yaml": "2.9.1"
+    },
+    "lint-staged": {
+        "*": "prettier --write --ignore-unknown",
+        "*.go": "gofmt -w"
+    }
+}

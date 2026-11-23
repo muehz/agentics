@@ -1,0 +1,22 @@
+{
+  "hook_event_name": "PostToolUse",
+  "session_id": "codex-session-1",
+  "turn_id": "codex-turn-2",
+  "cwd": "/tmp/agentics-codex-fixture",
+  "transcript_path": "/tmp/agentics-codex-fixture/transcript.jsonl",
+  "model": "gpt-5.6-sol",
+  "permission_mode": "acceptEdits",
+  "tool_name": "Write",
+  "tool_use_id": "codex-tool-use-2",
+  "tool_input": {
+    "file_path": "/tmp/agentics-codex-fixture/fixture.json"
+  },
+  "tool_response": {
+    "exit_code": 0,
+    "stdout": "fixture",
+    "stderr": ""
+  },
+  "unsupported_future_field": {
+    "preserve_failure_mode": "ignored"
+  }
+}

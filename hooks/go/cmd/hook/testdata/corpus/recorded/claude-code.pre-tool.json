@@ -1,0 +1,357 @@
+{
+  "claude-code/invalid-utf8": {
+    "exit": 2,
+    "stdout": "",
+    "stderr": "agx: malformed or mismatched event payload\n"
+  },
+  "claude-code/payload-not-object": {
+    "exit": 2,
+    "stdout": "",
+    "stderr": "agx: malformed or mismatched event payload\n"
+  },
+  "claude-code/payload-null": {
+    "exit": 2,
+    "stdout": "",
+    "stderr": "agx: malformed or mismatched event payload\n"
+  },
+  "claude-code/session_id-not-string": {
+    "exit": 2,
+    "stdout": "",
+    "stderr": "agx: malformed or mismatched event payload\n"
+  },
+  "claude-code/tool_input-not-object": {
+    "exit": 2,
+    "stdout": "",
+    "stderr": "agx: malformed or mismatched event payload\n"
+  },
+  "claude-code/tool_name-missing": {
+    "exit": 2,
+    "stdout": "",
+    "stderr": "agx: malformed or mismatched event payload\n"
+  },
+  "command-guardian/allow-cat-heredoc-gated-prose": {
+    "exit": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  "command-guardian/allowlist-empty-entries-are-skipped": {
+    "exit": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  "command-guardian/allowlist-env-suppresses-context": {
+    "exit": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  "command-guardian/context-info-only-threat": {
+    "exit": 0,
+    "stdout": "{\"hookSpecificOutput\":{\"hookEventName\":\"PreToolUse\",\"additionalContext\":\"[commands] 1 threat(s) detected: command_reformulation - In a git repo, prefer 'git clean -f <path>' for non-ignored untracked files; targeted rm remains appropriate for ignored build artifacts.\\n\\nSetting: policy.command_reformulation. To allow this, ask the user to set it to false in .agentics/hooks.json in the repository root or ~/.agentics/hooks.json; an agent must not edit those files.\"}}\n",
+    "stderr": ""
+  },
+  "command-guardian/continuation-joined-before-scan": {
+    "exit": 0,
+    "stdout": "{\"hookSpecificOutput\":{\"hookEventName\":\"PreToolUse\",\"additionalContext\":\"[commands] 1 threat(s) detected: command_reformulation - In a git repo, prefer 'git clean -f <path>' for non-ignored untracked files; targeted rm remains appropriate for ignored build artifacts.\\n\\nSetting: policy.command_reformulation. To allow this, ask the user to set it to false in .agentics/hooks.json in the repository root or ~/.agentics/hooks.json; an agent must not edit those files.\"}}\n",
+    "stderr": ""
+  },
+  "command-guardian/deny-commit-heredoc-piped": {
+    "exit": 2,
+    "stdout": "",
+    "stderr": "[commands] 2 blocking threat(s) detected: command_parse_limit - Use a command spelling without the unsupported wrapper or option so the guard can inspect the literal invocation.\n\nrelease-guardian could not inspect a recognized execution path (sh requires exactly -c or -lc and a literal command string); run /agentics:gate change ($agentics:gate change on Codex) and set the release record in the host environment\n\n[secrets-guardian] secrets-guardian could not inspect a recognized execution path (sh requires exactly -c or -lc and a literal command string)\n"
+  },
+  "command-guardian/deny-commit-heredoc-unquoted": {
+    "exit": 2,
+    "stdout": "",
+    "stderr": "[commands] 1 blocking threat(s) detected: unsafe_publication - Do not mark the pull request ready for review. Tell the user that agents cannot publish it as ready and ask them to mark it ready in the pull request UI or with 'gh pr ready'.\n\nSetting: policy.draft_prs. To allow this, ask the user to set it to false in .agentics/hooks.json in the repository root or ~/.agentics/hooks.json; an agent must not edit those files.\n"
+  },
+  "command-guardian/deny-destructive": {
+    "exit": 2,
+    "stdout": "",
+    "stderr": "[commands] 1 blocking threat(s) detected: destructive_file_ops - Remove only specific, verified paths instead of the filesystem root. If the user still wants to delete the root, tell the user that agents cannot perform this action and ask them to run it manually in their own terminal.\n"
+  },
+  "command-guardian/deny-gh-quoted-executable": {
+    "exit": 2,
+    "stdout": "",
+    "stderr": "[commands] 1 blocking threat(s) detected: unsafe_publication - Add --draft (or -d). If the user wants the pull request ready for review, tell them that agents cannot publish it as ready and ask them to mark it ready in the pull request UI or with 'gh pr ready'.\n\nSetting: policy.draft_prs. To allow this, ask the user to set it to false in .agentics/hooks.json in the repository root or ~/.agentics/hooks.json; an agent must not edit those files.\n"
+  },
+  "command-guardian/deny-gh-verb-through-eval": {
+    "exit": 2,
+    "stdout": "",
+    "stderr": "[commands] 1 blocking threat(s) detected: unsafe_publication - Add --draft (or -d). If the user wants the pull request ready for review, tell them that agents cannot publish it as ready and ask them to mark it ready in the pull request UI or with 'gh pr ready'.\n\nSetting: policy.draft_prs. To allow this, ask the user to set it to false in .agentics/hooks.json in the repository root or ~/.agentics/hooks.json; an agent must not edit those files.\n"
+  },
+  "command-guardian/deny-mcp-publication": {
+    "exit": 2,
+    "stdout": "",
+    "stderr": "[commands] 1 blocking threat(s) detected: unsafe_publication - Set draft: true. If the user wants the pull request ready for review, tell them that agents cannot publish it as ready and ask them to mark it ready in the pull request UI or with 'gh pr ready'.\n\nSetting: policy.draft_prs. To allow this, ask the user to set it to false in .agentics/hooks.json in the repository root or ~/.agentics/hooks.json; an agent must not edit those files.\n"
+  },
+  "command-guardian/deny-powershell-gh-pr-create-live": {
+    "exit": 2,
+    "stdout": "",
+    "stderr": "[commands] 1 blocking threat(s) detected: unsafe_publication - Add --draft (or -d). If the user wants the pull request ready for review, tell them that agents cannot publish it as ready and ask them to mark it ready in the pull request UI or with 'gh pr ready'.\n\nSetting: policy.draft_prs. To allow this, ask the user to set it to false in .agentics/hooks.json in the repository root or ~/.agentics/hooks.json; an agent must not edit those files.\n"
+  },
+  "command-guardian/deny-powershell-gh-verb-through-iex": {
+    "exit": 2,
+    "stdout": "",
+    "stderr": "[commands] 1 blocking threat(s) detected: unsafe_publication - Add --draft (or -d). If the user wants the pull request ready for review, tell them that agents cannot publish it as ready and ask them to mark it ready in the pull request UI or with 'gh pr ready'.\n\nSetting: policy.draft_prs. To allow this, ask the user to set it to false in .agentics/hooks.json in the repository root or ~/.agentics/hooks.json; an agent must not edit those files.\n"
+  },
+  "command-guardian/deny-quoted-fake-cat-heredoc": {
+    "exit": 2,
+    "stdout": "",
+    "stderr": "[commands] 1 blocking threat(s) detected: unsafe_publication - Do not mark the pull request ready for review. Tell the user that agents cannot publish it as ready and ask them to mark it ready in the pull request UI or with 'gh pr ready'.\n\nSetting: policy.draft_prs. To allow this, ask the user to set it to false in .agentics/hooks.json in the repository root or ~/.agentics/hooks.json; an agent must not edit those files.\n"
+  },
+  "command-guardian/deny-quoted-fake-commit-heredoc": {
+    "exit": 2,
+    "stdout": "",
+    "stderr": "[commands] 1 blocking threat(s) detected: unsafe_publication - Do not mark the pull request ready for review. Tell the user that agents cannot publish it as ready and ask them to mark it ready in the pull request UI or with 'gh pr ready'.\n\nSetting: policy.draft_prs. To allow this, ask the user to set it to false in .agentics/hooks.json in the repository root or ~/.agentics/hooks.json; an agent must not edit those files.\n"
+  },
+  "command-guardian/edit-self-doc-via-path-key": {
+    "exit": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  "command-guardian/edit-self-doc-via-value-file_path": {
+    "exit": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  "command-guardian/edit-self-doc-via-value-path": {
+    "exit": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  "command-guardian/empty-stdin": {
+    "exit": 2,
+    "stdout": "",
+    "stderr": "agx: malformed or mismatched event payload\n"
+  },
+  "command-guardian/env-mode-unknown-value-blocks": {
+    "exit": 2,
+    "stdout": "",
+    "stderr": "[commands] command-guardian: COMMAND_GUARD_MODE=\"blcok\" is not warn or block; using block\n\n1 blocking threat(s) detected: destructive_file_ops - Remove only specific, verified paths instead of the filesystem root. If the user still wants to delete the root, tell the user that agents cannot perform this action and ask them to run it manually in their own terminal.\n"
+  },
+  "command-guardian/env-mode-warn-overrides-config": {
+    "exit": 0,
+    "stdout": "{\"hookSpecificOutput\":{\"hookEventName\":\"PreToolUse\",\"additionalContext\":\"[commands] 1 threat(s) detected: destructive_file_ops - Remove only specific, verified paths instead of the filesystem root. If the user still wants to delete the root, tell the user that agents cannot perform this action and ask them to run it manually in their own terminal.\"}}\n",
+    "stderr": ""
+  },
+  "command-guardian/error-log-file-is-a-directory": {
+    "exit": 2,
+    "stdout": "",
+    "stderr": "[commands] command-guardian could not write its log\n\n[commands] check failed\n[commands] command-guardian could not write its log\n\n[commands] check failed\n\n[commands] \n🛡️  Tool Guardian: 1 threat(s) detected in 'Bash' invocation\n\n  CATEGORY                 SEVERITY   MATCH                                    SUGGESTION\n  --------                 --------   -----                                    ----------\n  command_reformulation    info       rm ./build                               In a git repo, prefer 'git clean -f <path>' for non-ignored untracked files; targeted rm remains appropriate for ignored build artifacts.\n\ncommand-guardian refused to append guard.log: a linked path component or a non-regular guard.log would redirect the write\n"
+  },
+  "command-guardian/malformed-payload": {
+    "exit": 2,
+    "stdout": "",
+    "stderr": "agx: malformed or mismatched event payload\n"
+  },
+  "command-guardian/mcp-namespace-only-tool-name": {
+    "exit": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  "command-guardian/pass-benign": {
+    "exit": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  "command-guardian/pass-commit-heredoc-message": {
+    "exit": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  "command-guardian/pass-commit-heredoc-stdin": {
+    "exit": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  "command-guardian/pass-gh-verb-in-body": {
+    "exit": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  "command-guardian/pass-gh-verb-in-commit-message": {
+    "exit": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  "command-guardian/pass-gh-verb-in-echo": {
+    "exit": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  "command-guardian/pass-powershell-benign": {
+    "exit": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  "command-guardian/pass-powershell-gh-verb-in-write-output": {
+    "exit": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  "command-guardian/skip-env": {
+    "exit": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  "command-guardian/strict-segmentation-without-command-key": {
+    "exit": 2,
+    "stdout": "",
+    "stderr": "[commands] 1 blocking threat(s) detected: unsafe_publication - Add --draft (or -d). If the user wants the pull request ready for review, tell them that agents cannot publish it as ready and ask them to mark it ready in the pull request UI or with 'gh pr ready'.\n\nSetting: policy.draft_prs. To allow this, ask the user to set it to false in .agentics/hooks.json in the repository root or ~/.agentics/hooks.json; an agent must not edit those files.\n\nrelease-guardian could not read normalized input; run /agentics:gate change ($agentics:gate change on Codex) and set the release record in the host environment\n"
+  },
+  "command-guardian/undecodable-tool-input-fails-closed": {
+    "exit": 2,
+    "stdout": "",
+    "stderr": "[commands] command-guardian could not extract normalized input\n\nrelease-guardian could not read normalized input; run /agentics:gate change ($agentics:gate change on Codex) and set the release record in the host environment\n\n[secrets-guardian] secrets-guardian could not read normalized input\n"
+  },
+  "command-guardian/wrong-event-payload": {
+    "exit": 2,
+    "stdout": "",
+    "stderr": "agx: malformed or mismatched event payload\n"
+  },
+  "release-guardian/deny-configured-environment": {
+    "exit": 2,
+    "stdout": "",
+    "stderr": "[commands] kubectl apply is a production-shaped deploy command (kubernetes_deploy); run /agentics:gate change ($agentics:gate change on Codex) and set the release record in the host environment\n\nSetting: policy.require_deploy_record. To allow this, ask the user to set it to false in .agentics/hooks.json in the repository root or ~/.agentics/hooks.json; an agent must not edit those files.\n"
+  },
+  "release-guardian/deny-unauthorized": {
+    "exit": 2,
+    "stdout": "",
+    "stderr": "[commands] kubectl apply is a production-shaped deploy command (kubernetes_deploy); run /agentics:gate change ($agentics:gate change on Codex) and set the release record in the host environment\n\nSetting: policy.require_deploy_record. To allow this, ask the user to set it to false in .agentics/hooks.json in the repository root or ~/.agentics/hooks.json; an agent must not edit those files.\n"
+  },
+  "release-guardian/deny-unreadable-input": {
+    "exit": 2,
+    "stdout": "",
+    "stderr": "[commands] command-guardian could not extract normalized input\n\nrelease-guardian could not read normalized input; run /agentics:gate change ($agentics:gate change on Codex) and set the release record in the host environment\n\n[secrets-guardian] secrets-guardian could not read normalized input\n"
+  },
+  "release-guardian/pass-authorized": {
+    "exit": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  "release-guardian/pass-benign": {
+    "exit": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  "release-guardian/pass-unconfigured-environment": {
+    "exit": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  "secrets-guardian/allowlist-env": {
+    "exit": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  "secrets-guardian/deny-bash-mixed-reads-deduplicated-and-sorted": {
+    "exit": 2,
+    "stdout": "",
+    "stderr": "[secrets-guardian] 2 credential file read(s) blocked — this content would enter the transcript:\n- .env (dotenv, critical)\n- ~/.npmrc (registry_credentials, high)\nRead the committed template (.env.example) instead, or ask the user for the one value you need\n"
+  },
+  "secrets-guardian/deny-cloud-credentials-read": {
+    "exit": 2,
+    "stdout": "",
+    "stderr": "[secrets-guardian] 1 credential file read(s) blocked — this content would enter the transcript:\n- /home/u/.aws/credentials (cloud_credentials, critical)\nUse the provider CLI (aws/az/gcloud/kubectl), which reads the file itself without printing it\n"
+  },
+  "secrets-guardian/deny-local-credential-read": {
+    "exit": 2,
+    "stdout": "",
+    "stderr": "[secrets-guardian] 1 credential file read(s) blocked — this content would enter the transcript:\n- /tmp/corpus/.env (dotenv, critical)\nRead the committed template (.env.example) instead, or ask the user for the one value you need\n"
+  },
+  "secrets-guardian/deny-mcp-credential-read": {
+    "exit": 2,
+    "stdout": "",
+    "stderr": "[secrets-guardian] 1 credential file read(s) blocked — this content would enter the transcript:\n- .env (dotenv, critical)\nRead the committed template (.env.example) instead, or ask the user for the one value you need\n"
+  },
+  "secrets-guardian/deny-multiedit-item": {
+    "exit": 2,
+    "stdout": "",
+    "stderr": "[secrets-guardian] 1 potential secret(s) found before writing to /tmp/corpus/notes.txt:\n- AWS_ACCESS_KEY (critical) AKIA************\nUse a placeholder and load the real value from the environment at run time.\nA value the edit only repeats from the text it replaces is not flagged; if this one is already in the file, narrow the edit to the lines you change. Do not write it through a shell command instead.\n"
+  },
+  "secrets-guardian/deny-multiedit-item-with-own-path": {
+    "exit": 2,
+    "stdout": "",
+    "stderr": "[secrets-guardian] 1 potential secret(s) found before writing to the target file:\n- AWS_ACCESS_KEY (critical) AKIA************ in /tmp/corpus/other.txt\nUse a placeholder and load the real value from the environment at run time.\nA value the edit only repeats from the text it replaces is not flagged; if this one is already in the file, narrow the edit to the lines you change. Do not write it through a shell command instead.\n"
+  },
+  "secrets-guardian/deny-powershell-call-reader": {
+    "exit": 2,
+    "stdout": "",
+    "stderr": "[secrets-guardian] 1 credential file read(s) blocked — this content would enter the transcript:\n- .env (dotenv, critical)\nRead the committed template (.env.example) instead, or ask the user for the one value you need\n"
+  },
+  "secrets-guardian/deny-powershell-credential-read": {
+    "exit": 2,
+    "stdout": "",
+    "stderr": "[secrets-guardian] 1 credential file read(s) blocked — this content would enter the transcript:\n- .env (dotenv, critical)\nRead the committed template (.env.example) instead, or ask the user for the one value you need\n"
+  },
+  "secrets-guardian/deny-powershell-qualified-reader": {
+    "exit": 2,
+    "stdout": "",
+    "stderr": "[secrets-guardian] 1 credential file read(s) blocked — this content would enter the transcript:\n- .env (dotenv, critical)\nRead the committed template (.env.example) instead, or ask the user for the one value you need\n"
+  },
+  "secrets-guardian/deny-registry-credentials-read": {
+    "exit": 2,
+    "stdout": "",
+    "stderr": "[secrets-guardian] 1 credential file read(s) blocked — this content would enter the transcript:\n- /home/u/.npmrc (registry_credentials, high)\nAsk the user to confirm the registry is configured; the token itself is not needed to answer that\n"
+  },
+  "secrets-guardian/deny-ssh-key-read": {
+    "exit": 2,
+    "stdout": "",
+    "stderr": "[secrets-guardian] 1 credential file read(s) blocked — this content would enter the transcript:\n- /home/u/.ssh/id_rsa (ssh_private_key, critical)\nPrivate key material must never enter the transcript; use the public half, or the agent that holds the key\n"
+  },
+  "secrets-guardian/deny-terraform-state-read": {
+    "exit": 2,
+    "stdout": "",
+    "stderr": "[secrets-guardian] 1 credential file read(s) blocked — this content would enter the transcript:\n- /tmp/corpus/terraform.tfstate (terraform_state, high)\nUse `terraform output` without a name for redacted output, or `terraform state list` for structure\n"
+  },
+  "secrets-guardian/deny-write-with-duplicate-matches": {
+    "exit": 2,
+    "stdout": "",
+    "stderr": "[secrets-guardian] 1 potential secret(s) found before writing to /tmp/corpus/notes.txt:\n- AWS_ACCESS_KEY (critical) AKIA************\nUse a placeholder and load the real value from the environment at run time.\nA value the edit only repeats from the text it replaces is not flagged; if this one is already in the file, narrow the edit to the lines you change. Do not write it through a shell command instead.\n"
+  },
+  "secrets-guardian/empty-stdin": {
+    "exit": 2,
+    "stdout": "",
+    "stderr": "agx: malformed or mismatched event payload\n"
+  },
+  "secrets-guardian/malformed-payload": {
+    "exit": 2,
+    "stdout": "",
+    "stderr": "agx: malformed or mismatched event payload\n"
+  },
+  "secrets-guardian/pass-bash-empty-command": {
+    "exit": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  "secrets-guardian/pass-benign": {
+    "exit": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  "secrets-guardian/pass-powershell-call-qualified-template": {
+    "exit": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  "secrets-guardian/pass-write-to-allowlisted-path": {
+    "exit": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  "secrets-guardian/post-event-is-ignored": {
+    "exit": 2,
+    "stdout": "",
+    "stderr": "agx: malformed or mismatched event payload\n"
+  },
+  "secrets-guardian/skip-env": {
+    "exit": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  "secrets-guardian/undecodable-tool-input-fails-closed": {
+    "exit": 2,
+    "stdout": "",
+    "stderr": "[secrets-guardian] secrets-guardian could not read normalized input\n"
+  }
+}

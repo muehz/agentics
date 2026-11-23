@@ -1,0 +1,112 @@
+# Eval results and settings. `evals stamp` writes the skills entries; see evals/README.md.
+model-ladders-reviewed: 2026-10-26
+
+settings:
+  copilot-model: gpt-6-luna
+  copilot-version: 1.0.83
+
+skills:
+  challenge:
+    last-evaluated: 2026-11-20
+    eval-status: not-run
+    eval-digest: d90b86512d583f83124c39721402689cf43b93f1ff1d86f8ff6e192e1c343848
+  decompose:
+    last-evaluated: 2026-11-20
+    eval-status: not-run
+    eval-digest: 50cb56d175cb1dde66cb83ae3574ebac76d68ee63edd44018e082bd349df5496
+  deepen:
+    last-evaluated: 2026-11-19
+    eval-status: not-run
+    eval-digest: 3137a3e7d46b1cb62938ed4338ad2758e0e91d51ca5bd7e27d340b44753492b6
+  diagnose:
+    last-evaluated: 2026-11-20
+    eval-status: not-run
+    eval-digest: 32d98f46a0fbc08994276e59de55645994d9fdb91e53d2e5d4126e93ccfbe4ec
+  docs:
+    last-evaluated: 2026-11-20
+    eval-status: not-run
+    eval-digest: ffcccb49606df75d4fa9718253902e724a359dcb8af48a5079864609e70a764a
+  execute:
+    last-evaluated: 2026-11-20
+    eval-status: not-run
+    eval-digest: abefa5724dc1fcbccc0cf93939331ee1ceed3c7c2df39d3bbc732c40a5dcfa52
+  explain:
+    last-evaluated: 2026-11-19
+    eval-status: not-run
+    eval-digest: 37c02897429d166c1dc45c39d9c3918280986f06e6bbb0729f0d3042491b32a6
+  forge:
+    last-evaluated: 2026-10-07
+    eval-status: not-run
+    eval-digest: cc45298e516de1c60eac18a28d663331cf06becb2f956907b2876051c01947b0
+  gate:
+    last-evaluated: 2026-11-20
+    eval-status: not-run
+    eval-digest: f7d96668af7f1b8369bda726461393d96e91fbcb32f17462f051645f2a3db2dc
+  gh:
+    last-evaluated: 2026-11-20
+    eval-status: not-run
+    eval-digest: 219e7fc8981521ebfa0632b8b062c718a8c43923704bbb0093feb8003e226a39
+  git:
+    last-evaluated: 2026-11-20
+    eval-status: not-run
+    eval-digest: df2c3cda8f01e193803a2819d1ba72cd1174ca52081d1fc9d2a2e923ca42ca49
+  handoff:
+    last-evaluated: 2026-11-20
+    eval-status: not-run
+    eval-digest: c6a4c474a3bb9ffdd7a3af74e0144da949389950eea444b8a41dd97c067e2924
+  hillclimb:
+    last-evaluated: 2026-11-20
+    eval-status: not-run
+    eval-digest: 569b20f9d4f66087440c37373c37d8e519402c35e96cd835f3fe24e3a2cb5b6b
+  intent:
+    last-evaluated: 2026-11-20
+    eval-status: not-run
+    eval-digest: 5ea290655f6b0493083e77a7cee5e3b5f040316c9a09d27c61f980595f6ed45f
+  ops:
+    last-evaluated: 2026-11-20
+    eval-status: not-run
+    eval-digest: 1baf5d9461ac77e8ff80351a70704a5666107e1e2f3fd81d60c33166b8c17ed7
+  principles:
+    last-evaluated: 2026-11-20
+    eval-status: not-run
+    eval-digest: 2cfcf66c5300d4bee5ae2cc35ae0ad2b5cf5780ef589268e6f12db57f2901b5c
+  prototype:
+    last-evaluated: 2026-11-20
+    eval-status: not-run
+    eval-digest: 0ca1fdd29aac4643970f7bc3b6d87ad81f22c2023bdc52178cbad2c7316c6c96
+  recall:
+    last-evaluated: 2026-11-20
+    eval-status: not-run
+    eval-digest: d44683464f5bd98c8b652e24942a89407d2806a60686809430471ce8882943c3
+  review:
+    last-evaluated: 2026-11-20
+    eval-status: not-run
+    eval-digest: 3c3ffc7faf065e1334a6857f707fe9a2e158da71369ffe898ab1fc5bc6ddefde
+  routing:
+    last-evaluated: 2026-11-20
+    eval-status: not-run
+    eval-digest: 66950fcc9bb3c3f480de261bdbe2b4b348cdbc32c9856b282426f40bfc9267a9
+  scaffold:
+    last-evaluated: 2026-11-20
+    eval-status: not-run
+    eval-digest: de6b48d5e8b245188ff3cc4103bad8fce18af41618ea8dc80a6a41c554504e95
+  spec:
+    last-evaluated: 2026-11-20
+    eval-status: not-run
+    eval-digest: 6bc0ebe3f820b522e3e3f1ca53a911caf013e719f5d9dac28f5c9330c91ac1d1
+  tdd:
+    last-evaluated: 2026-11-20
+    eval-status: not-run
+    eval-digest: 93a83921ffdaef10d8dc8d2b38efb53d5f76f6b10fe250d9a65ad0e1727f0d2f
+  threat-model:
+    last-evaluated: 2026-11-20
+    eval-status: not-run
+    eval-digest: 00e202a34416d4bb088409911926003074b4a8593c09413691549f50198eefd0
+  triage:
+    last-evaluated: 2026-11-20
+    eval-status: not-run
+    eval-digest: c1afcf353d782456577135b31bf3d5643a15d501e7c9dfc2453c56e98afe8154
+  zealot:
+    last-evaluated: 2026-11-20
+    eval-status: not-run
+    eval-digest: ec58b9781afe36ca851d971810ec7aeab8e9913faba1f02460c7a50fbf1f1bd9

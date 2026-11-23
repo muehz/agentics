@@ -1,0 +1,125 @@
+{
+    "version": 3,
+    "queries": [
+        {
+            "id": "q-01",
+            "query": "Our integration test for the checkout webhook passes about seven times out of ten and fails the rest with the same assertion mismatch. Nothing in the recent diff touches that code path, and rerunning locally reproduces the failure inconsistently. Find out why it's flaky before we quarantine it.",
+            "should_trigger": true,
+            "split": "development"
+        },
+        {
+            "id": "q-02",
+            "query": "Production checkout is down right now and customers are actively failing to complete purchases — we're already paging the on-call rotation. I need someone driving the response: confirm impact, coordinate mitigation, and keep the status page updated while we work toward a fix. Severity is SEV-1 and leadership is asking for updates every fifteen minutes.",
+            "should_trigger": false,
+            "split": "development"
+        },
+        {
+            "id": "q-03",
+            "query": "We're seeing a NullReferenceException spike in the order-processing logs starting around 2am UTC, right after the nightly batch job kicks off. There's no obvious change that lines up with the timing. Can you dig into the stack trace and figure out what's actually throwing before we touch any code?",
+            "should_trigger": true,
+            "split": "development"
+        },
+        {
+            "id": "q-04",
+            "query": "The refactor branch for the payments module is feature-complete and ready to merge. Review the diff for correctness bugs, missed edge cases, and anything that looks unsafe around the retry logic, then give me a verdict with file-level comments.",
+            "should_trigger": false,
+            "split": "development"
+        },
+        {
+            "id": "q-05",
+            "query": "p95 latency on the search endpoint jumped from 80ms to 450ms right after yesterday's deploy, and it hasn't recovered since. Nothing in the release notes mentions search at all. I need to know what in that deploy actually caused the slowdown before we consider rolling back.",
+            "should_trigger": true,
+            "split": "development"
+        },
+        {
+            "id": "q-06",
+            "query": "We already know the discount calculator drops the wrong rounding rule for three-item bundles — the cause is a truncation bug in the pricing helper. Write a regression test that pins down that exact case first, then implement the fix so the test goes green. Keep it test-first the whole way through.",
+            "should_trigger": false,
+            "split": "development"
+        },
+        {
+            "id": "q-07",
+            "query": "The nightly ETL job silently produced a partial dataset last night and nobody noticed until the morning dashboards looked wrong. I don't want a quick patch — trace this back to what's actually causing it, even if that means going through several upstream services, before anyone touches the pipeline.",
+            "should_trigger": true,
+            "split": "development"
+        },
+        {
+            "id": "q-08",
+            "query": "Before we commit to the plan for migrating auth to the new identity provider, I want someone to stress-test it. Poke holes in the phased rollout, the rollback strategy, and the assumptions about token compatibility, and tell me what could go wrong that we haven't accounted for.",
+            "should_trigger": false,
+            "split": "development"
+        },
+        {
+            "id": "q-09",
+            "query": "The calculateShippingCost function is returning negative values for a handful of international orders, which obviously shouldn't be possible. It happens for a specific subset of postal codes, but nothing in the recent history touches that function directly. I want to understand why it's producing that unexpected output.",
+            "should_trigger": true,
+            "split": "development"
+        },
+        {
+            "id": "q-10",
+            "query": "I want to systematically drive our CI pipeline's median duration down from twelve minutes to under seven over the next couple of weeks. Run it as a disciplined loop: one hypothesis at a time, measure the effect, then keep or revert before moving to the next.",
+            "should_trigger": false,
+            "split": "development"
+        },
+        {
+            "id": "q-11",
+            "query": "CI started failing on the main branch build this morning with a stack trace pointing into the serialization layer, right after a dependency bump landed. It was green yesterday and nobody touched that code directly. Figure out what's actually broken before we try reverting anything.",
+            "should_trigger": true,
+            "split": "development"
+        },
+        {
+            "id": "q-12",
+            "query": "We keep improvising the recovery steps whenever the checkout worker's memory climbs and it gets OOM-killed, and the on-call rotation wants something written down instead. Draft a runbook under runbooks/ covering how to confirm the leak signature, the immediate mitigation, and when to escalate — the underlying fix for the leak itself is already being handled separately.",
+            "should_trigger": false,
+            "split": "development"
+        },
+        {
+            "id": "q-13",
+            "query": "Our internal test-flight build of the mobile app has started crashing intermittently on cold start on about five percent of the team devices since last week, but we can't reproduce it locally. Crash reports show different stack traces each time, which is confusing everyone. Help me figure out what's actually causing it before we ship any workaround.",
+            "should_trigger": true,
+            "split": "holdout"
+        },
+        {
+            "id": "q-14",
+            "query": "There are two failing CI checks and five bot-flagged findings on the PR that touches our retry-queue consumer, and it's unclear which failures actually belong to this change versus pre-existing flakiness elsewhere in the pipeline. Sort out which findings are real, connect the check failures to the right cause, and draft replies to the reviewers who left comments so we know what still needs fixing before merging.",
+            "should_trigger": false,
+            "split": "holdout"
+        },
+        {
+            "id": "q-15",
+            "query": "The worker process in our staging environment has been getting OOM-killed roughly every six hours since the last deploy, and memory usage climbs steadily the whole time it's alive. Nothing about the workload has changed that we know of. I need to understand what's actually leaking before we just add more memory.",
+            "should_trigger": true,
+            "split": "holdout"
+        },
+        {
+            "id": "q-16",
+            "query": "I want to understand why the rate limiter resets its window on every deploy instead of preserving it across restarts — nothing here is broken, I'm just trying to build a mental model before I touch this area. Walk me through the design rationale and the tradeoffs that led to the current behavior.",
+            "should_trigger": false,
+            "split": "holdout"
+        },
+        {
+            "id": "q-17",
+            "query": "After bumping the JSON parsing library last night, a handful of API responses started coming back with fields in the wrong types, but only for certain nested objects. It wasn't caught by CI. Trace through what the upgrade actually changed and find the root cause before we pick a fix.",
+            "should_trigger": true,
+            "split": "holdout"
+        },
+        {
+            "id": "q-18",
+            "query": "This is a small diff that swaps the caching library used by the session store, and I don't fully trust it yet. Before it ships, I want to know what else in the system could break because of it — other services that share that cache, timing assumptions, anything outside the diff itself.",
+            "should_trigger": false,
+            "split": "holdout"
+        },
+        {
+            "id": "q-19",
+            "query": "The finance team's internal monthly reconciliation report has started showing totals that don't match the underlying ledger for about a dozen accounts, and it only started in the last two cycles. No customer sees this report. I want to know what's actually producing that mismatch before anyone touches the report code.",
+            "should_trigger": true,
+            "split": "holdout"
+        },
+        {
+            "id": "q-20",
+            "query": "The database outage from Tuesday is fully resolved and service has been stable for two days now. Write the blameless postmortem: timeline, contributing factors, and the follow-up actions, without pointing fingers at whoever was on call.",
+            "should_trigger": false,
+            "split": "holdout"
+        }
+    ]
+}

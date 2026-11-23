@@ -1,0 +1,19 @@
+{
+    "hook_event_name": "PreToolUse",
+    "session_id": "codex-session-1",
+    "turn_id": "codex-turn-4",
+    "cwd": "/tmp/agentics-codex-fixture",
+    "transcript_path": null,
+    "model": "gpt-5.6-sol",
+    "permission_mode": "default",
+    "tool_name": "mcp__github__create_pull_request",
+    "tool_use_id": "codex-tool-use-4",
+    "tool_input": {
+        "owner": "muehz",
+        "repo": "agentics",
+        "title": "Ship it",
+        "head": "feature",
+        "base": "main",
+        "body": "Opened without draft: true."
+    }
+}

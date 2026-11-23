@@ -1,0 +1,22 @@
+{
+    "version": 1,
+    "hooks": {
+        "preToolUse": [
+            {
+                "type": "command",
+                "matcher": ".*",
+                "bash": "\"${COPILOT_PLUGIN_ROOT}/hooks/run-hook.cmd\" copilot pre-tool",
+                "powershell": "& \"$env:COPILOT_PLUGIN_ROOT\\hooks\\run-hook.cmd\" copilot pre-tool",
+                "timeoutSec": 25
+            }
+        ],
+        "sessionStart": [
+            {
+                "type": "command",
+                "bash": "\"${COPILOT_PLUGIN_ROOT}/hooks/run-hook.cmd\" copilot startup",
+                "powershell": "& \"$env:COPILOT_PLUGIN_ROOT\\hooks\\run-hook.cmd\" copilot startup",
+                "timeoutSec": 25
+            }
+        ]
+    }
+}

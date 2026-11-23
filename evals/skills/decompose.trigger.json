@@ -1,0 +1,125 @@
+{
+    "version": 2,
+    "queries": [
+        {
+            "id": "q-01",
+            "query": "We just got sign-off on the payments-retry spec. Break it into ordered, testable implementation tasks with clear dependencies so two engineers can start today without stepping on each other.",
+            "should_trigger": true,
+            "split": "development"
+        },
+        {
+            "id": "q-02",
+            "query": "We think notification fatigue is hurting engagement but haven't pinned down what problem we're actually solving or what success looks like. Help me capture the problem, scope, and constraints before anyone starts building.",
+            "should_trigger": false,
+            "split": "development"
+        },
+        {
+            "id": "q-03",
+            "query": "The checkout redesign spec is approved but too big to ship at once. Just slice it into vertical delivery increments we can release independently, each testable on its own. Don't write the tasks yet.",
+            "should_trigger": true,
+            "split": "development"
+        },
+        {
+            "id": "q-04",
+            "query": "Exports started timing out for some customers after Tuesday's deploy and we have no idea why yet. Plan the fix so we can get it scheduled.",
+            "should_trigger": false,
+            "split": "development"
+        },
+        {
+            "id": "q-05",
+            "query": "The rate-limiter intent was approved this morning and the direction is settled. Take it from here to an implementation plan: ordered tasks and how the pieces fit together for delivery.",
+            "should_trigger": true,
+            "split": "development"
+        },
+        {
+            "id": "q-06",
+            "query": "The onboarding-flow plan was approved yesterday with explicit go-ahead from the team. Implement it now, running the tasks through isolated subagents in whatever wave order the dependency graph supports.",
+            "should_trigger": false,
+            "split": "development"
+        },
+        {
+            "id": "q-07",
+            "query": "Here's what we need: a webhook retry with exponential backoff, a dead-letter queue, and an admin replay button. Break this down into an ordered set of implementation tasks with a plan.md we can track against.",
+            "should_trigger": true,
+            "split": "development"
+        },
+        {
+            "id": "q-08",
+            "query": "All the tasks in the search-reindexing plan are implemented and the branch is pushed. Check the finished work against its acceptance criteria and tell me whether it's actually done.",
+            "should_trigger": false,
+            "split": "development"
+        },
+        {
+            "id": "q-09",
+            "query": "Here's the attached design doc for the multi-region failover feature, and the target behavior and interfaces are already agreed. Decompose it into vertical delivery slices with ordered, testable tasks so we can start scheduling the work this sprint.",
+            "should_trigger": true,
+            "split": "development"
+        },
+        {
+            "id": "q-10",
+            "query": "Roughly how many tasks would a rewrite of the billing reconciliation job be, just ballpark it. I'm not asking you to actually plan it out yet, just a rough sense of scale for a budget conversation.",
+            "should_trigger": false,
+            "split": "development"
+        },
+        {
+            "id": "q-11",
+            "query": "We shipped slice two of the reporting-pipeline plan last week and the spec for slice three changed slightly since then. Update just that slice's tasks in plan.md and leave the other slices alone.",
+            "should_trigger": true,
+            "split": "development"
+        },
+        {
+            "id": "q-12",
+            "query": "The brief.md for the one-line config default change was approved an hour ago. Go ahead and make the change it describes.",
+            "should_trigger": false,
+            "split": "development"
+        },
+        {
+            "id": "q-13",
+            "query": "I ran spec align on the export spec after the plan was approved, and two success criteria changed. Re-check whether the existing plan's tasks still cover everything the spec asks for.",
+            "should_trigger": true,
+            "split": "holdout"
+        },
+        {
+            "id": "q-14",
+            "query": "Checkout abandonment has been climbing for a month, but nobody has agreed on why or what a fixed outcome would even look like. Before anything else, help me work through the actual problem, the constraints we're under, and what's in and out of scope.",
+            "should_trigger": false,
+            "split": "holdout"
+        },
+        {
+            "id": "q-15",
+            "query": "The feature-flag service plan from yesterday's session is written and reviewed but nobody approved it yet. Show me what it covers and ask me for the approval so we can start.",
+            "should_trigger": true,
+            "split": "holdout"
+        },
+        {
+            "id": "q-16",
+            "query": "Sprint refinement is tomorrow. Split these five backlog stories into smaller user stories the team can point and pull into the sprint. There's no spec or design behind them, just the story cards.",
+            "should_trigger": false,
+            "split": "holdout"
+        },
+        {
+            "id": "q-17",
+            "query": "Here's the concrete requirements list for the inventory-sync job: idempotent writes keyed by SKU, last-writer-wins conflict resolution with a logged conflict record, and a dry-run mode that prints the writes it would make. Plan this out into ordered implementation tasks.",
+            "should_trigger": true,
+            "split": "holdout"
+        },
+        {
+            "id": "q-18",
+            "query": "The team already drafted a rollout plan for the multi-tenant billing migration. Before anyone touches it, stress-test the plan for where the sequencing could fall apart under load and call out any steps that are just optimistic assumptions dressed up as tasks.",
+            "should_trigger": false,
+            "split": "holdout"
+        },
+        {
+            "id": "q-19",
+            "query": "Architecture review just signed off on the design doc for the new tenant-isolation layer in the multi-tenant platform, and the data flow between services is fully specified. Turn that into a sequenced set of implementation tasks, each independently testable, so the team can start picking up work this sprint.",
+            "should_trigger": true,
+            "split": "holdout"
+        },
+        {
+            "id": "q-20",
+            "query": "Out of curiosity, about how many implementation tasks would breaking up the reporting monolith into three services take? I don't need you to actually write the plan, I'm just gathering rough numbers for a slide in tomorrow's staffing review.",
+            "should_trigger": false,
+            "split": "holdout"
+        }
+    ]
+}

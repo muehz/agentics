@@ -1,0 +1,31 @@
+{
+    "branches": ["main"],
+    "tagFormat": "v${version}",
+    "plugins": [
+        [
+            "@semantic-release/commit-analyzer",
+            {
+                "preset": "conventionalcommits",
+                "releaseRules": [{ "revert": true, "release": false }]
+            }
+        ],
+        [
+            "@semantic-release/release-notes-generator",
+            { "preset": "conventionalcommits" }
+        ],
+        "./.github/tools/src/release/plugin.ts",
+        [
+            "@semantic-release/git",
+            {
+                "assets": [
+                    ".claude-plugin/marketplace.json",
+                    ".claude-plugin/plugin.json",
+                    ".codex-plugin/plugin.json",
+                    ".github/plugin/plugin.json",
+                    ".antigravity-plugin/plugin.json"
+                ],
+                "message": "chore(release): v${nextRelease.version} [skip ci]"
+            }
+        ]
+    ]
+}

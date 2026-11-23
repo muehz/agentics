@@ -1,0 +1,33 @@
+# Auto detect text files and use LF on every checkout, including Windows
+* text=auto eol=lf
+
+# Denote binary files
+*.pdf binary
+*.xlsx binary
+*.vsdx binary
+
+# state.tsv is a committed flow artifact and the conformance rule state-tsv-shape
+# compares its header byte for byte, so a CRLF checkout fails it.
+*.tsv text eol=lf
+# Append-only flow state: a union merge keeps both sides' rows. A conflict
+# resolved by hand can repeat the version line and header, which
+# state-tsv-shape accepts.
+docs/specs/**/state.tsv merge=union
+# Keep ordinary Windows batch scripts on CRLF (run-hook.cmd is overridden below).
+*.bat text eol=crlf
+*.cmd text eol=crlf
+
+# Go sources stay LF on every checkout. LF keeps the bytes the source digest
+# hashes equal to the committed bytes, so its CRLF fold is a no-op, and gofmt -l
+# reports a CRLF file as unformatted.
+*.go text eol=lf
+
+# run-hook.cmd's fetch path matches manifest entries with awk field splitting,
+# and a CR on the path field would defeat every match on a CRLF checkout.
+hooks/SHA256SUMS text eol=lf
+
+# polyglot bash/cmd dispatcher — must stay LF so bash heredoc works on macOS/Linux
+hooks/run-hook.cmd text eol=lf
+
+.github/workflows/*.lock.yml linguist-generated=true
+

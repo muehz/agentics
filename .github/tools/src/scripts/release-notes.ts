@@ -1,0 +1,292 @@
+#!/usr/bin/env node
+
+import fs from "node:fs";
+import { TextDecoder } from "node:util";
+import { readSafeOutput, runSafeGh, safeOutputRepo } from "./safe-output.ts";
+import { FOOTER_PATTERN } from "../release/notes-contract.ts";
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null;
+}
+
+function fail(message: string): never {
+  throw new Error(message);
+}
+
+function readUtf8(path: string, name: string) {
+  let bytes: Buffer;
+  try {
+    bytes = fs.readFileSync(path);
+  } catch {
+    fail(`could not read ${name}`);
+  }
+  try {
+    return new TextDecoder("utf-8", { fatal: true }).decode(bytes);
+  } catch {
+    fail(`${name} is not valid UTF-8`);
+  }
+}
+
+function required(name: string) {
+  const value = process.env[name];
+  if (!value) fail(`${name} is required`);
+  return value;
+}
+
+function validateSha(value: unknown, field: string) {
+  if (typeof value !== "string" || !/^[0-9a-f]{40}$/.test(value))
+    fail(`${field} must be exactly 40 lowercase hexadecimal characters`);
+  return value;
+}
+
+function validateTag(value: unknown, field: string) {
+  if (typeof value !== "string" || !/^v[0-9]+\.[0-9]+\.[0-9]+$/.test(value))
+    fail(`${field} must match vX.Y.Z`);
+  return value;
+}
+
+function readBoundState() {
+  const raw = readUtf8(required("RELEASE_STATE_FILE"), "RELEASE_STATE_FILE");
+  let state: unknown;
+  try {
+    state = JSON.parse(raw);
+  } catch {
+    fail("RELEASE_STATE_FILE is not valid JSON");
+  }
+  if (!isRecord(state) || Array.isArray(state))
+    fail("RELEASE_STATE_FILE must contain an object");
+  const targetSha = validateSha(required("TARGET_SHA"), "TARGET_SHA");
+  const sha = validateSha(state.sha, "RELEASE_STATE_FILE.sha");
+  if (sha !== targetSha)
+    fail("RELEASE_STATE_FILE.sha does not match TARGET_SHA");
+  const tag = validateTag(state.tag, "RELEASE_STATE_FILE.tag");
+  const releaseId = state.release_id;
+  if (typeof releaseId !== "string" || !/^[0-9]+$/.test(releaseId))
+    fail("RELEASE_STATE_FILE.release_id must be a nonempty ASCII digit string");
+  if (typeof state.prerelease !== "boolean")
+    fail("RELEASE_STATE_FILE.prerelease must be a boolean");
+  return { targetSha, tag, releaseId, prerelease: state.prerelease };
+}
+
+function envPrerelease() {
+  const value = required("RELEASE_PRERELEASE");
+  if (value !== "true" && value !== "false")
+    fail("RELEASE_PRERELEASE must be true or false");
+  return value === "true";
+}
+
+function validateInputs(state: ReturnType<typeof readBoundState> | undefined) {
+  const releaseId = state?.releaseId ?? required("RELEASE_ID");
+  if (!/^[1-9][0-9]*$/.test(releaseId))
+    fail(
+      `${state ? "RELEASE_STATE_FILE.release_id" : "RELEASE_ID"} must be a positive decimal number`,
+    );
+  const targetSha =
+    state?.targetSha ?? validateSha(required("TARGET_SHA"), "TARGET_SHA");
+  const tag = state?.tag ?? validateTag(required("TAG"), "TAG");
+  const repo = safeOutputRepo(process.env);
+  const baselinePath = required("BASELINE_NOTES");
+  return {
+    releaseId,
+    targetSha,
+    tag,
+    repo,
+    baselinePath,
+    prerelease: state?.prerelease ?? envPrerelease(),
+  };
+}
+
+// HIGHLIGHTS_HEADING opens the agent's section, the way GitHub's own notes
+// open with "## What's Changed". The agent writes only the sections below
+// it; the heading is added here so it is present on every enriched
+// release. release/notes-contract.ts writes the same heading a second time.
+// This script's tests pin the composed body to the literal heading, and the
+// adapter tests in release/release-notes.test.ts compare
+// what this script writes, byte for byte, with a body built from the
+// contract's copy.
+export const HIGHLIGHTS_HEADING = "## 🌟 Release Highlights\n\n";
+
+// The generated changelog sits in a collapsed block under the highlights, so
+// the highlights carry the reading and the changelog stays one click away as
+// the full record. The blank line after the summary is required: GitHub does
+// not render Markdown inside the block without it.
+const CHANGELOG_OPEN = "<details>\n<summary>Full changelog</summary>\n\n";
+const CHANGELOG_CLOSE = "\n\n</details>\n";
+
+export function footerLine() {
+  const server = required("GITHUB_SERVER_URL");
+  const repo = required("GH_REPO");
+  const runId = required("GITHUB_RUN_ID");
+  const engine = required("NOTES_ENGINE");
+  const model = required("NOTES_MODEL");
+  if (!/^[1-9][0-9]*$/.test(runId))
+    fail("GITHUB_RUN_ID must be a positive decimal number");
+  // A separator or newline inside either field would make the footer this run
+  // writes unmatchable by FOOTER_PATTERN, so every later dispatch would read
+  // its own output as someone else's notes and refuse forever. Fail loudly on
+  // the run that introduces one instead.
+  if (/[\n·]/.test(engine) || /[\n·]/.test(model))
+    fail("NOTES_ENGINE and NOTES_MODEL must not contain a newline or ·");
+  return `> Generated by [Agentics release](${server}/${repo}/actions/runs/${runId}) · ${engine} · ${model}`;
+}
+
+export function composeBody(
+  highlights: string,
+  baseline: string,
+  footer: string,
+) {
+  return `${HIGHLIGHTS_HEADING}${highlights}\n\n${footer}\n\n${CHANGELOG_OPEN}${baseline}${CHANGELOG_CLOSE}`;
+}
+
+// classifyBody compares by content equivalence rather than by which run
+// wrote the body — and, deliberately, without pinning the agent's own
+// wording. `highlights` (the current run's agent output) is accepted for
+// signature stability but is not compared against the body's own text: the
+// agent is an LLM, so a retry almost never phrases the highlights
+// byte-for-byte the same as an earlier run, and requiring that match would
+// make nearly every retry fall through to the refusal branch below instead
+// of recognizing the shape it already wrote.
+export function classifyBody(
+  body: unknown,
+  highlights: string,
+  baseline: string,
+) {
+  // The releases API returns null for a release with no body. Treat anything
+  // that is not a string as unrecognized, so the skip below still fires: the
+  // previous code refused it cleanly, and reading .length off null would end
+  // the job on a raw TypeError instead.
+  if (typeof body !== "string") return "unrecognized";
+  if (body === baseline) return "baseline";
+  const suffix = `\n\n${CHANGELOG_OPEN}${baseline}${CHANGELOG_CLOSE}`;
+  if (!body.startsWith(HIGHLIGHTS_HEADING) || !body.endsWith(suffix)) {
+    return "unrecognized";
+  }
+  const middle = body.slice(
+    HIGHLIGHTS_HEADING.length,
+    body.length - suffix.length,
+  );
+  // The footer is one line with no newline in it (footerLine() and
+  // FOOTER_PATTERN both guarantee that), so it is the only part of the
+  // composed shape guaranteed newline-free. That makes the *last* blank line
+  // in the middle the boundary between the agent's highlights and the
+  // footer, regardless of what the highlights say or how many blank lines
+  // they themselves contain.
+  const separator = middle.lastIndexOf("\n\n");
+  if (separator === -1) return "unrecognized";
+  const highlightsPart = middle.slice(0, separator);
+  const footerPart = middle.slice(separator + 2);
+  if (highlightsPart.length === 0 || !FOOTER_PATTERN.test(footerPart)) {
+    return "unrecognized";
+  }
+  return "enriched";
+}
+
+// The release is the one stage published for this run (ADR 0010).
+// Its tag_name must be the real tag: stage published it with tag_name set.
+function assertIdentity(
+  release: unknown,
+  inputs: ReturnType<typeof validateInputs>,
+): asserts release is Record<string, unknown> {
+  if (release && (!isRecord(release) || release.draft !== false)) {
+    fail(
+      `release ${inputs.tag} is still a draft; stage publishes it before notes run`,
+    );
+  }
+  if (isRecord(release) && /^untagged-/.test(String(release.tag_name))) {
+    fail(
+      `release ${inputs.tag} is published under placeholder tag ${release.tag_name}`,
+    );
+  }
+  if (
+    !isRecord(release) ||
+    String(release.id) !== inputs.releaseId ||
+    release.tag_name !== inputs.tag ||
+    release.name !== inputs.tag ||
+    release.draft !== false ||
+    release.target_commitish !== inputs.targetSha
+  ) {
+    fail("release identity mismatch");
+  }
+}
+
+function getRelease(
+  inputs: ReturnType<typeof validateInputs>,
+  operation: "release GET" | "verification GET",
+) {
+  return runSafeGh(operation, [
+    "api",
+    `repos/${inputs.repo}/releases/${inputs.releaseId}`,
+  ]);
+}
+
+function main() {
+  const boundState =
+    process.env.RELEASE_STATE_FILE === undefined ? undefined : readBoundState();
+  const output = readSafeOutput(process.env, "update_release_notes");
+  if (output.kind !== "matched") {
+    console.error(
+      output.kind === "staged"
+        ? "release-notes: safe outputs are staged; no API calls made"
+        : "release-notes: no matching update_release_notes item; no-op",
+    );
+    return;
+  }
+  const highlights = output.value;
+  const inputs = validateInputs(boundState);
+  const baseline = readUtf8(inputs.baselinePath, "BASELINE_NOTES");
+  const composed = composeBody(highlights, baseline, footerLine());
+  const release = getRelease(inputs, "release GET");
+  assertIdentity(release, inputs);
+  if (release.prerelease !== inputs.prerelease) {
+    console.error(
+      "release-notes: release state changed since publication; no-op",
+    );
+    return;
+  }
+
+  const state = classifyBody(release.body, highlights, baseline);
+  if (state === "enriched") {
+    console.error("release-notes: release body already enriched; no-op");
+    return;
+  }
+  if (state === "unrecognized") {
+    // Neither the baseline nor a shape this script composed. Usually a person
+    // editing the release, but also a re-dispatch whose agent wrote different
+    // highlights, so this does not claim a human wrote it.
+    console.error(
+      "release-notes: refusing to overwrite notes this run did not compose",
+    );
+    return;
+  }
+
+  runSafeGh(
+    "PATCH",
+    [
+      "api",
+      "--method",
+      "PATCH",
+      `repos/${inputs.repo}/releases/${inputs.releaseId}`,
+      "--input",
+      "-",
+    ],
+    JSON.stringify({ body: composed }),
+  );
+
+  const reread = getRelease(inputs, "verification GET");
+  assertIdentity(reread, inputs);
+  if (reread.prerelease !== inputs.prerelease)
+    fail("verification release state changed since publication");
+  if (reread.body !== composed) fail("verification body mismatch");
+  console.error("release-notes: release notes updated and verified");
+}
+
+if (import.meta.main) {
+  try {
+    main();
+  } catch (error) {
+    console.error(
+      `release-notes: ${error instanceof Error ? error.message : "operation failed"}`,
+    );
+    process.exitCode = 1;
+  }
+}

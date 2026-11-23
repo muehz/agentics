@@ -1,0 +1,16 @@
+{
+  "hookEventName": "PreToolUse",
+  "conversationId": "antigravity-session-1",
+  "turnId": "antigravity-turn-8",
+  "cwd": "/tmp/agentics-antigravity-fixture",
+  "toolCall": {
+    "name": "replace_file_content",
+    "args": {
+      "TargetFile": "/tmp/agentics-antigravity-fixture/app.txt",
+      "TargetContent": "old line\n",
+      "ReplacementContent": "new line\n",
+      "StartLine": 1,
+      "EndLine": 1
+    }
+  }
+}
