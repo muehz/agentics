@@ -108,7 +108,7 @@ find. The skill handles both:
 3. The docs-repo version gets a footer that points back to the source repo:
 
 ```markdown
----
+***
 
 _This runbook is mirrored from
 [`<source-repo>/runbooks/<name>.md`](https://github.com/<owner>/<source-repo>/blob/main/runbooks/<name>.md). Keep them
@@ -120,7 +120,7 @@ in sync. Edit the source first._
 When you publish anywhere other than the runbook's home repo, include a provenance footer:
 
 ```markdown
----
+***
 
 _Authored via `/agentics:ops author` on YYYY-MM-DD. Seeded from postmortem [`<owner>/<repo>#<issue>`](url) (if
 applicable)._
