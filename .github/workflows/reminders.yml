@@ -23,7 +23,7 @@ jobs:
     runs-on: ubuntu-slim
     if: github.event_name == 'workflow_dispatch' || github.event.schedule == '0 9 * * 1'
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/checkout@v7.0.1
 
       # The conformance suite's docs domain owns the ledger rules; the max-age
       # knob arms its staleness check exactly as the retired bash harness did.
@@ -53,10 +53,10 @@ jobs:
       group: third-party-review-reminder
       cancel-in-progress: false
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/checkout@v7.0.1
 
       - name: Open monthly tracking issue
-        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        uses: actions/github-script@v9.0.0
         with:
           script: |
             const fs = require('node:fs');

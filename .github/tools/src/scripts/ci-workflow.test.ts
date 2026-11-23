@@ -72,10 +72,9 @@ function parseWorkflow(source: string): WorkflowDocument {
 }
 const ROOT = path.resolve(import.meta.dirname, "../../../..");
 const WORKFLOW = path.join(ROOT, ".github/workflows/validate.yml");
-const CHECKOUT = "actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1";
-const SETUP_NODE =
-  "actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1";
-const SETUP_GO = "actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e";
+const CHECKOUT = "actions/checkout@v7.0.1";
+const SETUP_NODE = "actions/setup-node@v7.1.0";
+const SETUP_GO = "actions/setup-go@v7.0.0";
 const FORMAT_GO_MESSAGE = "format must not set up Go";
 const FORMAT_TESTS_MESSAGE = "format must not run node --test";
 const SCOPED =
@@ -1897,10 +1896,7 @@ function assertFixtureToolchain(job: WorkflowJob): void {
     step.uses?.startsWith("actions/setup-go@"),
   )!;
   assert.equal(setup.length, 1, "tools needs the native fixture toolchain");
-  assert.equal(
-    setup[0]!.uses,
-    "actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e",
-  );
+  assert.equal(setup[0]!.uses, SETUP_GO);
   assert.equal(
     setup[0]!.if,
     undefined,
@@ -1966,7 +1962,7 @@ function assertTypeScriptCoverageUpload(source: string): void {
         steps: [
           {
             name: "Download coverage artifact",
-            uses: "actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333",
+            uses: "actions/download-artifact@v8.0.2",
             with: { name: artifact },
           },
           {
@@ -1983,7 +1979,7 @@ function assertTypeScriptCoverageUpload(source: string): void {
               'else\n  echo "should_upload=true" >> "$GITHUB_OUTPUT"\nfi\n',
           },
           {
-            uses: "actions/upload-code-coverage@2b21a77928be8d5168c2b9581a67f2adbebacc52",
+            uses: "actions/upload-code-coverage@v1.4.4",
             if: "steps.context.outputs.should_upload == 'true'",
             with: { file, language, label },
           },
@@ -2046,10 +2042,7 @@ test("TypeScript upload rejects repository execution, changed pins, and weakened
       "          DEFAULT_BRANCH: main",
     ],
     ["        if: steps.context.outputs.should_upload == 'true'\n", ""],
-    [
-      "actions/upload-code-coverage@2b21a77928be8d5168c2b9581a67f2adbebacc52",
-      "actions/upload-code-coverage@v1",
-    ],
+    ["actions/upload-code-coverage@v1.4.4", "actions/upload-code-coverage@v1"],
     ["          language: TypeScript", "          language: Go"],
     [
       "          name: coverage-report-typescript",
@@ -2121,10 +2114,7 @@ function assertTypeScriptCoverageReport(source: string): void {
   const download = report.steps.find(
     (step) => step.name === "Download shard LCOV reports",
   )!;
-  assert.equal(
-    download.uses,
-    "actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333",
-  );
+  assert.equal(download.uses, "actions/download-artifact@v8.0.2");
   assert.deepEqual(download.with, {
     name: "ts-coverage-lcov-tools-1",
     path: "${{ runner.temp }}/lcov/ts-coverage-lcov-tools-1",
@@ -2132,10 +2122,7 @@ function assertTypeScriptCoverageReport(source: string): void {
   const upload = report.steps.find(
     (step) => step.name === "Upload TypeScript coverage artifact",
   )!;
-  assert.equal(
-    upload.uses,
-    "actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9",
-  );
+  assert.equal(upload.uses, "actions/upload-artifact@v7.0.2");
   assert.equal(upload.if, FORK_GUARD);
   assert.deepEqual(upload.with, {
     name: "coverage-report-typescript",
@@ -4192,7 +4179,7 @@ function moduleNodeStep(id: string): string {
     id === "native-hook-smoke"
       ? `          architecture: ${NATIVE_NODE_ARCHITECTURE}\n`
       : "";
-  return `      - uses: ${SETUP_NODE} # v7.1.0\n        with:\n          node-version: ${MODULE_NODE_VERSION}\n${architecture}\n`;
+  return `      - uses: ${SETUP_NODE}\n        with:\n          node-version: ${MODULE_NODE_VERSION}\n${architecture}\n`;
 }
 
 // The setup step follows checkout, precedes the job's first run, and pins the

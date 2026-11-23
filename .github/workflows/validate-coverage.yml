@@ -50,22 +50,22 @@ jobs:
     steps:
       # The default checkout, like go-suite's: the profiles were measured on
       # that tree, and the converter resolves their files against it.
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/checkout@v7.0.1
         with:
           persist-credentials: false
 
-      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+      - uses: actions/setup-node@v7.1.0
         with:
           node-version: 26.12.1
 
-      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+      - uses: actions/setup-go@v7.0.0
         with:
           go-version-file: hooks/go/go.mod
           cache: ${{ inputs.cache != 'cold' }}
           cache-dependency-path: hooks/go/go.mod
 
       - name: Download shard coverage profiles
-        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        uses: actions/download-artifact@v8.0.2
         with:
           name: go-coverage-profile-hooks
           path: ${{ runner.temp }}/profiles/go-coverage-profile-hooks
@@ -89,7 +89,7 @@ jobs:
 
       - name: Upload coverage artifact
         if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
-        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        uses: actions/upload-artifact@v7.0.2
         with:
           name: coverage-report-go
           path: |
@@ -107,7 +107,7 @@ jobs:
       code-quality: write
     steps:
       - name: Download coverage artifact
-        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        uses: actions/download-artifact@v8.0.2
         with:
           name: coverage-report-go
 
@@ -126,7 +126,7 @@ jobs:
             echo "should_upload=true" >> "$GITHUB_OUTPUT"
           fi
 
-      - uses: actions/upload-code-coverage@2b21a77928be8d5168c2b9581a67f2adbebacc52 # v1.4.4
+      - uses: actions/upload-code-coverage@v1.4.4
         if: steps.context.outputs.should_upload == 'true'
         with:
           file: cobertura.xml
@@ -158,12 +158,12 @@ jobs:
       run:
         shell: bash
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/checkout@v7.0.1
         with:
           persist-credentials: false
           fetch-depth: 0
 
-      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+      - uses: actions/setup-node@v7.1.0
         with:
           node-version: 26.12.1
 
@@ -177,7 +177,7 @@ jobs:
         run: npm ci --ignore-scripts --prefix .github/release
 
       - name: Set up the TypeScript fixture toolchain
-        uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        uses: actions/setup-go@v7.0.0
         with:
           go-version-file: hooks/go/go.mod
           cache: ${{ inputs.cache != 'cold' }}
@@ -187,7 +187,7 @@ jobs:
         run: node .github/tools/src/scripts/ci-test-shard.ts "coverage-$WORKSPACE" "$TEST_SHARD" 1
 
       - name: Upload the shard LCOV report
-        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        uses: actions/upload-artifact@v7.0.2
         with:
           name: ts-coverage-lcov-${{ matrix.workspace }}-${{ matrix.shard }}
           path: .github/${{ matrix.workspace }}/coverage/lcov.info
@@ -206,16 +206,16 @@ jobs:
       run:
         shell: bash
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/checkout@v7.0.1
         with:
           persist-credentials: false
 
-      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+      - uses: actions/setup-node@v7.1.0
         with:
           node-version: 26.12.1
 
       - name: Download shard LCOV reports
-        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        uses: actions/download-artifact@v8.0.2
         with:
           name: ts-coverage-lcov-tools-1
           path: ${{ runner.temp }}/lcov/ts-coverage-lcov-tools-1
@@ -227,7 +227,7 @@ jobs:
 
       - name: Upload TypeScript coverage artifact
         if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
-        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        uses: actions/upload-artifact@v7.0.2
         with:
           name: coverage-report-typescript
           path: cobertura-typescript.xml
@@ -244,7 +244,7 @@ jobs:
       code-quality: write
     steps:
       - name: Download coverage artifact
-        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        uses: actions/download-artifact@v8.0.2
         with:
           name: coverage-report-typescript
 
@@ -261,7 +261,7 @@ jobs:
             echo "should_upload=true" >> "$GITHUB_OUTPUT"
           fi
 
-      - uses: actions/upload-code-coverage@2b21a77928be8d5168c2b9581a67f2adbebacc52 # v1.4.4
+      - uses: actions/upload-code-coverage@v1.4.4
         if: steps.context.outputs.should_upload == 'true'
         with:
           file: cobertura-typescript.xml

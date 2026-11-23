@@ -65,13 +65,37 @@ test("the mutation jobs are read-only, secret-free, and pinned", () => {
     undefined,
     "the caller must not widen the token",
   );
+  const lockfile = YAML.parse(
+    fs.readFileSync(
+      path.resolve(
+        import.meta.dirname,
+        "../../../../.github/workflows/actions.lock",
+      ),
+      "utf8",
+    ),
+  ) as {
+    workflows: Record<string, string[]>;
+    dependencies: Record<string, { commit?: string }>;
+  };
+  const locked = new Set(
+    lockfile.workflows[".github/workflows/validate-mutation.yml"] ?? [],
+  );
   for (const id of MUTATION_JOBS) {
     const job = workflow.jobs[id]!;
     assert.equal(job.permissions, undefined, `${id} must not widen the token`);
     assert.doesNotMatch(YAML.stringify(job), /secrets\./, id);
     for (const step of job.steps) {
       if (step.uses === undefined) continue;
-      assert.match(step.uses, /^[\w.-]+\/[\w.-]+@[0-9a-f]{40}$/, step.uses);
+      assert.match(step.uses, /^[\w.-]+\/[\w.-]+@v\d+\.\d+\.\d+$/, step.uses);
+      assert.ok(
+        locked.has(step.uses),
+        `${step.uses} must be locked in actions.lock`,
+      );
+      assert.match(
+        lockfile.dependencies[step.uses]?.commit ?? "",
+        /^sha1-[0-9a-f]{40}$/,
+        `${step.uses} must resolve to a 40-hex commit in actions.lock`,
+      );
     }
   }
 });
