@@ -190,7 +190,7 @@ In Phase 6:
 1. **Add a provenance footer** to the runbook:
 
     ```markdown
-    ---
+    ***
 
     _Authored via `/agentics:ops author from-postmortem` on YYYY-MM-DD. Seeded from postmortem
     [`<owner>/<repo>#<issue-id>`](postmortem-url)._
