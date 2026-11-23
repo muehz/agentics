@@ -1,10 +1,12 @@
 import assert from "node:assert/strict";
-import { spawnSync } from "node:child_process";
+import { execFile, spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { createServer } from "node:http";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import test from "node:test";
+import { promisify } from "node:util";
 import { Script } from "node:vm";
 import {
   inlineNodeScript,
@@ -15,6 +17,7 @@ import {
 const ROOT = path.resolve(import.meta.dirname, "../../../../..");
 const VALIDATE = ".github/workflows/validate.yml";
 const METADATA = "pr-metadata";
+const FETCH = "Fetch current pull request metadata";
 const TITLE = "Check the PR title";
 const MARKERS = "Check the release markers";
 const DESCRIPTION = "Check the change description";
@@ -40,11 +43,129 @@ test("a matching name in an earlier job cannot replace the selected workflow ste
   );
 });
 
-const event = {
-  title: "${{ github.event.pull_request.title }}",
-  body: "${{ github.event.pull_request.body }}",
-  author: "${{ github.event.pull_request.user.login }}",
+const metadata = {
+  title: "${{ fromJSON(steps.metadata.outputs.snapshot).title }}",
+  body: "${{ fromJSON(steps.metadata.outputs.snapshot).body }}",
+  author: "${{ fromJSON(steps.metadata.outputs.snapshot).author }}",
 };
+
+test("each metadata run fetches the current snapshot for all three checks", async (t) => {
+  const selected = lookupWorkflowStep(validate, VALIDATE, METADATA, FETCH);
+  const events = selected.workflow.on as { pull_request: { types: string[] } };
+  assert.deepEqual(events.pull_request.types, [
+    "opened",
+    "synchronize",
+    "reopened",
+    "edited",
+  ]);
+  assert.deepEqual(selected.step.env, {
+    GH_TOKEN: "${{ github.token }}",
+    PR_NUMBER: "${{ github.event.pull_request.number }}",
+  });
+  const directory = mkdtempSync(path.join(tmpdir(), "agentics-pr-metadata-"));
+  t.after(() => rmSync(directory, { recursive: true, force: true }));
+  const output = path.join(directory, "github-output");
+  const calls: { url: string | undefined; method: string | undefined }[] = [];
+  let current = {
+    title: "Old title",
+    body: null as string | null,
+    user: { login: "fixture-author" },
+  };
+  let status = 200;
+  const server = createServer((request, response) => {
+    calls.push({ url: request.url, method: request.method });
+    response.writeHead(status, { "Content-Type": "application/json" });
+    response.end(JSON.stringify(current));
+  });
+  await new Promise<void>((resolve) => server.listen(0, "127.0.0.1", resolve));
+  t.after(() => server[Symbol.asyncDispose]());
+  const address = server.address();
+  assert.ok(address && typeof address === "object");
+  const env = {
+    ...process.env,
+    GITHUB_API_URL: `http://127.0.0.1:${address.port}`,
+    GITHUB_REPOSITORY: "example/agentics",
+    GH_TOKEN: "fixture-token",
+    PR_NUMBER: "2",
+    GITHUB_OUTPUT: output,
+    PR_TITLE: "Old title",
+    PR_BODY: "Old description",
+    PR_AUTHOR: "old-author",
+  };
+  const fetchMetadata = () =>
+    promisify(execFile)(process.execPath, ["-e", inlineNodeScript(selected)], {
+      env,
+    });
+  const fetchSnapshot = async () => {
+    writeFileSync(output, "");
+    await fetchMetadata();
+    const line = readFileSync(output, "utf8");
+    assert.match(line, /^snapshot=[^\r\n]+\n$/u);
+    return JSON.parse(line.slice("snapshot=".length)) as Record<string, string>;
+  };
+  const check = (
+    name: string,
+    bindings: Record<string, string>,
+    snapshot: Record<string, string>,
+  ) =>
+    runMetadata(
+      name,
+      {
+        PR_TITLE: snapshot.title!,
+        PR_BODY: snapshot.body!,
+        PR_AUTHOR: snapshot.author!,
+      },
+      directory,
+      bindings,
+    );
+  const titleBindings = { PR_TITLE: metadata.title };
+  const markerBindings = { PR_TITLE: metadata.title, PR_BODY: metadata.body };
+  const descriptionBindings = {
+    PR_BODY: metadata.body,
+    PR_AUTHOR: metadata.author,
+  };
+
+  const stale = await fetchSnapshot();
+  assert.deepEqual(stale, {
+    title: "Old title",
+    body: "",
+    author: "fixture-author",
+  });
+  assert.equal(check(TITLE, titleBindings, stale).status, 1);
+  assert.equal(check(DESCRIPTION, descriptionBindings, stale).status, 1);
+
+  current = {
+    ...current,
+    title: "fix: check current metadata",
+    body: "## What changed\r\n\r\nTreat newlines and shell-shaped text $(exit 73) as data.\r\n",
+  };
+  const fresh = await fetchSnapshot();
+  assert.deepEqual(fresh, {
+    title: current.title,
+    body: current.body,
+    author: current.user.login,
+  });
+  assert.equal(check(TITLE, titleBindings, fresh).status, 0);
+  assert.match(
+    check(MARKERS, markerBindings, fresh).stdout,
+    /Release level: patch/u,
+  );
+  assert.equal(check(DESCRIPTION, descriptionBindings, fresh).status, 0);
+
+  status = 403;
+  writeFileSync(output, "");
+  await assert.rejects(fetchMetadata(), {
+    stderr: /current pull request metadata.*HTTP 403/u,
+  });
+  assert.equal(readFileSync(output, "utf8"), "");
+  assert.deepEqual(
+    calls,
+    Array.from({ length: 3 }, () => ({
+      url: "/repos/example/agentics/pulls/2",
+      method: "GET",
+    })),
+  );
+});
 
 function runMetadata(
   name: string,
@@ -53,7 +174,7 @@ function runMetadata(
   expectedBindings: Record<string, string>,
 ) {
   const selected = lookupWorkflowStep(validate, VALIDATE, METADATA, name);
-  assert.deepEqual(selected.job.permissions, {});
+  assert.deepEqual(selected.job.permissions, { "pull-requests": "read" });
   assert.equal(selected.job.if, "github.event_name == 'pull_request'");
   const actionSteps = (selected.job.steps as WorkflowStepData[]).flatMap(
     (step) => (step.uses ? [step.uses] : []),
@@ -78,7 +199,7 @@ function runMetadata(
   };
 }
 
-test("the checkout-free metadata job executes the inline rules with event data in env only", (t) => {
+test("the checkout-free metadata job executes the inline rules with snapshot data in env only", (t) => {
   const directory = mkdtempSync(
     path.join(tmpdir(), "agentics-metadata-rules-"),
   );
@@ -89,7 +210,7 @@ test("the checkout-free metadata job executes the inline rules with event data i
     "## What changed\r\n\r\nUse $(exit 73) as text.\r\n\r\nBREAKING CHANGE: data\r\n";
   assert.deepEqual(
     runMetadata(TITLE, { PR_TITLE: title }, directory, {
-      PR_TITLE: event.title,
+      PR_TITLE: metadata.title,
     }),
     {
       status: 0,
@@ -106,7 +227,7 @@ test("the checkout-free metadata job executes the inline rules with event data i
         GITHUB_OUTPUT: output,
       },
       directory,
-      { PR_TITLE: event.title, PR_BODY: event.body },
+      { PR_TITLE: metadata.title, PR_BODY: metadata.body },
     ),
     {
       status: 0,
@@ -124,7 +245,7 @@ test("the checkout-free metadata job executes the inline rules with event data i
         GITHUB_OUTPUT: output,
       },
       directory,
-      { PR_TITLE: event.title, PR_BODY: event.body },
+      { PR_TITLE: metadata.title, PR_BODY: metadata.body },
     ),
     {
       status: 1,
@@ -135,7 +256,10 @@ test("the checkout-free metadata job executes the inline rules with event data i
   );
   assert.equal(readFileSync(output, "utf8"), "level=major\n");
 
-  const descriptionBindings = { PR_BODY: event.body, PR_AUTHOR: event.author };
+  const descriptionBindings = {
+    PR_BODY: metadata.body,
+    PR_AUTHOR: metadata.author,
+  };
   assert.deepEqual(
     runMetadata(
       DESCRIPTION,

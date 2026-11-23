@@ -3987,16 +3987,21 @@ test("negative: the coverage paths guard rejects a step that is not the module c
 
 test("the PR metadata jobs run only on pull requests and hold no wider token", () => {
   const jobs = parseWorkflow(readWorkflow()).jobs;
-  assert.deepEqual(jobs["pr-metadata"]!.permissions, {});
+  assert.deepEqual(jobs["pr-metadata"]!.permissions, {
+    "pull-requests": "read",
+  });
   assert.deepEqual(jobs["pr-version-fields"]!.permissions, {
     contents: "read",
   });
   for (const id of ["pr-metadata", "pr-version-fields"]) {
     assert.equal(jobs[id]!.if, "github.event_name == 'pull_request'", id);
   }
-  // Drafts included: the pull request trigger names no event types.
+  // Keep the standard PR events, including drafts, and validate metadata edits.
   const on = YAML.parse(readWorkflow()).on;
-  assert.deepEqual(on.pull_request, { branches: ["main"] });
+  assert.deepEqual(on.pull_request, {
+    branches: ["main"],
+    types: ["opened", "synchronize", "reopened", "edited"],
+  });
 });
 
 test("each called workflow runs only when validate.yml calls it, with a read-only default token", () => {
@@ -4350,6 +4355,11 @@ const INLINE_BLOCKS = [
     "ts-coverage-upload",
     "Select supported coverage upload context",
   ],
+  [
+    ".github/workflows/validate.yml",
+    "pr-metadata",
+    "Fetch current pull request metadata",
+  ],
   [".github/workflows/validate.yml", "pr-metadata", "Check the PR title"],
   [
     ".github/workflows/validate.yml",
@@ -4625,8 +4635,8 @@ function assertRunInventory(steps: RunStep[]): void {
   if (problems.length > 0) throw new Error(problems.join("\n"));
 }
 
-test("exactly the 19 inline run: blocks stay multi-line and the 23 moved steps call their modules", () => {
-  assert.equal(INLINE_BLOCKS.length, 19);
+test("exactly the 20 inline run: blocks stay multi-line and the 23 moved steps call their modules", () => {
+  assert.equal(INLINE_BLOCKS.length, 20);
   assert.equal(MOVED_STEPS.length, 23);
   const modules = new Set(
     MOVED_STEPS.map(([, , , command]) => /ci-[a-z-]+\.ts/.exec(command)![0]),
@@ -4646,7 +4656,7 @@ test("exactly the 19 inline run: blocks stay multi-line and the 23 moved steps c
     ".github/actions/release/action.yml": 1,
     ".github/workflows/validate-coverage.yml": 3,
     ".github/workflows/validate-manual.yml": 9,
-    ".github/workflows/validate.yml": 5,
+    ".github/workflows/validate.yml": 6,
   });
 });
 
