@@ -1,13 +1,12 @@
 package scriptsnap
 
 import (
-	"bytes"
 	"crypto/sha256"
 	"encoding/hex"
+	"errors"
 	"io"
 	"os"
 	"path/filepath"
-	"unicode/utf8"
 
 	"github.com/muehz/agentics/hooks/go/internal/pathshape"
 	"github.com/muehz/agentics/hooks/go/internal/shellwords"
@@ -80,10 +79,8 @@ func (h readHooks) checkOpened(path string, f *os.File, opened os.FileInfo) (she
 	if err != nil {
 		return refuse(path, shellwords.RuleChanging, "path no longer resolves"), true
 	}
-	if final != path {
-		if refusal, refused := h.checkResolved(path, final); refused {
-			return refusal, true
-		}
+	if refusal, refused := h.checkResolved(path, final); refused {
+		return refusal, true
 	}
 	if byFinal, err := os.Stat(final); err != nil || !os.SameFile(opened, byFinal) {
 		return refuse(path, shellwords.RuleChanging, "path resolves to a different file than the one opened"), true
@@ -95,20 +92,43 @@ func currentHooks() readHooks {
 	return readHooks{afterLstat: afterLstat, afterOpen: afterOpen, beforeRead: beforeRead, fileID: fileIDFunc}
 }
 
-// readFile reads at most max bytes of one regular file. It trusts no stat size and never executes the file.
+// readFile reads at most max bytes of one regular file into Raw and Text without dialect-specific content filtering,
+// peeking at most 4 KiB for oversized files and symlink targets. It trusts no stat size and never executes the file.
 //
-// The path is classified with Lstat so a final symlink is refused, then opened without blocking or following a link.
-// The opened handle is compared with the Lstat result to catch a path swapped in between, but that comparison is
-// best effort: a filesystem that reuses an inode for a delete and recreate passes it. Every later check therefore
-// binds to the opened handle, never to the path: its kind, its identity, and, after the read, its size and
-// modification time and whether the path still names it, so bytes that may mix two versions are never returned.
+// The path is classified with Lstat after lexical and resolved policy checks. A final symlink is refused as unreadable
+// while recording IsSymlink and, when its final target is a stable regular file that clears the path policy, a 4 KiB
+// ResolvedHeader peek. A regular file is opened without blocking or following a link and compared with the Lstat
+// result to catch a swap in between; because inode reuse can pass that comparison, every subsequent check binds to the
+// opened handle—its kind, its identity, and, after the read or header peek, its size, modification time, and whether
+// the path still names it—so bytes or headers that may mix two versions are never returned.
 func readFile(path string, max int, h readHooks) shellwords.ScriptRead {
 	if refusal, refused := h.checkPath(path); refused {
 		return refusal
 	}
 	info, err := os.Lstat(path)
+	if errors.Is(err, os.ErrNotExist) {
+		return shellwords.ScriptRead{
+			Path:     path,
+			Limit:    shellwords.RuleUnreadable,
+			Detail:   "not a readable regular file",
+			NotExist: true,
+		}
+	}
 	if err != nil {
 		return refuse(path, shellwords.RuleUnreadable, "not a readable regular file")
+	}
+	if info.Mode()&os.ModeSymlink != 0 {
+		r := refuse(path, shellwords.RuleUnreadable, "not a regular file")
+		r.IsSymlink = true
+		header, ok, protectedRefusal := peekSymlinkHeader(path, h)
+		if protectedRefusal != nil {
+			return *protectedRefusal
+		}
+		if ok {
+			r.ResolvedHeader = header
+			r.HasResolvedHeader = true
+		}
+		return r
 	}
 	if !info.Mode().IsRegular() {
 		return refuse(path, shellwords.RuleUnreadable, "not a regular file")
@@ -149,6 +169,24 @@ func readFile(path string, max int, h readHooks) shellwords.ScriptRead {
 	if refusal, refused := h.checkOpened(path, f, before); refused {
 		return refusal
 	}
+	if before.Size() > int64(max) {
+		head, err := io.ReadAll(io.LimitReader(f, headerPeekBytes))
+		if err != nil {
+			return refuse(path, shellwords.RuleUnreadable, "read failed")
+		}
+		after, err := f.Stat()
+		byPath, pathErr := os.Stat(path)
+		if err != nil || pathErr != nil || after.Size() != before.Size() || !after.ModTime().Equal(before.ModTime()) || !os.SameFile(before, byPath) {
+			return refuse(path, shellwords.RuleChanging, "file changed while it was read")
+		}
+		return shellwords.ScriptRead{
+			Path:     path,
+			Limit:    shellwords.RuleTooLarge,
+			Detail:   "exceeds the per-script limit",
+			TooLarge: true,
+			Header:   inspectHeader(head),
+		}
+	}
 	data, err := io.ReadAll(io.LimitReader(f, int64(max)+1))
 	if err != nil {
 		return refuse(path, shellwords.RuleUnreadable, "read failed")
@@ -159,26 +197,70 @@ func readFile(path string, max int, h readHooks) shellwords.ScriptRead {
 		return refuse(path, shellwords.RuleChanging, "file changed while it was read")
 	}
 	if len(data) > max {
-		return refuse(path, shellwords.RuleTooLarge, "exceeds the per-script limit")
-	}
-	if reason := contentGate(data); reason != "" {
-		return refuse(path, shellwords.RuleEncoding, reason)
+		return shellwords.ScriptRead{
+			Path:     path,
+			Limit:    shellwords.RuleTooLarge,
+			Detail:   "exceeds the per-script limit",
+			TooLarge: true,
+			Header:   inspectHeader(data),
+		}
 	}
 	sum := sha256.Sum256(data)
-	return shellwords.ScriptRead{Path: path, ID: id, Text: string(data), SHA256: hex.EncodeToString(sum[:]), Bytes: len(data)}
+	raw := string(data)
+	return shellwords.ScriptRead{
+		Path:   path,
+		ID:     id,
+		Raw:    raw,
+		Text:   raw,
+		SHA256: hex.EncodeToString(sum[:]),
+		Bytes:  len(data),
+		Header: inspectHeader(data),
+	}
 }
 
-// contentGate admits only plain LF text: valid UTF-8, no NUL, no CR, no byte-order mark.
-func contentGate(b []byte) string {
-	switch {
-	case bytes.HasPrefix(b, []byte{0xEF, 0xBB, 0xBF}), bytes.HasPrefix(b, []byte{0xFF, 0xFE}), bytes.HasPrefix(b, []byte{0xFE, 0xFF}):
-		return "byte-order mark"
-	case bytes.IndexByte(b, 0) >= 0:
-		return "NUL byte"
-	case bytes.IndexByte(b, '\r') >= 0:
-		return "carriage return"
-	case !utf8.Valid(b):
-		return "invalid UTF-8"
+func peekSymlinkHeader(path string, h readHooks) (shellwords.ScriptHeader, bool, *shellwords.ScriptRead) {
+	resolved, ok := resolveExisting(path)
+	if !ok {
+		return shellwords.ScriptHeader{}, false, nil
 	}
-	return ""
+	if refusal, refused := h.checkResolved(path, resolved); refused {
+		if refusal.Limit == shellwords.RulePathProtected {
+			refusal.Path = path
+			return shellwords.ScriptHeader{}, false, &refusal
+		}
+		return shellwords.ScriptHeader{}, false, nil
+	}
+	targetInfo, err := os.Lstat(resolved)
+	if err != nil || !targetInfo.Mode().IsRegular() || !os.SameFile(targetInfo, targetInfo) {
+		return shellwords.ScriptHeader{}, false, nil
+	}
+	h.afterLstat()
+	f, err := openNoBlock(resolved)
+	if err != nil {
+		return shellwords.ScriptHeader{}, false, nil
+	}
+	defer f.Close()
+	before, err := f.Stat()
+	if err != nil || !before.Mode().IsRegular() || !os.SameFile(targetInfo, before) {
+		return shellwords.ScriptHeader{}, false, nil
+	}
+	h.afterOpen()
+	if refusal, refused := h.checkOpened(resolved, f, before); refused {
+		if refusal.Limit == shellwords.RulePathProtected {
+			refusal.Path = path
+			return shellwords.ScriptHeader{}, false, &refusal
+		}
+		return shellwords.ScriptHeader{}, false, nil
+	}
+	head, err := io.ReadAll(io.LimitReader(f, headerPeekBytes))
+	if err != nil {
+		return shellwords.ScriptHeader{}, false, nil
+	}
+	after, err := f.Stat()
+	byTarget, tErr := os.Stat(resolved)
+	byLink, lErr := os.Stat(path)
+	if err != nil || tErr != nil || lErr != nil || after.Size() != before.Size() || !after.ModTime().Equal(before.ModTime()) || !os.SameFile(before, byTarget) || !os.SameFile(before, byLink) {
+		return shellwords.ScriptHeader{}, false, nil
+	}
+	return inspectHeader(head), true, nil
 }

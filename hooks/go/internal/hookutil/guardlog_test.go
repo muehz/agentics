@@ -13,6 +13,20 @@ import (
 
 const testGuardEnv = "HOOKUTIL_TEST_GUARD_LOG_DIR"
 
+func TestCheckWorkingDirectoryRequiresMatchingIdentity(t *testing.T) {
+	work := t.TempDir()
+	t.Chdir(work)
+	if err := checkWorkingDirectory(work); err != nil {
+		t.Fatalf("current directory: %v", err)
+	}
+	other := t.TempDir()
+	for _, path := range []string{other, filepath.Join(other, "missing")} {
+		if err := checkWorkingDirectory(path); !errors.Is(err, os.ErrNotExist) {
+			t.Errorf("checkWorkingDirectory(%q) = %v, want not-exist error", path, err)
+		}
+	}
+}
+
 func TestGuardLogDir(t *testing.T) {
 	g := GuardLog{Guard: "demo-guardian", EnvDir: testGuardEnv}
 	t.Setenv(testGuardEnv, "")
@@ -121,6 +135,7 @@ func TestGuardLogAppend(t *testing.T) {
 		if runtime.GOOS == "windows" {
 			t.Skip("Windows cannot remove the current directory")
 		}
+		outside := t.TempDir()
 		work := filepath.Join(t.TempDir(), "gone")
 		if err := os.Mkdir(work, 0o755); err != nil {
 			t.Fatal(err)
@@ -130,9 +145,25 @@ func TestGuardLogAppend(t *testing.T) {
 			t.Fatal(err)
 		}
 		t.Setenv(testGuardEnv, "")
-		err := g.Append("", map[string]string{"k": "v"})
-		if err == nil || !strings.HasPrefix(err.Error(), "demo-guardian could not resolve the working directory: ") {
-			t.Fatalf("Append = %v, want the working-directory sentence", err)
+		check := func() {
+			t.Helper()
+			for _, root := range []string{"", outside} {
+				err := g.Append(root, map[string]string{"k": "v"})
+				if !errors.Is(err, os.ErrNotExist) || !strings.HasPrefix(err.Error(), "demo-guardian could not resolve the working directory: ") {
+					t.Errorf("Append(%q) = %v, want the working-directory sentence and not-exist error", root, err)
+				}
+			}
+		}
+		check()
+		if err := os.Mkdir(work, 0o755); err != nil {
+			t.Fatal(err)
+		}
+		check()
+		for _, dir := range []string{work, outside} {
+			entries, err := os.ReadDir(dir)
+			if err != nil || len(entries) != 0 {
+				t.Errorf("invalid cwd wrote to %q: entries=%v, error=%v", dir, entries, err)
+			}
 		}
 	})
 }

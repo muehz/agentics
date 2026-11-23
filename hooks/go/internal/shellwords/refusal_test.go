@@ -268,8 +268,8 @@ func TestConstructVocabularyMatchesReadme(t *testing.T) {
 			t.Errorf("construct %q does not round-trip: %v", c, err)
 		}
 	}
-	if len(ours) != 21 {
-		t.Errorf("got %d constructs, want 21", len(ours))
+	if len(ours) != 24 {
+		t.Errorf("got %d constructs, want 24", len(ours))
 	}
 	sort.Strings(readme)
 	sort.Strings(ours)
@@ -326,7 +326,7 @@ func TestRefusalRendersTodaysText(t *testing.T) {
 		{"caller argument", CallerArgumentRefusal(ScriptCall{Path: "/ws/t.sh"}), "script-caller-argument in /ws/t.sh"},
 		{"control character", ruleRefusal(RuleUnreadable, &ScriptOrigin{Path: "/ws/a\x1b[31m.sh", Chain: []string{"/ws/\u202eb.sh"}}), "script-unreadable in /ws/a?[31m.sh (via /ws/?b.sh)"},
 		{"shell contract", forms[formShellContract], "bash requires exactly -c or -lc and a literal command string"},
-		{"powershell contract", forms[formPowerShellContract], "pwsh requires optional -NoProfile/-NonInteractive, then -Command and one literal token"},
+		{"powershell contract", forms[formPowerShellContract], "pwsh requires optional PowerShell flags, then -File <literal .ps1> or -Command and one literal token"},
 		{"env name", forms[formEnvName], "env -u requires a literal name"},
 		{"wrapper option", forms[formWrapperOption], "sudo option --bogus is outside the literal wrapper contract"},
 		{"wrapper value", forms[formWrapperValue], "sudo -u requires a literal value"},
@@ -515,8 +515,8 @@ func TestRefusalFormsQuoteOnlyClassifiedWords(t *testing.T) {
 	}{
 		{"bash -x " + m, POSIX, formShellContract, []string{"bash"}, "bash requires exactly -c or -lc and a literal command string"},
 		{"sh " + m, POSIX, formShellContract, []string{"sh"}, "sh requires exactly -c or -lc and a literal command string"},
-		{"pwsh -File " + m, POSIX, formPowerShellContract, []string{"pwsh"}, "pwsh requires optional -NoProfile/-NonInteractive, then -Command and one literal token"},
-		{"powershell -Command " + m + " " + m, POSIX, formPowerShellContract, []string{"powershell"}, "powershell requires optional -NoProfile/-NonInteractive, then -Command and one literal token"},
+		{"pwsh -File " + m, POSIX, formPowerShellContract, []string{"pwsh"}, "pwsh requires optional PowerShell flags, then -File <literal .ps1> or -Command and one literal token"},
+		{"powershell -Command " + m + " " + m, POSIX, formPowerShellContract, []string{"powershell"}, "powershell requires optional PowerShell flags, then -File <literal .ps1> or -Command and one literal token"},
 		{"env -u \"$" + m + "\" x", POSIX, formEnvName, []string{"-u"}, "env -u requires a literal name"},
 		{"env --unset", POSIX, formEnvName, []string{"--unset"}, "env --unset requires a literal name"},
 		{"sudo --bogus " + m, POSIX, formWrapperOption, []string{"sudo", "--bogus"}, "sudo option --bogus is outside the literal wrapper contract"},

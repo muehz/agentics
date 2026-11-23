@@ -445,7 +445,7 @@ func TestLauncherRefusesNonImageBinary(t *testing.T) {
 // installed launcher's system utility lookup is independent of the test PATH.
 func TestLauncherFailsClosedWithoutOd(t *testing.T) {
 	script := launcherScript(t)
-	probe := []byte("command -p od ")
+	probe := []byte("command -p od -An -tx1 -N4 ")
 	if bytes.Count(script, probe) != 1 {
 		t.Fatal("cannot identify the launcher's image inspection command")
 	}
@@ -540,7 +540,13 @@ func TestLauncherRejectsMalformedResolution(t *testing.T) {
 			}{
 				{"valid", path + "\n", 0}, {"no LF", path, 0}, {"extra LF", path + "\n\n", 0}, {"trailing bytes", path + "\nx", 0},
 				{"CRLF", path + "\r\n", 0}, {"NUL", path + "\x00\n", 0}, {"two paths", path + "\n" + path + "\n", 0},
-				{"unrelated image", unrelated + "\n", 0}, {"relative", name + "\n", 0}, {"invalid UTF8", path + "\xff\n", 0}, {"surrogate UTF8", path + "\xed\xa0\x80\n", 0}, {"out of range UTF8", path + "\xf4\x90\x80\x80\n", 0}, {"failed resolver", path + "\n", 23},
+				{"unrelated image", unrelated + "\n", 0}, {"relative", name + "\n", 0},
+				{"invalid UTF8", path + "\xff\n", 0},
+				{"truncated UTF8", path + "\xe2\x82\n", 0},
+				{"overlong UTF8", path + "\xe0\x80\x80\n", 0},
+				{"surrogate UTF8", path + "\xed\xa0\x80\n", 0},
+				{"out of range UTF8", path + "\xf4\x90\x80\x80\n", 0},
+				{"failed resolver", path + "\n", 23},
 			} {
 				t.Run(tc.name, func(t *testing.T) {
 					writeRel(t, root, "hooks/response", tc.output)

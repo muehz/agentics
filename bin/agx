@@ -49,8 +49,45 @@ fi
 IFS= read -r BIN <"$agx_response" || unavailable
 printf '%s\n' "$BIN" | command -p cmp -s - "$agx_response" || unavailable
 case $BIN in *"$(printf '\r')"*) unavailable ;; esac
-# UTF-16 has no representation for invalid UTF-8 scalars.
-command -p iconv -f UTF-8 -t UTF-16LE "$agx_response" >/dev/null 2>&1 || unavailable "invalid UTF-8 in provision-only response"
+# Some iconv implementations replace invalid scalars and exit successfully.
+# Check the UTF-8 bytes directly, including the first continuation limits
+# that exclude overlong encodings, surrogates, and values above U+10FFFF.
+agx_bytes=$(command -p od -An -v -tu1 -- "$agx_response") || unavailable "cannot inspect provision-only response"
+if ! printf '%s\n' "$agx_bytes" | LC_ALL=C command -p awk '
+  {
+    for (i = 1; i <= NF; i++) {
+      byte = $i + 0
+      if (remaining) {
+        if (byte < low || byte > high)
+          exit 1
+        remaining--
+        low = 128
+        high = 191
+        continue
+      }
+      if (byte < 128)
+        continue
+      low = 128
+      high = 191
+      if (byte >= 194 && byte <= 223) {
+        remaining = 1
+      } else if (byte >= 224 && byte <= 239) {
+        remaining = 2
+        if (byte == 224) low = 160
+        if (byte == 237) high = 159
+      } else if (byte >= 240 && byte <= 244) {
+        remaining = 3
+        if (byte == 240) low = 144
+        if (byte == 244) high = 143
+      } else {
+        exit 1
+      }
+    }
+  }
+  END { if (remaining) exit 1 }
+'; then
+  unavailable "invalid UTF-8 in provision-only response"
+fi
 
 if "$agx_windows"; then
   case $BIN in [A-Za-z]:\\*|\\\\*) ;; *) unavailable ;; esac

@@ -1,6 +1,7 @@
 package shellwords
 
 import (
+	"context"
 	"path"
 	"regexp"
 	"slices"
@@ -9,21 +10,6 @@ import (
 	"github.com/muehz/agentics/hooks/go/internal/argv"
 	"github.com/muehz/agentics/hooks/go/internal/pathshape"
 )
-
-// writerCommands are the programs a typed command may run before a script call that can rewrite files the call, or
-// the script it reads, depends on. The guard read the script before any predecessor ran, so a predecessor that
-// replaces it leaves the call running text nobody inspected.
-//
-// The set is the script proof's own because it is a closed, documented set: it lists the programs this proof treats as
-// writers, which no guard classifies, so it does not derive from the shared command vocabulary, and a name joins it
-// only with a test of the call it refuses.
-var writerCommands = map[string]bool{"tee": true, "cp": true, "mv": true, "install": true, "ln": true, "dd": true, "rsync": true,
-	"tar": true, "unzip": true, "truncate": true, "touch": true, "wget": true, "patch": true, "make": true, "npm": true, "npx": true,
-	"pnpm": true, "yarn": true}
-
-// writerGitVerbs are the git subcommands that rewrite the working tree.
-var writerGitVerbs = map[string]bool{"checkout": true, "switch": true, "restore": true, "reset": true, "pull": true, "merge": true,
-	"rebase": true, "stash": true, "apply": true, "am": true, "read-tree": true, "cherry-pick": true, "revert": true, "clean": true}
 
 // gitValueOptions are the git options before the subcommand that take the next word as their value. Only the lenient
 // walk of lenientGitVerb reads them: the write-target reader uses that walk when ReadGit cannot read a line to its
@@ -91,21 +77,37 @@ func predecessorProblem(inv *Invocation) Rule {
 	if redirectsToFiles(inv.OutputRedirects) {
 		return RulePredecessorMayWrite
 	}
-	words := stripBuiltin(inv.Words)
+	if !inv.Inspectable {
+		if inv.Reason.Rule() == RuleBudget {
+			// A canceled inspection already refuses the enclosing tool call. Let later
+			// reads observe their own deadline and keep their own diagnostic.
+			return RuleNone
+		}
+		return RulePredecessorMayWrite
+	}
+	if reason := predecessorWrapperProblem(inv.Wrappers, inv.Dialect); reason != RuleNone {
+		return reason
+	}
+	if inv.FuncDef && slices.ContainsFunc(inv.Wrappers, func(w Word) bool { return w.Text == "bash" || w.Text == "sh" }) {
+		return RuleNone
+	}
+	words := inv.Words
+	for len(words) > 1 && words[0].Literal && words[0].Text == "builtin" && inv.Dialect == POSIX {
+		words = words[1:]
+		if words[0].Literal && words[0].Text == "--" {
+			words = words[1:]
+		}
+	}
 	if len(words) == 0 {
 		return RuleNone
 	}
-	exe := strings.ToLower(ExecutableName(words[0].Text))
+	if !words[0].Literal {
+		return RulePredecessorMayWrite
+	}
+	exe := shellName(words[0], inv.Dialect)
 	args := words[1:]
-	has := func(flags ...string) bool {
-		for _, a := range args {
-			for _, f := range flags {
-				if a.Text == f || strings.HasPrefix(a.Text, f+"=") {
-					return true
-				}
-			}
-		}
-		return false
+	if prefixConstruct(inv.Assignments, inv.EnvironmentResets, exe) != constructNone {
+		return RulePredecessorState
 	}
 	switch {
 	case stateCommands[exe]:
@@ -117,46 +119,435 @@ func predecessorProblem(inv *Invocation) Rule {
 	case nameAssigners[exe] && assignsStateName(exe, args):
 		return RulePredecessorState
 	case exe == "hash" && hasShortFlag(args, 'p'), exe == "enable" && len(operandWords(args)) > 0:
-		// hash -p binds a command name to any file, and enable loads or turns off builtins.
 		return RulePredecessorState
-	case writerCommands[exe]:
-		return RulePredecessorMayWrite
-	case exe == "sed" && (has("-i", "--in-place") || hasShortFlag(args, 'i')):
-		return RulePredecessorMayWrite
-	case exe == "perl" && hasShortFlag(args, 'i'):
-		return RulePredecessorMayWrite
-	case (exe == "awk" || exe == "gawk") && has("-i"):
-		return RulePredecessorMayWrite
-	case exe == "curl" && (has("--output") || hasShortFlag(args, 'o') || curlNamesFromURL(args)):
-		return RulePredecessorMayWrite
-	case exe == "go" && len(args) > 0 && args[0].Text == "generate":
-		return RulePredecessorMayWrite
-	case exe == "git" && gitWritesTree(args):
-		return RulePredecessorMayWrite
+	case exe == "mapfile" || exe == "readarray" || exe == "wait":
+		if pinnedConstruct(inv, nil) != constructNone {
+			return RulePredecessorState
+		}
+	}
+	if nonWritingPredecessor(exe, args, inv) {
+		return RuleNone
+	}
+	return RulePredecessorMayWrite
+}
+
+var (
+	literalArrayName  = regexp.MustCompile(`^[A-Za-z_][A-Za-z_0-9]*\+?=$`)
+	literalArrayWords = regexp.MustCompile(`^[A-Za-z0-9_./+ \t-]+$`)
+	simpleArithmetic  = regexp.MustCompile(`^(?:[A-Za-z_][A-Za-z_0-9]*[ \t]*(?:=|==)[ \t]*)?[0-9]+(?:[ \t]*[-+*/%][ \t]*[0-9]+)*$`)
+	// Only ordinary variable and positional expansions count as quoted data.
+	quotedArrayVariables = regexp.MustCompile(`^(?:[^$\x60\\]|\\.|[$](?:[A-Za-z_][A-Za-z_0-9]*|[0-9@*#?]|[{][A-Za-z_][A-Za-z_0-9]*(?:\[@\])?[}]))*$`)
+)
+
+// The splitter supplies the entire span from the lexical opener. Executable
+// substitutions keep the ordinary checks active instead of becoming data.
+func provenGroupData(opener byte, body, tail string) bool {
+	if opener == '(' {
+		var ok bool
+		tail, ok = strings.CutPrefix(tail, ")")
+		if !ok || !simpleArithmetic.MatchString(strings.TrimSpace(body)) {
+			return false
+		}
+	} else {
+		lexed := lexSegment(body, POSIX)
+		if lexed.refusal.Refused() || len(lexed.redirects) != 0 {
+			return false
+		}
+		for _, word := range lexed.words {
+			quotedData := fullyQuoted(word) && (word.Literal || word.Raw[0] == '"' && quotedArrayVariables.MatchString(word.Raw[1:len(word.Raw)-1]))
+			if word.Substituted || textAssignsState(word.Raw) || !quotedData && (!word.Literal || !literalArrayWords.MatchString(word.Raw)) {
+				return false
+			}
+		}
+		return true
+	}
+	tail = strings.TrimLeft(tail, " \t")
+	return tail == "" || strings.HasPrefix(tail, "&&") || strings.HasPrefix(tail, "||") || tail[0] == ';' || tail[0] == '\n'
+}
+
+// Array syntax follows an unquoted assignment prefix, possibly after other
+// assignments or reserved openers in the same command. It is not a callable
+// group just because an element's value is a variable reference.
+func arrayAssignmentPrefix(prefix string) bool {
+	lexed := lexSegment(prefix, POSIX)
+	if lexed.refusal.Refused() || len(lexed.redirects) != 0 || len(lexed.words) == 0 {
+		return false
+	}
+	last := len(lexed.words) - 1
+	word := lexed.words[last]
+	if !literalArrayName.MatchString(word.Raw) {
+		return false
+	}
+	command, _ := stripPrefixes(lexed.words[:last], true)
+	name := variableName(word.Raw)
+	return len(command) == 0 && namedVariable(name) == constructNone && !stateVariables[name]
+}
+
+func predecessorWrapperProblem(wrappers []Word, dialect Dialect) Rule {
+	subshell := false
+	for _, wrapper := range wrappers {
+		if !wrapper.Literal {
+			return RulePredecessorMayWrite
+		}
+		switch shellName(wrapper, dialect) {
+		case "bash", "sh":
+			subshell = true
+		case "command", "time", "env":
+		case "exec":
+			if !subshell {
+				return RulePredecessorState
+			}
+		default:
+			return RulePredecessorMayWrite
+		}
 	}
 	return RuleNone
 }
 
-// gitWritesTree reports a git command, given the words after git, whose subcommand rewrites the working tree,
-// read with ReadGit. A line ReadGit cannot read, or one that prints, is a writer when words are left after the walk
-// stopped, since git may still run one of them as a writing subcommand; with nothing left it runs no subcommand. A
-// global option that is not literal is a writer in every state, because its run-time text may be anything, the verb
-// included. The verb is compared exactly, and the index-only test reads the whole argument list.
-func gitWritesTree(args []Word) bool {
+// Only a command whose normal effect is known can precede the bytes a script reader inspected.
+func nonWritingPredecessor(exe string, args []Word, inv *Invocation) bool {
+	switch exe {
+	case "git":
+		return !gitWritesTree(args, inv.Dialect)
+	case "bash":
+		return inv.Inspection == BashMetadata
+	case "command":
+		return len(args) > 0 && args[0].Literal && args[0].Text == "-v"
+	case "let":
+		for _, a := range args {
+			if !a.Literal || !simpleArithmetic.MatchString(a.Text) {
+				return false
+			}
+		}
+		return true
+	case "env":
+		return len(args) == 0
+	case "find":
+		return readOnlyFind(args)
+	case "rg", "sort", "diff", "uniq", "file", "date", "hostname":
+		return readOnlyUtility(exe, args)
+	case "sort-object":
+		return inv.Dialect == PowerShell && readOnlyPowerShellSort(args)
+	case "mkdir", "md":
+		for _, a := range args {
+			if !a.Literal || activeBrace(a) || scriptPatternArg(a, inv.Dialect) || slices.Contains(strings.FieldsFunc(strings.ToLower(a.Text), func(r rune) bool { return r == '/' || r == '\\' }), ".agentics") {
+				return false
+			}
+		}
+		return true
+	case "cd", "pwd", "true", "false", ":", "test", "[", "[[", "wait", "sleep",
+		"echo", "printf", "ls", "dir", "stat", "head", "tail", "cat", "wc", "cut", "tr", "cmp", "grep",
+		"which", "type", "dirname", "basename", "realpath", "readlink", "uname", "whoami", "id", "sha256sum", "shasum", "printenv",
+		"set", "shopt", "declare", "typeset", "local", "export", "readonly", "read", "mapfile", "readarray", "getopts", "unset", "hash", "enable":
+		return true
+	case "set-location", "sl", "chdir", "get-location", "gl", "write-output", "write-host", "write-information",
+		"get-childitem", "gci", "test-path", "get-item", "gi", "get-content", "gc", "select-string", "sls",
+		"get-command", "gcm", "get-date", "get-filehash":
+		return inv.Dialect == PowerShell
+	}
+	return false
+}
+
+var psSortSwitches = map[string]bool{"casesensitive": true, "descending": true, "stable": true, "unique": true}
+
+func readOnlyPowerShellSort(args []Word) bool {
+	for _, a := range args {
+		if !a.Literal {
+			return false
+		}
+	}
+	const values = "property inputobject culture top bottom"
+	named, _, ok := bindPSOptions("sort-object", args, values+" casesensitive descending stable unique", psSortSwitches)
+	if !ok {
+		return false
+	}
+	allowed := strings.Fields(values)
+	for name := range named {
+		if !slices.Contains(allowed, name) {
+			return false
+		}
+	}
+	return true
+}
+
+// Option recognition ends at --. Before then, a word expanded by the shell can supply an option.
+func readOnlyUtility(exe string, args []Word) bool {
+	var flags, values, short, shortValues string
+	maxOperands := len(args)
+	switch exe {
+	case "sort":
+		flags = "--reverse --unique --numeric-sort --human-numeric-sort --version-sort --ignore-case --stable --check --merge --zero-terminated"
+		values = "--key --field-separator --parallel --buffer-size"
+		short = "bdfghinMruVszcCm"
+		shortValues = "ktS"
+	case "rg":
+		flags = "--hidden --files --files-with-matches --files-without-match --line-number --no-line-number --ignore-case --smart-case --case-sensitive --fixed-strings --word-regexp --invert-match --count --count-matches --quiet --no-heading --heading --json --no-ignore --text --no-filename --with-filename --only-matching --pcre2 --multiline --no-config --no-messages"
+		values = "--glob --iglob --regexp --type --type-not --type-add --max-count --max-depth --context --before-context --after-context --color --sort --sortr"
+		short = "inuSwlLFvqcHhoUPazs"
+		shortValues = "geftTmABC"
+	case "diff":
+		flags = "--unified --brief --recursive --ignore-case --ignore-space-change --ignore-all-space --report-identical-files --new-file --text"
+		short = "urqibwsaN"
+	case "uniq":
+		flags = "--count --repeated --unique --ignore-case --zero-terminated"
+		short = "cduiz"
+		maxOperands = 1
+	case "file":
+		flags = "--brief --mime --mime-type --mime-encoding --dereference --no-dereference"
+		short = "biLh"
+	case "date":
+		flags = "--utc --universal --iso-8601 --rfc-email"
+		values = "--date --reference"
+		short = "uIR"
+		shortValues = "dr"
+	case "hostname":
+		flags = "--short --fqdn --domain --ip-address --all-ip-addresses"
+		short = "sfdiI"
+		maxOperands = 0
+	}
+	operands := 0
+	afterOptions := false
+	longFlags, longValues := strings.Fields(flags), strings.Fields(values)
+	for i := 0; i < len(args); i++ {
+		a := args[i]
+		if !a.Literal || activeBrace(a) || scriptPatternArg(a, POSIX) {
+			return false
+		}
+		if !afterOptions && a.Text == "--" {
+			afterOptions = true
+			continue
+		}
+		if afterOptions || !strings.HasPrefix(a.Text, "-") || a.Text == "-" {
+			operands++
+			if exe == "date" && !strings.HasPrefix(a.Text, "+") {
+				return false
+			}
+			continue
+		}
+		name, _, joined := strings.Cut(a.Text, "=")
+		if !joined && slices.Contains(longFlags, name) {
+			continue
+		}
+		needsValue := false
+		if strings.HasPrefix(a.Text, "--") {
+			if !slices.Contains(longValues, name) {
+				return false
+			}
+			needsValue = !joined
+		} else {
+			for j, flag := range a.Text[1:] {
+				if strings.ContainsRune(shortValues, flag) {
+					needsValue = j+2 == len(a.Text)
+					break
+				}
+				if !strings.ContainsRune(short, flag) {
+					return false
+				}
+			}
+		}
+		if needsValue {
+			i++
+			if i == len(args) || !args[i].Literal || activeBrace(args[i]) || scriptPatternArg(args[i], POSIX) {
+				return false
+			}
+		}
+	}
+	return operands <= maxOperands
+}
+
+func activeBrace(w Word) bool {
+	return strings.ContainsAny(w.Raw, "{}") && !fullyQuoted(w)
+}
+
+func fullyQuoted(w Word) bool {
+	raw := w.Raw
+	return len(raw) >= 2 && (raw[0] == '"' || raw[0] == '\'') && raw[len(raw)-1] == raw[0] && !strings.ContainsRune(raw[1:len(raw)-1], rune(raw[0]))
+}
+
+func readOnlyFind(args []Word) bool {
+	expression := false
+	for i := 0; i < len(args); i++ {
+		w := args[i]
+		if !expression && w.Text != "" && !strings.ContainsAny(w.Text[:1], "-!()") {
+			if w.Literal && !activeBrace(w) && !scriptPatternArg(w, POSIX) {
+				continue
+			}
+			if !w.Literal && fullyQuoted(w) && strings.Contains(w.Text, "/") && !strings.ContainsAny(w.Text[:1], "$`~{") {
+				continue
+			}
+		}
+		expression = true
+		if !w.Literal || activeBrace(w) {
+			return false
+		}
+		switch w.Text {
+		case "-print", "-print0", "-true", "-false", "-empty", "-readable", "-writable", "-executable", "-prune", "-quit", "-depth", "-mount", "-xdev", "-a", "-and", "-o", "-or", "-not", "!", "(", ")":
+		case "-name", "-iname", "-path", "-ipath", "-wholename", "-regex", "-iregex", "-type", "-xtype", "-size", "-maxdepth", "-mindepth", "-mtime", "-mmin", "-atime", "-ctime", "-user", "-group", "-perm", "-newer":
+			i++
+			if i == len(args) || (!args[i].Literal && !fullyQuoted(args[i])) || activeBrace(args[i]) || scriptPatternArg(args[i], POSIX) {
+				return false
+			}
+		default:
+			return false
+		}
+	}
+	return true
+}
+
+// Only a parsed literal global option can establish where Git's subcommand and its operands begin.
+func gitWritesTree(args []Word, dialect Dialect) bool {
 	g := argv.ReadGit(args)
-	if gitGlobalExpands(g) {
+	if gitGlobalExpands(g, dialect, true) {
 		return true
 	}
-	if g.State != argv.GitVerb {
-		return len(g.Rest) > 0
+	for _, global := range g.Globals {
+		switch global.Name {
+		case "-C", "--git-dir", "--work-tree", "--namespace", "--literal-pathspecs", "--glob-pathspecs", "--noglob-pathspecs", "--icase-pathspecs", "--no-optional-locks", "--bare", "--no-pager", "-P", "--no-replace-objects", "--no-lazy-fetch", "--no-advice":
+		default:
+			return true
+		}
 	}
-	return (!g.Verb.Literal || writerGitVerbs[g.Verb.Text]) && !gitIndexOnly(g.Verb.Text, args)
+	if g.State == argv.GitPrints {
+		return len(g.Rest) != 0
+	}
+	if g.State != argv.GitVerb || !fixedGitWord(g.Verb, dialect) {
+		return true
+	}
+	switch g.Verb.Text {
+	case "status", "rev-parse", "ls-files", "check-ignore", "merge-base", "describe", "add", "commit", "fetch":
+		return false
+	case "diff", "log", "show":
+		return !gitReadDiff(g.Args, dialect)
+	case "branch", "tag":
+		return !gitReadRefs(g.Verb.Text, g.Args, dialect)
+	case "config":
+		return !gitReadConfig(g.Args, dialect)
+	case "restore", "rm":
+		return !gitIndexOnly(g.Verb.Text, g.Args, dialect)
+	}
+	return true
+}
+
+func fixedGitWord(w Word, dialect Dialect) bool {
+	return w.Literal && !activeBrace(w) && (dialect != POSIX || !scriptPatternArg(w, POSIX))
+}
+
+func gitReadDiff(args []Word, dialect Dialect) bool {
+	for _, a := range args {
+		if !fixedGitWord(a, dialect) {
+			return false
+		}
+		if a.Text == "--" {
+			return true
+		}
+		if !strings.HasPrefix(a.Text, "-") {
+			continue
+		}
+		name, _, joined := strings.Cut(a.Text, "=")
+		switch name {
+		case "--format", "--pretty", "--color", "--abbrev", "--max-count", "--since", "--until", "--author", "--grep", "--unified":
+			if joined {
+				continue
+			}
+		case "--stat", "--shortstat", "--numstat", "--name-only", "--name-status", "--oneline", "--graph", "--all", "--no-color", "--no-patch", "--patch", "--cached", "--staged", "--no-ext-diff", "--no-textconv", "--exit-code", "--quiet", "--check", "--decorate", "--no-decorate", "--no-merges", "--reverse", "--first-parent", "--no-renames":
+			if !joined {
+				continue
+			}
+		}
+		if len(a.Text) > 1 && (strings.Trim(a.Text[1:], "0123456789") == "" || strings.Trim(a.Text[1:], "pwsuz") == "") {
+			continue
+		}
+		return false
+	}
+	return true
+}
+
+func gitReadRefs(verb string, args []Word, dialect Dialect) bool {
+	patterns := false
+	for i := 0; i < len(args); i++ {
+		a := args[i]
+		if !fixedGitWord(a, dialect) {
+			return false
+		}
+		if a.Text == "--" {
+			return patterns || i+1 == len(args)
+		}
+		if !strings.HasPrefix(a.Text, "-") {
+			if !patterns {
+				return false
+			}
+			continue
+		}
+		name, _, joined := strings.Cut(a.Text, "=")
+		switch name {
+		case "-l", "--list":
+			if joined {
+				return false
+			}
+			patterns = true
+		case "-v":
+			if joined {
+				return false
+			}
+			patterns = patterns || verb == "tag"
+		case "--verify":
+			if verb != "tag" || joined {
+				return false
+			}
+			patterns = true
+		case "-a", "--all", "-r", "--remotes", "-vv", "--show-current":
+			if verb != "branch" || joined {
+				return false
+			}
+		case "--sort", "--format":
+			if !joined {
+				i++
+				if i == len(args) || !fixedGitWord(args[i], dialect) {
+					return false
+				}
+			}
+		case "--color", "--column", "--contains", "--no-contains", "--merged", "--no-merged", "--points-at":
+		default:
+			return false
+		}
+	}
+	return true
+}
+
+func gitReadConfig(args []Word, dialect Dialect) bool {
+	mode, operands := "", 0
+	for _, a := range args {
+		if !fixedGitWord(a, dialect) {
+			return false
+		}
+		switch a.Text {
+		case "--get", "--get-all", "--list", "-l":
+			if mode != "" {
+				return false
+			}
+			mode = a.Text
+		case "--global", "--local", "--system", "--worktree", "--show-origin", "--show-scope", "--name-only", "--null", "-z":
+		default:
+			if strings.HasPrefix(a.Text, "-") {
+				return false
+			}
+			operands++
+		}
+	}
+	switch mode {
+	case "--list", "-l":
+		return operands == 0
+	case "--get", "--get-all":
+		return operands == 1 || operands == 2
+	}
+	return false
 }
 
 // gitGlobalExpands reports a global option word of g that is not literal.
-func gitGlobalExpands(g argv.Git) bool {
+func gitGlobalExpands(g argv.Git, dialect Dialect, requireFixedArgv bool) bool {
 	for _, global := range g.Globals {
-		if !global.Option.Literal {
+		if !global.Option.Literal || requireFixedArgv &&
+			(!fixedGitWord(global.Option, dialect) || global.HasValue && !fixedGitWord(global.Value, dialect)) {
 			return true
 		}
 	}
@@ -195,7 +586,7 @@ func writesUnnamedFiles(inv *Invocation) bool {
 	case "curl":
 		return curlNamesFromURL(args)
 	case "git":
-		return gitWritesTree(args)
+		return gitWritesTree(args, inv.Dialect)
 	}
 	return false
 }
@@ -499,15 +890,20 @@ func (p *parser) predecessorReason() Rule {
 		return RulePredecessorMayWrite
 	}
 	for p.predecessorScanned < len(p.result.Invocations) {
-		inv := &p.result.Invocations[p.predecessorScanned]
+		inv := p.result.Invocations[p.predecessorScanned]
 		if inv.Script == nil {
-			if reason := predecessorProblem(inv); reason != RuleNone {
+			inv = p.predecessorInActiveList(inv)
+			if reason := predecessorProblem(&inv); reason != RuleNone {
 				return reason
 			}
 		}
 		p.predecessorScanned++
 	}
 	for p.bareScanned < len(p.result.BareAssignments) {
+		if p.bareClaimed[p.bareScanned] {
+			p.bareScanned++
+			continue
+		}
 		// A bare assignment lasts for the rest of the shell, so a pinned name or IFS set before the call changes what the
 		// script runs under, as an export of it does.
 		if w := p.result.BareAssignments[p.bareScanned]; stateVariables[variableName(w.Text)] || hiddenName(w) || namedVariable(variableName(w.Text)) != constructNone {
@@ -516,6 +912,21 @@ func (p *parser) predecessorReason() Rule {
 		p.bareScanned++
 	}
 	return RuleNone
+}
+
+// An already-running shell is the context of this list, not a predecessor
+// process. Wrapper IDs distinguish equal spellings in separate invocations.
+func (p *parser) predecessorInActiveList(inv Invocation) Invocation {
+	if len(p.lists) == 0 {
+		return inv
+	}
+	depth := min(p.lists[len(p.lists)-1].depth, len(p.wrapperIDs), len(inv.WrapperIDs), len(inv.Wrappers))
+	shared := 0
+	for shared < depth && p.wrapperIDs[shared] != 0 && p.wrapperIDs[shared] == inv.WrapperIDs[shared] {
+		shared++
+	}
+	inv.WrapperIDs, inv.Wrappers = inv.WrapperIDs[shared:], inv.Wrappers[shared:]
+	return inv
 }
 
 // noteStrayWrites handles write redirects of a segment that runs no command of its own. They belong to a group, a
@@ -576,12 +987,13 @@ func writeKey(host pathshape.Host, p string) string {
 // inspectedPaths are the paths of every script this parse read, in the compared form: the path the reader reported
 // and each spelling the calls asked for, with the directories that hold them.
 type inspectedPaths struct {
-	host    pathshape.Host
-	keys    []string
-	set     map[string]bool
-	dirs    []string
-	dirSet  map[string]bool
-	anyPath bool
+	powerShell bool
+	host       pathshape.Host
+	keys       []string
+	set        map[string]bool
+	dirs       []string
+	dirSet     map[string]bool
+	anyPath    bool
 }
 
 func (p *parser) inspectedPaths() inspectedPaths {
@@ -648,10 +1060,13 @@ func (in inspectedPaths) hits(w Word) bool {
 		return false
 	}
 	if !w.Literal || strings.HasPrefix(text, "~") {
+		if in.powerShell && !w.Literal && psSelfFile(text) {
+			return true
+		}
 		if !w.Literal && selfReference(text) {
 			return true
 		}
-		tail := text[strings.LastIndexByte(text, '/')+1:]
+		tail := text[strings.LastIndexAny(text, "/\\")+1:]
 		return tail != "" && !strings.ContainsAny(tail, expandingChars+"~") && in.endsWithPath(in.keys, tail)
 	}
 	if in.host.MayNameAnotherFile(text) {
@@ -668,6 +1083,9 @@ func (in inspectedPaths) hits(w Word) bool {
 // directory holds one, or is relative to a directory the text does not give.
 func (in inspectedPaths) hitsDir(w Word) bool {
 	text := w.Text
+	if in.powerShell && in.anyPath && !w.Literal && (strings.EqualFold(text, "$PSScriptRoot") || strings.EqualFold(text, "${PSScriptRoot}")) {
+		return true
+	}
 	if !in.anyPath || !w.Literal || text == "" || strings.HasPrefix(text, "~") {
 		return false
 	}
@@ -770,8 +1188,11 @@ func operandWords(args []Word) []Word {
 // bulkSource reports a copy source that stands for many files: a glob, a directory with a trailing / or /., or the
 // working directory itself.
 func bulkSource(w Word) bool {
-	t := w.Text
-	return strings.ContainsAny(t, "*?[") || strings.HasSuffix(t, "/") || strings.HasSuffix(t, "/.") || t == "." || t == ".."
+	return strings.ContainsAny(w.Text, "*?[") || directoryCopySource(w.Text)
+}
+
+func directoryCopySource(text string) bool {
+	return strings.HasSuffix(text, "/") || strings.HasSuffix(text, "/.") || text == "." || text == ".."
 }
 
 // copyDestinations returns what a cp, mv, install, ln or rsync writes: the destination, and for a destination
@@ -915,15 +1336,183 @@ func extractsArchive(args []Word) bool {
 
 var dotWord = Word{Text: ".", Literal: true}
 
+func psSelfFile(text string) bool {
+	switch strings.ToLower(text) {
+	case "$pscommandpath", "${pscommandpath}", "$myinvocation.mycommand.path", "$myinvocation.mycommand.definition", "${myinvocation}.mycommand.path", "${myinvocation}.mycommand.definition":
+		return true
+	}
+	return false
+}
+
+// The provider binder understands quoted values and switch parameters. Other file-writing
+// cmdlets need their own parameter lists because named values can precede positional paths.
+var psOutputParameters = map[string]string{
+	"export-csv":        "path literalpath inputobject encoding delimiter quotefields usequotes append force noclobber notypeinformation includetypeinformation useculture noheader",
+	"export-clixml":     "path literalpath inputobject encoding depth force noclobber",
+	"invoke-webrequest": "uri outfile method headers body contenttype credential timeoutsec useragent infile websession passthru usebasicparsing usedefaultcredentials skiphttperrorcheck",
+	"invoke-restmethod": "uri outfile method headers body contenttype credential timeoutsec useragent infile websession passthru usebasicparsing usedefaultcredentials skiphttperrorcheck",
+	"expand-archive":    "path literalpath destinationpath force passthru",
+}
+
+var psOutputSwitches = map[string]bool{
+	"notypeinformation": true, "includetypeinformation": true, "useculture": true, "noheader": true,
+	"usebasicparsing": true, "usedefaultcredentials": true, "skiphttperrorcheck": true,
+}
+
+func bindPSOutput(exe string, args []Word) (map[string]Word, []Word, bool) {
+	if params, ok := psOutputParameters[exe]; ok {
+		return bindPSOptions(exe, args, params, psOutputSwitches)
+	}
+	return bindPSProviderOptions(exe, args)
+}
+
+// A list is a single parser word. Re-read its elements before comparing paths so a literal
+// comma in a quoted filename cannot be confused with two path operands.
+func psTargetElements(ctx context.Context, words []Word) (targets []Word, resolved bool) {
+	resolved = true
+	for _, w := range words {
+		if w.Raw == "" || isPSScalarRaw(w.Raw) {
+			targets = append(targets, w)
+			continue
+		}
+		if ctx.Err() != nil {
+			return targets, false
+		}
+		parser := psParser{ctx: ctx, mode: psModeTyped, line: 1}
+		elements, ok := parser.providerTargets(w)
+		targets = append(targets, elements...)
+		resolved = resolved && ok
+	}
+	return targets, resolved
+}
+
+func psJoinTarget(dir, name Word) Word {
+	return Word{Text: path.Join(strings.ReplaceAll(dir.Text, `\`, "/"), strings.ReplaceAll(name.Text, `\`, "/")), Literal: dir.Literal && name.Literal}
+}
+
+func psWriteTargets(ctx context.Context, exe string, args []Word) (files, dirs []Word) {
+	for _, a := range args {
+		if !a.Literal && strings.HasPrefix(normalizeLeadingDashes(a.Raw), "-") && !isUnquotedFlagHead(a.Raw) {
+			// The run-time parameter name decides which following word is its destination.
+			return nil, []Word{dotWord}
+		}
+	}
+	named, rest, ok := bindPSOutput(exe, args)
+	if !ok {
+		// Unresolved parameter binding leaves the output location unproven.
+		return nil, []Word{dotWord}
+	}
+	firstPath := func(names ...string) Word {
+		for _, n := range names {
+			if a, ok := named[n]; ok {
+				return a
+			}
+		}
+		if len(rest) == 0 {
+			return Word{}
+		}
+		a := rest[0]
+		rest = rest[1:]
+		return a
+	}
+	switch exe {
+	case "copy-item", "move-item":
+		dst, hasDest := named["destination"]
+		src, literalSources := named["literalpath"]
+		hasSrc := literalSources
+		if !literalSources {
+			src, hasSrc = named["path"]
+		}
+		if !hasDest && len(rest) > 0 {
+			if hasSrc {
+				dst, rest = rest[0], rest[1:]
+			} else if len(rest) >= 2 {
+				dst, rest = rest[len(rest)-1], rest[:len(rest)-1]
+			}
+		}
+		if dst == (Word{}) {
+			dst = dotWord
+		}
+		if hasSrc {
+			rest = append(slices.Clone(rest), src)
+		}
+		destinations, known := psTargetElements(ctx, []Word{dst})
+		if !known || len(destinations) != 1 {
+			return nil, []Word{dotWord}
+		}
+		sources, allKnown := psTargetElements(ctx, rest)
+		bulk := !allKnown || len(sources) > 1
+		for _, a := range args {
+			head, value, _ := strings.Cut(normalizeLeadingDashes(a.Raw), ":")
+			if isUnquotedFlagHead(a.Raw) && strings.HasPrefix("-recurse", strings.ToLower(head)) && !strings.EqualFold(value, "$false") {
+				bulk = true
+			}
+		}
+		files = append(files, destinations...)
+		for _, src := range sources {
+			src.Text = strings.ReplaceAll(src.Text, `\`, "/")
+			bulk = bulk || directoryCopySource(src.Text) || !src.Literal || !literalSources && strings.ContainsAny(src.Text, "*?[")
+			if src.Literal && src.Text != "" {
+				name := Word{Text: path.Base(src.Text), Literal: true}
+				files = append(files, psJoinTarget(destinations[0], name))
+			}
+		}
+		if bulk {
+			dirs = append(dirs, destinations...)
+		}
+	case "set-content", "add-content", "clear-content", "set-item", "out-file", "tee-object", "export-csv", "export-clixml":
+		files = append(files, firstPath("literalpath", "filepath", "path"))
+	case "new-item":
+		parent := firstPath("path", "literalpath")
+		if name, hasName := named["name"]; hasName {
+			if parent.Text == "" {
+				parent = dotWord
+			}
+			parents, known := psTargetElements(ctx, []Word{parent})
+			if !known {
+				return nil, []Word{dotWord}
+			}
+			for _, dir := range parents {
+				files = append(files, psJoinTarget(dir, name))
+			}
+		} else {
+			files = append(files, parent)
+		}
+	case "rename-item":
+		src := firstPath("path", "literalpath")
+		files = append(files, src, firstPath("newname"))
+	case "invoke-webrequest", "invoke-restmethod":
+		if out, ok := named["outfile"]; ok {
+			files = append(files, out)
+		}
+	case "expand-archive":
+		firstPath("path", "literalpath")
+		dst := firstPath("destinationpath")
+		if dst == (Word{}) {
+			dst = dotWord
+		}
+		dirs = append(dirs, dst)
+	}
+	files, fileOK := psTargetElements(ctx, files)
+	dirs, dirOK := psTargetElements(ctx, dirs)
+	if !fileOK || !dirOK {
+		dirs = append(dirs, dotWord)
+	}
+	return files, dirs
+}
+
 // commandWriteTargets returns the words an invocation writes to through its arguments: files it names, and
 // directories it may fill with files it does not name. Redirects are separate.
-func commandWriteTargets(inv *Invocation) (files, dirs []Word) {
+func commandWriteTargets(ctx context.Context, inv *Invocation) (files, dirs []Word) {
 	words := stripBuiltin(inv.Words)
 	if len(words) == 0 || !words[0].Literal {
 		return nil, nil
 	}
 	exe := strings.ToLower(ExecutableName(words[0].Text))
 	args := words[1:]
+	if inv.Dialect == PowerShell && (psProviderOptions[exe] != "" || psOutputParameters[exe] != "") {
+		return psWriteTargets(ctx, exe, args)
+	}
 	switch exe {
 	case "tee", "truncate", "touch", "patch":
 		return operandWords(args), nil
@@ -984,7 +1573,7 @@ func commandWriteTargets(inv *Invocation) (files, dirs []Word) {
 			dirs = []Word{dotWord}
 		}
 	case "git":
-		return gitWriteTargetsArgv(args)
+		return gitWriteTargetsArgv(args, inv.Dialect)
 	}
 	return files, dirs
 }
@@ -998,7 +1587,7 @@ func commandWriteTargets(inv *Invocation) (files, dirs []Word) {
 // `git -- checkout .` that git may still run. The operands start after the first literal word equal to the verb,
 // which can be an option value, so `git -C checkout checkout .` also lists checkout: starting at the verb itself
 // would drop a target.
-func gitWriteTargetsArgv(args []Word) (files, dirs []Word) {
+func gitWriteTargetsArgv(args []Word, dialect Dialect) (files, dirs []Word) {
 	g := argv.ReadGit(args)
 	var verb Word
 	switch {
@@ -1008,14 +1597,14 @@ func gitWriteTargetsArgv(args []Word) (files, dirs []Word) {
 			return nil, nil
 		}
 		verb = lenient
-	case gitGlobalExpands(g):
+	case gitGlobalExpands(g, dialect, false):
 		return nil, nil
 	default:
 		verb = g.Verb
 	}
 	switch verb.Text {
 	case "checkout", "restore", "rm", "mv":
-		if gitIndexOnly(verb.Text, args) {
+		if g.State == argv.GitVerb && !gitGlobalExpands(g, dialect, true) && gitIndexOnly(verb.Text, g.Args, dialect) {
 			return nil, nil
 		}
 		var after []Word
@@ -1052,25 +1641,26 @@ func (p *parser) checkScriptWrites() {
 			continue
 		}
 		if inv.Script == nil {
-			if writesInspected(in, inv) {
+			if writesInspected(p.ctx, in, inv) {
 				inv.Inspectable, inv.Reason = false, ruleRefusal(RuleWritesInspected, nil)
 			}
 			continue
 		}
-		if writesInspected(in, inv) {
+		if writesInspected(p.ctx, in, inv) {
 			inv.Inspectable = false
 			inv.Reason = ruleRefusal(RuleWritesInspected, inv.Script)
 		}
 	}
 }
 
-func writesInspected(in inspectedPaths, inv *Invocation) bool {
+func writesInspected(ctx context.Context, in inspectedPaths, inv *Invocation) bool {
+	in.powerShell = inv.Dialect == PowerShell
 	for _, r := range inv.OutputRedirects {
 		if in.hits(r.Target) {
 			return true
 		}
 	}
-	files, dirs := commandWriteTargets(inv)
+	files, dirs := commandWriteTargets(ctx, inv)
 	for _, w := range files {
 		if in.hits(w) {
 			return true
@@ -1085,22 +1675,34 @@ func writesInspected(in inspectedPaths, inv *Invocation) bool {
 }
 
 // gitIndexOnly reports a git command that changes only the index: restore --staged without --worktree, rm --cached.
-func gitIndexOnly(verb string, args []Word) bool {
-	has := func(names ...string) bool {
-		for _, a := range args {
-			for _, n := range names {
-				if a.Literal && a.Text == n {
-					return true
-				}
-			}
+func gitIndexOnly(verb string, args []Word, dialect Dialect) bool {
+	index := false
+	for i := 0; i < len(args); i++ {
+		a := args[i]
+		if !fixedGitWord(a, dialect) {
+			return false
 		}
-		return false
+		if a.Text == "--" {
+			break
+		}
+		if !strings.HasPrefix(a.Text, "-") {
+			continue
+		}
+		switch {
+		case verb == "restore" && (a.Text == "--staged" || a.Text == "-S"):
+			index = true
+		case verb == "restore" && (a.Text == "-s" || a.Text == "--source"):
+			i++
+			if i == len(args) || !fixedGitWord(args[i], dialect) {
+				return false
+			}
+		case verb == "restore" && strings.HasPrefix(a.Text, "--source="):
+		case verb == "rm" && a.Text == "--cached":
+			index = true
+		case verb == "rm" && (a.Text == "--ignore-unmatch" || a.Text == "--quiet" || a.Text == "--force" || len(a.Text) > 1 && strings.Trim(a.Text[1:], "rfqn") == ""):
+		default:
+			return false
+		}
 	}
-	switch verb {
-	case "restore":
-		return has("--staged", "-S") && !has("--worktree", "-W")
-	case "rm":
-		return has("--cached")
-	}
-	return false
+	return index
 }

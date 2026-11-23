@@ -493,7 +493,10 @@ func arithmeticSubstitution(line string) bool {
 // syntheticOpaque builds a refused child for a construct that is not an invocation of its own. Raw stays empty and
 // the only word is a fixed label, so a guard that prints either prints nothing of the script.
 func (p *parser) syntheticOpaque(rule construct, origin *ScriptOrigin, line int, wrappers []Word, parent int, complete bool) Invocation {
-	o := &ScriptOrigin{Path: origin.Path, Chain: origin.Chain, Line: line}
+	var o *ScriptOrigin
+	if origin != nil {
+		o = &ScriptOrigin{Path: origin.Path, Chain: origin.Chain, Line: line}
+	}
 	return Invocation{Dialect: POSIX, Words: []Word{{Text: "script-construct", Raw: "script-construct", Literal: true}},
 		Wrappers: append([]Word(nil), wrappers...), WrapperIDs: append([]int(nil), p.wrapperIDs...),
 		Before: Sequence, Parent: parent, Complete: complete, Inspectable: false, Script: o,

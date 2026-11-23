@@ -134,7 +134,11 @@ function Invoke-TestRunner([string]$Runner, [string]$File) {
         # The piped $null keeps the runner off the console's stdin. The file is passed as a
         # quoted string because PowerShell on Unix expands wildcards in an unquoted argument to
         # a native command, which would turn a test named `[ab]_test.js` into `a_test.js`.
-        $output = @($null | & $Runner test "$File" 2>&1 | ForEach-Object { ConvertTo-OutputLine $_ })
+        $output = @(switch -Exact -CaseSensitive ($Runner) {
+            'npm'  { $null | npm test "$File" 2>&1 | ForEach-Object { ConvertTo-OutputLine $_ } }
+            'pnpm' { $null | pnpm test "$File" 2>&1 | ForEach-Object { ConvertTo-OutputLine $_ } }
+            'yarn' { $null | yarn test "$File" 2>&1 | ForEach-Object { ConvertTo-OutputLine $_ } }
+        })
     } catch [System.Management.Automation.CommandNotFoundException] {
         return @{ NotFound = $true; Status = 127; Output = @() }
     }

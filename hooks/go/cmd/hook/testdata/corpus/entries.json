@@ -15,8 +15,8 @@
     "pre-powershell-call-qualified-template": {
       "claude-code": {"hook_event_name":"PreToolUse","session_id":"corpus","turn_id":"corpus-turn","cwd":"/tmp/corpus","tool_name":"PowerShell","tool_input":{"command":"&'Microsoft.PowerShell.Management\\Get-Content' .env.example"}},
       "copilot": {"sessionId":"corpus","timestamp":1777831012000,"cwd":"/tmp/corpus","toolName":"powershell","toolArgs":{"command":"&'Microsoft.PowerShell.Management\\Get-Content' .env.example"}},
-      "codex": {"hook_event_name":"PreToolUse","session_id":"corpus","turn_id":"corpus-turn","cwd":"/tmp/corpus","tool_name":"Bash","tool_input":{"command":"&'Microsoft.PowerShell.Management\\Get-Content' .env.example"}},
-      "antigravity": {"hookEventName":"PreToolUse","conversationId":"corpus","turnId":"corpus-turn","cwd":"/tmp/corpus","toolCall":{"name":"run_command","args":{"CommandLine":"&'Microsoft.PowerShell.Management\\Get-Content' .env.example"}}}
+      "codex": {"hook_event_name":"PreToolUse","session_id":"corpus","turn_id":"corpus-turn","cwd":"/tmp/corpus","tool_name":"Bash","tool_input":{"command":"pwsh -NoProfile -Command \"&'Microsoft.PowerShell.Management\\Get-Content' .env.example\""}},
+      "antigravity": {"hookEventName":"PreToolUse","conversationId":"corpus","turnId":"corpus-turn","cwd":"/tmp/corpus","toolCall":{"name":"run_command","args":{"CommandLine":"pwsh -NoProfile -Command \"&'Microsoft.PowerShell.Management\\Get-Content' .env.example\""}}}
     },
     "pre-benign": {
       "claude-code": {"hook_event_name": "PreToolUse", "session_id": "corpus", "turn_id": "corpus-turn", "cwd": "/tmp/corpus", "tool_name": "Bash", "tool_input": {"command": "git status --short"}},

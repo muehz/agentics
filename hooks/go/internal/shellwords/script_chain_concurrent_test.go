@@ -137,6 +137,82 @@ func TestIndexOnlyGitAndNonStateDeclarations(t *testing.T) {
 	}
 }
 
+func TestScriptPredecessorGroupCommandsKeepTheirIdentity(t *testing.T) {
+	for _, group := range []string{"(a b)", "( n = 1 )", "(1+2)"} {
+		res := parseScript(group+"; bash /ws/ok.sh", chainFiles())
+		if got := firstScriptReason(res); got != "script-predecessor-may-write" || len(res.Scripts) != 0 {
+			t.Errorf("%s: reason %q, inspected %+v", group, got, res.Scripts)
+		}
+	}
+}
+
+func TestScriptPredecessorReadOnlyOptions(t *testing.T) {
+	for _, p := range []string{
+		"env", "find ./notes -type f -name '*.txt' -print", `find "./$folder" -maxdepth 2 -print`,
+		"rg -in -g '*.txt' report", "sort -k2,2 notes.txt", "git diff --stat -- notes.txt",
+		"git branch --list --sort refname", "git tag --format '%(refname)' --list 'v*'",
+		"git config --local --get user.name", "git restore --source HEAD --staged -- notes.txt",
+	} {
+		res := parseScript(p+"; bash /ws/ok.sh", chainFiles())
+		if got := firstScriptReason(res); got != "" || len(res.Scripts) != 1 {
+			t.Errorf("%q: reason %q, inspected %d scripts", p, got, len(res.Scripts))
+		}
+	}
+	for _, p := range []string{
+		"find {notes,reports} -print", `find ./prefix"$folder" -print`, "find ./notes -unclassified",
+		"rg --unclassified report", "sort -o preview.txt", "git --exec-path=preview status",
+		"git diff --output=preview.txt", "git log --unclassified", "git branch --color example",
+		"git tag --column example", "git config --list user.name", "git restore --staged -SW notes.txt",
+		"git rm -- notes.txt --cached",
+	} {
+		res := parseScript(p+"; bash /ws/ok.sh", chainFiles())
+		if got := firstScriptReason(res); got != "script-predecessor-may-write" || len(res.Scripts) != 0 {
+			t.Errorf("%q: reason %q, inspected %d scripts", p, got, len(res.Scripts))
+		}
+	}
+}
+
+func TestScriptPredecessorMetadataQueries(t *testing.T) {
+	for _, tc := range []struct{ query, reason string }{
+		{"command -v echo", ""},
+		{"command -v echo > /dev/null", ""},
+		{"command -v echo > report.txt", "script-predecessor-may-write"},
+		{"./command -v echo", "script-predecessor-may-write"},
+		{"bash -c '' > report.txt", "script-predecessor-may-write"},
+	} {
+		res := parseScript(tc.query+"; bash /ws/ok.sh", chainFiles())
+		if got := firstScriptReason(res); got != tc.reason || (len(res.Scripts) == 1) != (tc.reason == "") {
+			t.Errorf("%q: reason %q, want %q, inspected %d scripts", tc.query, got, tc.reason, len(res.Scripts))
+		}
+	}
+	files := fakeReader{"/ws/query.sh": {ID: "query", Text: "command -v echo > preview.txt\n"}}
+	res := parseScript("bash /ws/query.sh", files)
+	child := scriptChild(res)
+	if got := firstScriptReason(res); got != "" || child == nil || child.Script.Path != "/ws/query.sh" ||
+		len(child.OutputRedirects) != 1 || child.OutputRedirects[0].Target.Text != "preview.txt" {
+		t.Fatalf("expected the queried script to own the file redirect, got %+v", res)
+	}
+}
+
+func TestScriptWritePowerShellPathLists(t *testing.T) {
+	const filename = "/ws/report.ps1"
+	for _, tc := range []struct{ body, want string }{
+		{"Clear-Content -WhatIf -LiteralPath 'notes.txt','report.ps1'", "script-writes-inspected in /ws/report.ps1:1"},
+		{"Clear-Content -WhatIf -LiteralPath 'notes.txt,report.ps1'", ""},
+		{"Copy-Item -WhatIf -LiteralPath 'notes.txt','data.txt' archive", ""},
+		{"Copy-Item -WhatIf -LiteralPath notes.txt -Destination:$PSScriptRoot", ""},
+		{"Copy-Item -WhatIf -LiteralPath 'notes[old].txt' -Destination:$PSScriptRoot", ""},
+		{"Move-Item -WhatIf -LiteralPath 'notes[old].txt' -Destination:$PSScriptRoot", ""},
+		{"Expand-Archive -WhatIf -DestinationPath:sub -Path sample.zip", ""},
+		{"Set-Content -WhatIf -Path:$logPath -Value report.ps1", ""},
+	} {
+		res := parsePowerShellCall(t, "./report.ps1", fakeReader{filename: {ID: "report", Text: tc.body + "\n"}})
+		if got := firstScriptReason(res); got != tc.want || len(res.Scripts) != 1 {
+			t.Errorf("%q: reason %q, want %q, inspected %d scripts", tc.body, got, tc.want, len(res.Scripts))
+		}
+	}
+}
+
 // pipeFiles adds the execute helper at its repository path to the chain fixture.
 func pipeFiles() fakeReader {
 	files := chainFiles()

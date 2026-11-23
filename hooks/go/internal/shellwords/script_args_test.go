@@ -103,6 +103,54 @@ func TestScriptCallsAreRecordedForNestedCalls(t *testing.T) {
 	}
 }
 
+func TestPOSIXSourceRequiresProvenArgumentBinding(t *testing.T) {
+	files := fakeReader{
+		"/ws/entry.sh":   {Text: ". /ws/first\n"},
+		"/ws/first":      {Text: "source /ws/second.inc\n"},
+		"/ws/second.inc": {Text: "printf '%s' \"$1\"\n"},
+		"/ws/static":     {Text: "printf '%s' sample\n"},
+	}
+	for _, command := range []string{
+		"source /ws/second.inc",
+		"bash /ws/entry.sh sample",
+		". /ws/second.inc explicit",
+		"sh -c '. /ws/second.inc explicit'",
+	} {
+		res := parseScript(command, files)
+		if reason := firstScriptReason(res); !strings.HasPrefix(reason, "script-caller-argument") {
+			t.Errorf("%q: reason = %q, want script-caller-argument", command, reason)
+		}
+	}
+
+	for _, command := range []string{
+		"bash -c '. /ws/second.inc explicit'",
+		"bash -c 'source /ws/second.inc explicit'",
+	} {
+		res := parseScript(command, files)
+		if reason := firstScriptReason(res); reason != "" || len(res.ScriptCalls) != 1 {
+			t.Fatalf("%q: reason %q, calls %+v", command, reason, res.ScriptCalls)
+		}
+		call := res.ScriptCalls[0]
+		if !call.ConsumesParams || len(call.Args) != 1 || call.Args[0] != "explicit" {
+			t.Errorf("%q: call = %+v", command, call)
+		}
+	}
+
+	for _, command := range []string{
+		"/bin/bash -c 'source /ws/second.inc explicit'",
+		"/opt/git/bash.exe -c 'source /ws/second.inc explicit'",
+	} {
+		if reason := firstScriptReason(parseScript(command, files)); reason != "script-predecessor-may-write" {
+			t.Errorf("%q: reason = %q, want script-predecessor-may-write", command, reason)
+		}
+	}
+
+	res := parseScript(". /ws/static", files)
+	if reason := firstScriptReason(res); reason != "" || len(res.ScriptCalls) != 1 || res.ScriptCalls[0].ConsumesParams {
+		t.Errorf("parameter-independent source: reason %q, calls %+v", reason, res.ScriptCalls)
+	}
+}
+
 func TestScriptNonLiteralArgumentsBlockOnlyWhenParametersAreConsumed(t *testing.T) {
 	if _, got := argsOutcome("bash /ws/p.sh \"$X\"", "echo \"$1\"\n"); !strings.HasPrefix(got, "script-caller-argument") {
 		t.Errorf("consuming script: got %q", got)
@@ -194,7 +242,7 @@ func TestScriptPinnedNamesOnTheCall(t *testing.T) {
 		"IFS=,; bash /ws/p.sh": "script-predecessor-state", "CDPATH=; bash /ws/p.sh": "script-predecessor-state",
 		"PS4=x; set -x; bash /ws/p.sh": "script-predecessor-state", "export PATH=/x; bash /ws/p.sh": "script-predecessor-state",
 		"FLOW_WORK_ROOT=x bash /ws/p.sh": "", "env FOO=1 bash /ws/p.sh": "", "FOO=1; bash /ws/p.sh": "", "env -u FOO bash /ws/p.sh": "",
-		"FOO=1 bash /ws/p.sh": "", "env FOO=1 nohup bash /ws/p.sh": "", "PATH=/x echo hi; bash /ws/p.sh": "",
+		"FOO=1 bash /ws/p.sh": "", "env FOO=1 nohup bash /ws/p.sh": "", "PATH=/x echo hi; bash /ws/p.sh": "script-predecessor-state",
 	} {
 		_, got := argsOutcome(command, "echo hi\n")
 		if want == "" && got != "" || want != "" && !strings.HasPrefix(got, want) {

@@ -3,6 +3,7 @@ package shellwords
 import (
 	"path"
 	"strings"
+	"time"
 	"unicode"
 
 	"github.com/muehz/agentics/hooks/go/internal/pathshape"
@@ -232,7 +233,11 @@ func runsInList(inv Invocation, depth int) (same, unknown bool) {
 func (p *parser) cwdBefore() (dir cwdPath, ok bool, byCD bool) {
 	// A relative event cwd proves nothing: no directory is known, though the replay still runs.
 	haveDir := false
-	if cwd := slashPath(p.script.host.Native(p.script.opts.Cwd)); isAbsolutePath(cwd) {
+	cwd := p.script.opts.Cwd
+	if p.dialect != PowerShell {
+		cwd = p.script.host.Native(cwd)
+	}
+	if cwd = slashPath(cwd); isAbsolutePath(cwd) {
 		dir, haveDir = startCwdPath(p.script.host, cwd, false, true)
 	}
 	sawCD, grouped := false, false
@@ -298,6 +303,8 @@ func (p *parser) cwdBefore() (dir cwdPath, ok bool, byCD bool) {
 					// shell. A refused sh or bash script call is not: it runs in a shell of its own. (A refused source
 					// or . was caught above.)
 					return cwdPath{}, false, true
+				case inv.Dialect == PowerShell && len(words) > 1 && strings.HasPrefix(asciiLower(words[0].Text), "$env:") && strings.HasSuffix(words[1].Text, "="):
+					continue
 				case !words[0].Literal || strings.ContainsAny(words[0].Text, expandingChars):
 					// A command word that expands at run time may be a cd: $C with C=cd, and also words the lexer keeps
 					// literal, such as {cd,} or c? and c[d] once a file named cd exists.
@@ -350,6 +357,13 @@ func applyCD(dir *cwdPath, operand string, mayFail, inPowerShell bool) bool {
 
 func applyCDOperand(dir *cwdPath, operand string, mayFail, inPowerShell bool) bool {
 	target := dir.host.Native(operand)
+	if inPowerShell {
+		var rule Rule
+		target, rule = shellOperandPath(dir.host, operand, true, *dir, true)
+		if rule != RuleNone {
+			return false
+		}
+	}
 	if !isAbsolutePath(target) {
 		return dir.walk(target, mayFail, inPowerShell)
 	}
@@ -384,22 +398,425 @@ func leadingParentAfterCD(host pathshape.Host, text string, dir cwdPath) bool {
 	return false
 }
 
-// resolveScriptPath applies the literal-path and extension rules and resolves a relative path against dir.
-func resolveScriptPath(host pathshape.Host, w Word, dir cwdPath, dirOK bool) (string, Rule) {
-	if !literalPathWord(w) || host.ChangedByCleaning(w.Text) || leadingParentAfterCD(host, w.Text, dir) {
+func posixShellName(exe string) bool {
+	switch exe {
+	case "sh", "bash", "dash", "ksh":
+		return true
+	}
+	return false
+}
+
+func localPathHead(s string) bool { return strings.ContainsAny(s, "/\\") || pathshape.HasDrive(s) }
+
+func scriptExt(s string) string { return strings.ToLower(path.Ext(strings.ReplaceAll(s, "\\", "/"))) }
+
+func scriptSuffix(s string) bool {
+	switch scriptExt(s) {
+	case ".sh", ".bash", ".dash", ".ksh", ".ps1", ".zsh", ".fish", ".csh", ".tcsh", ".cmd", ".bat":
+		return true
+	}
+	return false
+}
+
+func posixPathAppend(w Word) bool {
+	return strings.HasPrefix(w.Text, "PATH+=") && strings.HasPrefix(w.Raw, "PATH+=")
+}
+
+func (p *parser) badSearchPath(w Word, dialect Dialect) bool {
+	name, value, ok := strings.Cut(w.Text, "=")
+	if !ok || (name != "PATH" && !(dialect == POSIX && posixPathAppend(w))) {
+		return false
+	}
+	sep := ":"
+	if dialect == PowerShell && p.script.host.Windows() {
+		sep = ";"
+	}
+	if dialect == PowerShell && !w.Literal && strings.EqualFold(value, "$env:PATH") {
+		return false
+	}
+	if dialect == POSIX && strings.HasPrefix(w.Raw, "PATH+=") {
+		if value == "" {
+			return false
+		}
+		// A leading separator terminates the existing search list. Without
+		// it the first appended characters change an unknown existing entry.
+		if !strings.HasPrefix(value, sep) {
+			return true
+		}
+		value = value[len(sep):]
+	}
+	for _, part := range strings.Split(value, sep) {
+		if dialect == POSIX && !w.Literal && !strings.ContainsAny(w.Raw, "'\\\\") && (part == "$PATH" || part == "${PATH}") {
+			continue
+		}
+		if dialect == PowerShell && !w.Literal && strings.EqualFold(part, "$env:PATH") {
+			continue
+		}
+		if !isAbsolutePath(part) || strings.ContainsAny(part, "$\x60()*?[]{}") {
+			return true
+		}
+	}
+	return false
+}
+
+func (p *parser) refuse(inv Invocation, r Refusal) bool {
+	inv.Inspectable, inv.Reason = false, r.locatedAt(inv.Script)
+	p.result.Invocations = append(p.result.Invocations, inv)
+	return true
+}
+
+func (p *parser) resolveModuleCommand(inv *Invocation, meta *psInvocationMeta) Rule {
+	raw := inv.Words[0]
+	raw.Text = meta.RawCommand
+	dir, ok, _ := p.cwdBefore()
+	if ok {
+		resolved, rule := resolveScriptPath(p.script.host, raw, dir, ok, PowerShell)
+		if rule != RuleNone {
+			return rule
+		}
+		suffix, found, rule := p.probeScript(resolved, []string{"", ".ps1", ".bat", ".cmd"})
+		if rule != RuleNone {
+			return rule
+		}
+		if found {
+			raw.Text += suffix
+			inv.Words = append([]Word{raw}, inv.Words[1:]...)
+			meta.Opaque = psOpaqueNone
+			meta.ModuleStripped = false
+		}
+	}
+
+	return RuleNone
+}
+
+func (p *parser) dispatchLocal(inv Invocation, meta psInvocationMeta, depth int) bool {
+	head := inv.Words[0]
+	exe := strings.ToLower(ExecutableName(head.Text))
+
+	if inv.Dialect == PowerShell && head.Literal && localPathHead(head.Text) {
+		// A local denied extension is classified after path and cwd safety.
+		switch scriptExt(head.Text) {
+		case ".bat", ".cmd":
+			if meta.Opaque == psOpaqueBatchFile {
+				meta.Opaque = psOpaqueNone
+			}
+		case ".zsh", ".fish", ".csh", ".tcsh":
+			if meta.Opaque == psOpaqueOtherShell {
+				meta.Opaque = psOpaqueNone
+			}
+		}
+	}
+	if meta.Opaque != psOpaqueNone {
+		if !p.script.opts.Context.AllowsNewProof() && (exe == "pwsh" || exe == "powershell") {
+			if _, file, _ := parsePowerShellScriptForm(inv.Words); file {
+				return p.refuse(inv, ruleRefusal(RuleContextUnqualified, nil))
+			}
+		}
+		return p.refuse(inv, opaqueRefusal(powerShellConstruct(meta.Opaque), nil))
+	}
+	source := inv.Dialect == POSIX && (head.Text == "source" || head.Text == ".")
+	form := scriptForm{path: head, args: inv.Words[1:], caller: inv.Dialect, sourced: meta.CallKind == psCallDot}
+	if source {
+		list := len(p.lists) - 1
+		if !head.Literal || list < 0 || len(inv.Wrappers) != p.lists[list].depth || len(inv.Words) < 2 || !inv.Words[1].Literal || !strings.Contains(inv.Words[1].Text, "/") {
+			return p.refuse(inv, opaqueRefusal(constructSource, nil))
+		}
+		form.path, form.args, form.sourced = inv.Words[1], inv.Words[2:], true
+		// Bash rebinds the arguments when given an explicit list. Other POSIX
+		// interpreters may ignore the list and retain the caller's parameters.
+		if len(form.args) > 0 && len(inv.Wrappers) > 0 {
+			active := inv.Wrappers[len(inv.Wrappers)-1]
+			form.sourceArgsBound = active.Literal && active.Text == "bash"
+		}
+		if strings.HasPrefix(form.path.Text, "/dev/fd/") || strings.HasPrefix(form.path.Text, "/proc/self/fd/") || form.path.Text == "/dev/stdin" {
+			return p.refuse(inv, opaqueRefusal(constructSource, nil))
+		}
+		p.dispatchFile(inv, form, nil, Refusal{}, depth)
+		return true
+	}
+	if inv.Dialect == POSIX && len(p.script.chain) > 0 && strings.Contains(head.Text, "=") && variableConstruct(head) != constructNone {
+		return false
+	}
+	if !head.Literal {
+		if inv.Dialect == POSIX || localPathHead(head.Text) || scriptSuffix(head.Text) {
+			return p.refuse(inv, opaqueRefusal(constructCommandPositionExpansion, nil))
+		}
+		return false
+	}
+	local := localPathHead(head.Text)
+	if !local && len(p.script.chain) == 0 {
+		unsafe := p.unsafeSearchPath
+		for _, group := range [][]Word{inv.Assignments, p.script.callAssignments} {
+			for _, w := range group {
+				unsafe = unsafe || p.badSearchPath(w, inv.Dialect)
+			}
+		}
+		if unsafe {
+			// A script call applies its own prefix and predecessor checks in their established order.
+			_, file, _ := shellFileForm(exe, inv.Words)
+			if !file {
+				return p.refuse(inv, ruleRefusal(RuleEnvPinned, nil))
+			}
+		}
+	}
+	if inv.Dialect == POSIX && !local {
+		command := stripBuiltin(inv.Words)
+		if len(command) > 0 && command[0].Literal && len(command) < len(inv.Words) {
+			switch command[0].Text {
+			case ".", "source":
+				return p.refuse(inv, opaqueRefusal(constructSource, nil))
+			case "eval":
+				return p.refuse(inv, opaqueRefusal(constructEval, nil))
+			}
+		}
+		if list := len(p.lists) - 1; len(p.script.chain) == 0 && list >= 0 {
+			if same, _ := runsInList(inv, p.lists[list].depth); same {
+				p.observePOSIXSearchPath(command)
+			}
+		}
+		if head.Text == "eval" {
+			return p.refuse(inv, opaqueRefusal(constructEval, nil))
+		}
+	}
+	if inv.Dialect == POSIX {
+		switch {
+		case exe == "zsh" || exe == "fish" || exe == "csh" || exe == "tcsh":
+			return p.refuse(inv, opaqueRefusal(constructOtherShell, nil))
+		case exe == "cmd" && cmdTargetsBatchFile(inv.Words[1:]):
+			return p.refuse(inv, opaqueRefusal(constructBatchFile, nil))
+		}
+	}
+	if posixShellName(exe) || exe == "pwsh" || exe == "powershell" || exe == "cmd" || meta.ModuleStripped {
+		return false
+	}
+	if !local && !scriptSuffix(head.Text) {
+		return false
+	}
+	ext := scriptExt(head.Text)
+	if local && ext == ".exe" && literalPathWord(head) {
+		return false
+	}
+	if !local && ext != ".bat" && ext != ".cmd" {
+		return p.refuse(inv, ruleRefusal(RulePathNotLiteral, nil))
+	}
+	dir, ok, _ := p.cwdBefore()
+	resolved, rule := resolveScriptPath(p.script.host, head, dir, ok, inv.Dialect)
+	if rule != RuleNone {
+		return p.refuse(inv, ruleRefusal(rule, nil))
+	}
+	if inv.Dialect == PowerShell && ext == "" {
+		suffix, found, rule := p.probeScript(resolved, []string{".ps1", ".bat", ".cmd"})
+		if rule != RuleNone {
+			return p.refuse(inv, ruleRefusal(rule, nil))
+		}
+		if found {
+			ext = suffix
+			form.path.Text += suffix
+		}
+	}
+	switch ext {
+	case ".bat", ".cmd":
+		return p.refuse(inv, opaqueRefusal(constructBatchFile, nil))
+	case ".zsh", ".fish", ".tcsh", ".csh":
+		return p.refuse(inv, opaqueRefusal(constructOtherShell, nil))
+	}
+	form.direct = true
+	if inv.Dialect == PowerShell && ext == ".ps1" {
+		form.dialect = PowerShell
+	} else {
+		if p.script.deadline.Before(time.Now()) {
+			return p.refuse(inv, ruleRefusal(RuleBudget, nil))
+		}
+		reader := p.script.opts.Reader
+		var read ScriptRead
+		if classifier, ok := reader.(ScriptClassifier); ok {
+			read = classifier.InspectScript(resolved)
+		} else {
+			read = reader.ReadScript(resolved)
+			form.read = &read
+		}
+		dialect, inspect, reason := p.classifyDirect(read, head.Text, inv.Dialect)
+		if reason.Refused() {
+			return p.refuse(inv, reason)
+		}
+		if !inspect {
+			return false
+		}
+		form.dialect = dialect
+	}
+	var shell *Word
+	if !form.sourced {
+		shell = &head
+	}
+	p.dispatchFile(inv, form, shell, Refusal{}, depth)
+	return true
+}
+
+func (p *parser) observePOSIXSearchPath(words []Word) {
+	for len(words) > 1 && words[0].Literal && words[0].Text == "command" {
+		words = stripBuiltin(readCommand(p.ctx, "command", words, POSIX, 0).child)
+	}
+	if len(words) < 2 || !words[0].Literal {
+		return
+	}
+	switch words[0].Text {
+	case "export", "declare", "readonly", "typeset":
+		for _, w := range words[1:] {
+			p.unsafeSearchPath = p.unsafeSearchPath || p.badSearchPath(w, POSIX)
+		}
+	case "unset":
+		for _, w := range words[1:] {
+			p.unsafeSearchPath = p.unsafeSearchPath || w.Text == "PATH"
+		}
+	}
+}
+
+func (p *parser) probeScript(path string, suffixes []string) (string, bool, Rule) {
+	prober, ok := p.script.opts.Reader.(ScriptProber)
+	if !ok {
+		return "", false, RuleUnreadable
+	}
+	for _, s := range suffixes {
+		exists, rule := prober.ProbeExists(path + s)
+		if rule != RuleNone || exists {
+			return s, exists, rule
+		}
+	}
+	return "", false, RuleNone
+}
+
+func (p *parser) classifyDirect(read ScriptRead, name string, caller Dialect) (Dialect, bool, Refusal) {
+	deny := func(r Rule) (Dialect, bool, Refusal) { return POSIX, false, ruleRefusal(r, nil) }
+	if read.NotExist && !scriptSuffix(name) {
+		if len(p.script.chain) == 0 {
+			return deny(p.predecessorReason())
+		}
+		return POSIX, false, Refusal{}
+	}
+	if read.Limit != RuleNone && !(read.IsSymlink && read.HasResolvedHeader && read.Limit == RuleUnreadable) && !(read.TooLarge && read.Limit == RuleTooLarge) {
+		return deny(read.Limit)
+	}
+	header := read.Header
+	if read.IsSymlink {
+		header = read.ResolvedHeader
+	}
+	kind := ClassifyShebang(header.Shebang)
+	binary := header.BinaryMagic || caller == POSIX && kind == ShebangNone && header.HasNUL
+	if read.IsSymlink {
+		if read.HasResolvedHeader && (binary || kind == ShebangNonShell) {
+			return POSIX, false, Refusal{}
+		}
+		return deny(RuleUnreadable)
+	}
+	if path.Base(strings.ReplaceAll(name, "\\", "/")) == "agx" && read.SHA256 == AgxLauncherSHA256 || binary || kind == ShebangNonShell {
+		return POSIX, false, Refusal{}
+	}
+	switch kind {
+	case ShebangBatch:
+		return POSIX, false, opaqueRefusal(constructBatchFile, nil)
+	case ShebangOtherShell, ShebangUnparseable:
+		return POSIX, false, opaqueRefusal(constructOtherShell, nil)
+	case ShebangPowerShell, ShebangPOSIX:
+		if !safeShellShebang(header.Shebang, kind) {
+			return deny(RuleFormUnsupportedOption)
+		}
+	case ShebangNone:
+		if caller == PowerShell && !posixShellName(strings.TrimPrefix(scriptExt(name), ".")) {
+			return deny(RuleExtension)
+		}
+	}
+	if read.TooLarge {
+		return deny(RuleTooLarge)
+	}
+	if kind == ShebangPowerShell {
+		return PowerShell, true, Refusal{}
+	}
+	return POSIX, true, Refusal{}
+}
+
+func safeShellShebang(line string, kind ShebangKind) bool {
+	words := strings.Fields(strings.TrimPrefix(line, "#!"))
+	i := 1
+	if strings.EqualFold(ExecutableName(words[0]), "env") {
+		for ; i < len(words); i++ {
+			w := words[i]
+			switch {
+			case w == "-S" || w == "-v" || w == "--":
+				continue
+			case w == "-i":
+				return false
+			case w == "-u":
+				i++
+				if i >= len(words) || isPSPinnedEnv(words[i]) || namedVariable(words[i]) != constructNone {
+					return false
+				}
+				continue
+			case strings.Contains(w, "="):
+				name, _, _ := strings.Cut(w, "=")
+				if isPSPinnedEnv(name) || namedVariable(name) != constructNone {
+					return false
+				}
+				continue
+			}
+			break
+		}
+		i++
+	}
+	if kind == ShebangPOSIX {
+		for _, w := range words[i:] {
+			if !scriptBashOptions[w] {
+				return false
+			}
+		}
+		return true
+	}
+	args := []Word{{Text: "pwsh", Literal: true}}
+	for _, w := range words[i:] {
+		args = append(args, Word{Text: w, Raw: w, Literal: true})
+	}
+	args = append(args, Word{Text: "-File", Raw: "-File", Literal: true})
+	return powerShellEntry(args) == len(args)-1
+}
+
+// shellOperandPath applies the caller's path syntax before any lexical
+// cleanup. Windows PowerShell resolves a rooted path on the current drive.
+func shellOperandPath(host pathshape.Host, operand string, powershell bool, dir cwdPath, dirOK bool) (string, Rule) {
+	text := operand
+	if powershell && (host.Windows() || !strings.HasPrefix(text, "\\")) {
+		text = strings.ReplaceAll(text, "\\", "/")
+	}
+	if pathshape.HasDrive(text) && !isAbsolutePath(text) || host.ChangedByCleaning(text) {
 		return "", RulePathNotLiteral
 	}
-	switch strings.ToLower(path.Ext(w.Text)) {
-	case ".sh", ".bash":
-	default:
-		return "", RuleExtension
+	if powershell && host.Windows() {
+		if strings.HasPrefix(text, "/") {
+			if !dirOK || !pathshape.HasDrive(dir.root) {
+				return "", RuleCwdUnproven
+			}
+			text = dir.root[:2] + text
+		}
+		return text, RuleNone
 	}
-	text := host.Native(w.Text)
+	return host.Native(text), RuleNone
+}
+
+// resolveScriptPath checks the spelling before resolving it against the caller's proven working directory.
+func resolveScriptPath(host pathshape.Host, w Word, dir cwdPath, dirOK bool, dialect Dialect) (string, Rule) {
+	if !literalPathWord(w) {
+		return "", RulePathNotLiteral
+	}
+	text, reason := shellOperandPath(host, w.Text, dialect == PowerShell, dir, dirOK)
+	if reason != RuleNone {
+		return "", reason
+	}
+	if leadingParentAfterCD(host, text, dir) {
+		return "", RulePathNotLiteral
+	}
 	if isAbsolutePath(text) {
 		return slashPath(text), RuleNone
 	}
-	// bash opens the path from the directory it holds as /c/... on Windows, so .. never stays at a drive root here.
-	if !dirOK || !dir.walk(text, false, false) {
+	// PowerShell stays at a drive root, while Git Bash may climb to its MSYS root.
+	if !dirOK || !dir.walk(text, false, dialect == PowerShell) {
 		return "", RuleCwdUnproven
 	}
 	return dir.String(), RuleNone

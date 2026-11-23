@@ -130,6 +130,9 @@ const (
 	constructPromptCommand
 	constructArithmeticSubstitution
 	constructHeredocDelimiter
+	constructDotNetCall
+	constructBatchFile
+	constructDynamicCall
 	constructEnd
 
 	constructFirst = constructEval
@@ -137,6 +140,9 @@ const (
 )
 
 var constructNames = [constructEnd]string{
+	constructDotNetCall:               "dotnet-call",
+	constructBatchFile:                "batch-file",
+	constructDynamicCall:              "dynamic-call",
 	constructEval:                     "eval",
 	constructTrap:                     "trap",
 	constructSource:                   "source",
@@ -213,7 +219,7 @@ const (
 // formTemplates are the texts the form kinds render. formWrapperDepth fills its %d with maxWrapperDepth itself.
 var formTemplates = [formEnd]string{
 	formShellContract:      "%s requires exactly -c or -lc and a literal command string",
-	formPowerShellContract: "%s requires optional -NoProfile/-NonInteractive, then -Command and one literal token",
+	formPowerShellContract: "%s requires optional PowerShell flags, then -File <literal .ps1> or -Command and one literal token",
 	formEnvName:            "env %s requires a literal name",
 	formWrapperOption:      "%s option %s is outside the literal wrapper contract",
 	formWrapperValue:       "%s %s requires a literal value",
@@ -414,6 +420,11 @@ func (r Refusal) Construct() string {
 		return ""
 	}
 	return r.construct.String()
+}
+
+// IsOpaqueEval reports whether the refusal is specifically script-opaque:eval.
+func (r Refusal) IsOpaqueEval() bool {
+	return r.rule == RuleOpaque && r.construct == constructEval
 }
 
 // Origin returns a copy of the script location the refusal renders, nil when none was appended.

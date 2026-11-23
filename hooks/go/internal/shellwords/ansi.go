@@ -9,14 +9,21 @@ import (
 // It returns len(s) for an unfinished span so callers cannot inspect its data
 // as executable shell syntax.
 func ansiCEnd(s string, start int) int {
+	end, _ := ansiCEndClosed(s, start)
+	return end
+}
+
+// ansiCEndClosed skips a dollar-single-quoted span, including escaped quotes,
+// and reports whether a closing single quote terminated the span.
+func ansiCEndClosed(s string, start int) (int, bool) {
 	for i := start + 2; i < len(s); i++ {
 		if s[i] == '\\' {
 			i++
 		} else if s[i] == '\'' {
-			return i + 1
+			return i + 1, true
 		}
 	}
-	return len(s)
+	return len(s), false
 }
 
 // decodeANSI decodes the ASCII subset used by literal command names and

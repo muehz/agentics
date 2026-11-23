@@ -9,8 +9,8 @@ import (
 )
 
 // TestScriptOutcomeProof drives the grouped pre-tool event end to end: a script
-// call is judged by what the script contains, the verdict names the line but
-// never the content, and a direct invocation behaves as it did before.
+// call is judged by what the script contains, and the verdict names the line
+// without exposing the content.
 func TestScriptOutcomeProof(t *testing.T) {
 	pinScriptGuardEnv(t)
 	dir := t.TempDir()
@@ -22,6 +22,9 @@ func TestScriptOutcomeProof(t *testing.T) {
 	writeScript(t, dir, "ok.sh", "#!/usr/bin/env bash\necho hello\n")
 	if code, out := run("cd " + slash + " && bash ./ok.sh arg"); code != 0 || strings.TrimSpace(out) != "" {
 		t.Fatalf("benign script call: exit %d output %q", code, out)
+	}
+	if code, out := run("cd " + slash + " && ./ok.sh arg"); code != 0 || strings.TrimSpace(out) != "" {
+		t.Fatalf("benign direct invocation: exit %d output %q", code, out)
 	}
 	writeScript(t, dir, "ok.sh", "#!/usr/bin/env bash\necho hello\nrm -rf /\n")
 	code, out := run("cd " + slash + " && bash ./ok.sh arg")
@@ -38,8 +41,10 @@ func TestScriptOutcomeProof(t *testing.T) {
 		t.Fatalf("dynamic source: exit %d output %q", code, out)
 	}
 	writeScript(t, dir, "ok.sh", "#!/usr/bin/env bash\necho hello\nrm -rf /\n")
-	if code, out := run("cd " + slash + " && ./ok.sh arg"); code != 0 || strings.TrimSpace(out) != "" {
-		t.Fatalf("direct invocation changed: exit %d output %q", code, out)
+	code, out = run("cd " + slash + " && ./ok.sh arg")
+	if code != 2 || !strings.Contains(out, "ok.sh:3") || !strings.Contains(out, "1 blocking threat(s) detected: destructive_file_ops") ||
+		strings.Contains(out, "command_parse_limit") || strings.Contains(out, "script-opaque") || strings.Contains(out, "rm -rf") {
+		t.Fatalf("dangerous direct invocation: exit %d output %q", code, out)
 	}
 }
 

@@ -261,11 +261,14 @@ print_runtime_path() {
   # RFC 3629 restricts the second byte after E0, ED, F0 and F4. Match
   # bytes in the C locale regardless of the invoking terminal's encoding.
   local LC_ALL=C
-  local scalar=$'[\x01-\x7f]|[\xc2-\xdf][\x80-\xbf]'
+  # Bash 3.2 treats 0x01 as an internal escape in a regex operand.
+  # Replace that ASCII byte only in the validation copy.
+  local validation_path="${1//$'\x01'/x}"
+  local scalar=$'[\x02-\x7f]|[\xc2-\xdf][\x80-\xbf]'
   scalar+=$'|(\xe0[\xa0-\xbf]|[\xe1-\xec\xee-\xef][\x80-\xbf]|\xed[\x80-\x9f])[\x80-\xbf]'
   scalar+=$'|(\xf0[\x90-\xbf]|[\xf1-\xf3][\x80-\xbf]|\xf4[\x80-\x8f])[\x80-\xbf]{2}'
   local path_pattern="^($scalar)+$"
-  if [[ "$1" = *$'\n'* || "$1" = *$'\r'* || ! "$1" =~ $path_pattern ]]; then
+  if [[ "$1" = *$'\n'* || "$1" = *$'\r'* || ! "$validation_path" =~ $path_pattern ]]; then
     echo "agx: use a single-line UTF-8 path for the installed plugin or runtime cache" >&2
     return 1
   fi

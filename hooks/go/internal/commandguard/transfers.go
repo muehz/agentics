@@ -13,26 +13,81 @@ const (
 	fileUploadSuggestion         = "Inspect the file and destination before sending data with 'curl --data @file'."
 )
 
-func checkTransferCommands(invocations []shellwords.Invocation, report reportFunc) {
+// checkTransferCommands reports the first transfer finding and returns its
+// refused sink index when the finding already explains that refusal.
+func checkTransferCommands(invocations []shellwords.Invocation, report reportFunc) int {
 	for i, inv := range invocations {
 		if inv.Before == shellwords.Pipe || inv.PipelineInput {
 			if producer, ok := pipelineProducer(invocations, i); ok && isDownloadProducer(producer) && isShellConsumerForPipeline(inv, producer) {
 				report(ruleDownloadExecute, producer.Raw+" | "+inv.Raw, downloadExecuteSuggestion)
-				return
+				if isRefusedPipedPowerShellEvaluator(inv) || isRefusedStdinSource(inv) {
+					return i
+				}
+				return -1
 			}
 		}
 		if inv.Parent >= 0 && inv.Parent < len(invocations) && (inv.Before == shellwords.Group || inv.Before == shellwords.Substitution) &&
 			isPowerShellDownloader(inv) && isPowerShellEvaluator(invocations[inv.Parent]) {
-			report(rulePowerShellDownload, invocations[inv.Parent].Raw+" ("+inv.Raw+")", powerShellDownloadSuggestion)
-			return
+			parent := invocations[inv.Parent]
+			report(rulePowerShellDownload, parent.Raw+" ("+inv.Raw+")", powerShellDownloadSuggestion)
+			if parent.Reason.IsOpaqueEval() && solePowerShellCommandArgument(parent) {
+				return inv.Parent
+			}
+			return -1
 		}
 	}
 	for _, inv := range invocations {
 		if match, ok := curlUploadMatch(inv); ok {
 			report(ruleFileUpload, match, fileUploadSuggestion)
-			return
+			break
 		}
 	}
+	return -1
+}
+
+func isRefusedPipedPowerShellEvaluator(inv shellwords.Invocation) bool {
+	return len(inv.Words) == 1 && len(inv.InputRedirects) == 0 && inv.Reason.IsOpaqueEval() && isPowerShellEvaluator(inv)
+}
+
+// A nested download can own the evaluator's refusal only when its parent has
+// one command-text operand and no expandable redirection targets. Otherwise
+// the same parent index can describe a download in a different operand.
+func solePowerShellCommandArgument(inv shellwords.Invocation) bool {
+	for _, redirects := range [2][]shellwords.Redirection{inv.InputRedirects, inv.OutputRedirects} {
+		for _, redirect := range redirects {
+			if !redirect.Target.Literal {
+				return false
+			}
+		}
+	}
+	words := inv.Words
+	switch len(words) {
+	case 2:
+		if words[1].Literal {
+			return false
+		}
+		head, _, joined := strings.Cut(words[1].Raw, ":")
+		return head != "" && strings.IndexAny(head, "-–—―") != 0 || joined && strings.EqualFold(head, "-Command")
+	case 3:
+		flag := words[1]
+		return flag.Literal && flag.Raw == flag.Text && strings.EqualFold(flag.Text, "-Command") && !words[2].Literal
+	}
+	return false
+}
+
+func isRefusedStdinSource(inv shellwords.Invocation) bool {
+	if inv.Dialect != shellwords.POSIX || len(inv.Words) < 2 || len(inv.InputRedirects) > 0 {
+		return false
+	}
+	name, operand := inv.Words[0], inv.Words[1]
+	if !name.Literal || (name.Text != "source" && name.Text != ".") || !operand.Literal {
+		return false
+	}
+	switch operand.Text {
+	case "/dev/stdin", "/dev/fd/0", "/proc/self/fd/0":
+		return inv.Reason.Construct() == "source" || inv.Reason.Rule() == shellwords.RuleUnreadable
+	}
+	return false
 }
 
 func isShellConsumerForPipeline(inv, producer shellwords.Invocation) bool {
@@ -113,7 +168,7 @@ func isPowerShellDownloader(inv shellwords.Invocation) bool {
 }
 
 func isPowerShellEvaluator(inv shellwords.Invocation) bool {
-	if !inv.Inspectable || len(inv.Words) == 0 || !inv.Words[0].Literal {
+	if (!inv.Inspectable && !inv.Reason.IsOpaqueEval()) || len(inv.Words) == 0 || !inv.Words[0].Literal {
 		return false
 	}
 	name := strings.ToLower(shellwords.ExecutableName(inv.Words[0].Text))

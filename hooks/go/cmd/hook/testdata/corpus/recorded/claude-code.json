@@ -92,7 +92,7 @@
   "command-guardian/deny-gh-verb-through-eval": {
     "exit": 2,
     "stdout": "",
-    "stderr": "1 blocking threat(s) detected: unsafe_publication - Add --draft (or -d). If the user wants the pull request ready for review, tell them that agents cannot publish it as ready and ask them to mark it ready in the pull request UI or with 'gh pr ready'.\n\nSetting: policy.draft_prs. To allow this, ask the user to set it to false in .agentics/hooks.json in the repository root or ~/.agentics/hooks.json; an agent must not edit those files.\n"
+    "stderr": "2 blocking threat(s) detected: command_parse_limit - Rewrite the script line so the command it runs is literal; eval, trap, a dynamic source and an expansion in command position cannot be inspected. (script-opaque:eval)\n"
   },
   "command-guardian/deny-mcp-publication": {
     "exit": 2,
@@ -107,7 +107,7 @@
   "command-guardian/deny-powershell-gh-verb-through-iex": {
     "exit": 2,
     "stdout": "",
-    "stderr": "1 blocking threat(s) detected: unsafe_publication - Add --draft (or -d). If the user wants the pull request ready for review, tell them that agents cannot publish it as ready and ask them to mark it ready in the pull request UI or with 'gh pr ready'.\n\nSetting: policy.draft_prs. To allow this, ask the user to set it to false in .agentics/hooks.json in the repository root or ~/.agentics/hooks.json; an agent must not edit those files.\n"
+    "stderr": "2 blocking threat(s) detected: command_parse_limit - Rewrite the script line so the command it runs is literal; eval, trap, a dynamic source and an expansion in command position cannot be inspected. (script-opaque:eval)\n"
   },
   "command-guardian/deny-quoted-fake-cat-heredoc": {
     "exit": 2,

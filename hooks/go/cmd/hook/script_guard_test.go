@@ -83,7 +83,7 @@ func TestScriptCallsAreJudgedByContent(t *testing.T) {
 		{"missing script release", cd + "bash ./nope.sh", "release-guardian", []string{"script-unreadable"}, ""},
 		{"missing script secrets", cd + "bash ./nope.sh", "secrets-guardian", []string{"script-unreadable"}, ""},
 		{"unsupported option", cd + "bash -x ./ok.sh", "command-guardian", []string{"script-form-unsupported-option"}, ""},
-		{"direct invocation is not read", cd + "./rm.sh", "command-guardian", nil, ""},
+		{"direct invocation checked", cd + "./rm.sh", "command-guardian", []string{"1 blocking threat(s) detected: destructive_file_ops", "rm.sh:2"}, "command_parse_limit"},
 	}
 	for _, surface := range scriptSurfaces {
 		for _, tc := range cases {

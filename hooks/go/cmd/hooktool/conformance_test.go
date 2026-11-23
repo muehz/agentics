@@ -469,14 +469,14 @@ func auditFixture(t *testing.T) string {
 		t.Fatal(err)
 	}
 	put("hooks/go/go.mod", strings.Replace(string(mod), "github.com/muehz/agentics/hooks/go", "example.com/tinyhook", 1))
-	for rel, key := range map[string]string{"hooks/go/cmd/hook/main.go": "tinyMainGo", "hooks/go/cmd/hook/main_test.go": "tinyMainTestGo", "hooks/go/internal/provider/provider.go": "tinyProviderGo", "hooks/go/cmd/launcher/main.go": "tinyLauncherGo", "bin/agx": "tinyLauncherScript", ".gitattributes": "tinyGitAttributes"} {
+	for rel, key := range map[string]string{"hooks/go/cmd/hook/main.go": "tinyMainGo", "hooks/go/cmd/hook/main_test.go": "tinyMainTestGo", "hooks/go/internal/provider/provider.go": "tinyProviderGo", "hooks/go/cmd/launcher/main.go": "tinyLauncherGo", ".gitattributes": "tinyGitAttributes"} {
 		if values[key] == "" {
 			t.Fatalf("missing fixture %s", key)
 		}
 		put(rel, values[key])
 	}
 	put("hooks/run-hook.cmd", "@echo off\nexit /b 0\n")
-	for _, rel := range []string{"hooks/hooks.claude.json", "hooks/hooks.copilot.json", "hooks/hooks.codex.json", "hooks.json"} {
+	for _, rel := range []string{"bin/agx", "hooks/hooks.claude.json", "hooks/hooks.copilot.json", "hooks/hooks.codex.json", "hooks.json"} {
 		data, err := os.ReadFile(filepath.Join(hosttest.Checkout(t), filepath.FromSlash(rel)))
 		if err != nil {
 			t.Fatal(err)

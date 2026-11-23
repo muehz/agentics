@@ -11,3 +11,4 @@ triage/references/pull-requests/checkmarx/checkmarx-remediation-patterns-generic
 triage/references/pull-requests/checkmarx/checkmarx-remediation-patterns-generic.md	Write	cda6a3915d95	secrets-guardian	Secrets-guardian two directions, one event	// Java — Before
 triage/references/pull-requests/checkmarx/checkmarx-remediation-patterns-generic.md	Write	ea2af4336b62	secrets-guardian	Secrets-guardian two directions, one event	// Node.js — Before
 triage/references/subagent-contract.md	Bash	34204d18466a	command_parse_limit	Command-guardian threat categories	out=$(bash harness.sh 2>&1); rc=$?
+triage/references/subagent-contract.md	PowerShell	a04bce741e9c	command_parse_limit	Command-guardian reading the file	The sweep does not create the referenced local harness.ps1.

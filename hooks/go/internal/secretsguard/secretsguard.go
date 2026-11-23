@@ -121,7 +121,8 @@ var readerCommands = map[string]bool{
 	"jq": true, "yq": true, "source": true, ".": true, "dd": true,
 	// PowerShell and cmd equivalents.
 	"get-content": true, "gc": true, "type": true, "select-string": true,
-	"copy-item": true, "copy": true, "format-hex": true,
+	"sls": true, "copy-item": true, "cpi": true, "copy": true,
+	"move-item": true, "mi": true, "move": true, "format-hex": true,
 }
 
 // gitExecutable is the one executable name outside readerCommands that the path reader dispatches on, to read the
@@ -234,6 +235,9 @@ func Run(req hookspec.Request) hookspec.Outcome {
 		if command != "" {
 			parsed = call.Inspect(req.ExecutionContext(), req.Scripts)
 		}
+		if parsed.DataCanceled {
+			mode = guardmode.Block
+		}
 		inspection := inspectShellReads(req.ExecutionContext(), call, parsed)
 		if inspection.Reason.Refused() {
 			return hookspec.Outcome(contract.Deny(reportMessage(modeDiagnostic, shellParseMessage(inspection.Reason))))
@@ -252,6 +256,9 @@ func Run(req hookspec.Request) hookspec.Outcome {
 		}
 		if len(findings) > 0 {
 			return report(diag, mode, modeDiagnostic, renderMessage(findings))
+		}
+		if parsed.DataCanceled {
+			return contract.Deny(reportMessage(modeDiagnostic, "secrets-guardian could not inspect a recognized execution path (PowerShell inspection canceled)"))
 		}
 		// Content a shell command writes (a heredoc, printf, sed replacement)
 		// is in the command text itself, and a secret on a command line is
@@ -685,7 +692,14 @@ func inspectShellReads(ctx context.Context, call toolcall.Call, inspection toolc
 			configUnknown = true
 		}
 		_, invocationDialect := context.candidateContext(invocation, dialect)
-		context.observeCommand(invocation, verb, index+1 < len(policyParsed.Invocations) && policyParsed.Invocations[index+1].Before == shellwords.And, invocationDialect)
+		cwdVerb := verb
+		if invocationDialect == shellwords.PowerShell && verb == "set-location" {
+			switch strings.ToLower(invocation.Words[0].Raw) {
+			case "cd", "chdir", "set-location":
+				cwdVerb = "cd"
+			}
+		}
+		context.observeCommand(invocation, cwdVerb, index+1 < len(policyParsed.Invocations) && policyParsed.Invocations[index+1].Before == shellwords.And, invocationDialect)
 		if readerCommands[verb] {
 			candidateCwd, candidateDialect := context.candidateContext(invocation, dialect)
 			makePath := func(word shellwords.Word, expand bool) shellPath {
@@ -712,6 +726,19 @@ func inspectShellReads(ctx context.Context, call toolcall.Call, inspection toolc
 				return shellPath{Text: word.Text, Pattern: pattern, ExpandPattern: expand, Cwd: candidateCwd, Dialect: candidateDialect, GlobReason: reason, Origin: invocation.Script}
 			}
 			literalPath := hasLiteralPathFlag(invocation.Words[1:])
+			var pathWords [][]shellwords.Word
+			if candidateDialect == shellwords.PowerShell && powerShellPathListReader(verb) {
+				pathWords = make([][]shellwords.Word, len(invocation.Words)-1)
+				for i, arg := range invocation.Words[1:] {
+					parts, literal, refusal := shellwords.PowerShellReadPathWords(ctx, arg)
+					if refusal.Refused() {
+						result.Reason = refusal
+						return result
+					}
+					pathWords[i] = parts
+					literalPath = literalPath || literal
+				}
+			}
 			for _, redirect := range invocation.InputRedirects {
 				expand := candidateDialect == shellwords.POSIX && posixExpandsPattern(redirect.Target.Raw)
 				if (redirect.Target.Literal || expand) && redirect.Target.Text != "" && redirect.Target.Text != "-" {
@@ -756,11 +783,17 @@ func inspectShellReads(ctx context.Context, call toolcall.Call, inspection toolc
 				if search.patterns[index] {
 					continue
 				}
-				expand := candidateDialect == shellwords.PowerShell && !literalPath || candidateDialect == shellwords.POSIX && posixExpandsPattern(arg.Raw)
-				if (!arg.Literal && !expand) || arg.Text == "" || arg.Text == "-" || strings.HasPrefix(arg.Text, "-") {
-					continue
+				parts := []shellwords.Word{arg}
+				if pathWords != nil {
+					parts = pathWords[index]
 				}
-				result.Paths = append(result.Paths, makePath(arg, expand))
+				for _, part := range parts {
+					expand := candidateDialect == shellwords.PowerShell && !literalPath || candidateDialect == shellwords.POSIX && posixExpandsPattern(part.Raw)
+					if (!part.Literal && !expand) || part.Text == "" || part.Text == "-" || strings.HasPrefix(part.Text, "-") {
+						continue
+					}
+					result.Paths = append(result.Paths, makePath(part, expand))
+				}
 			}
 			continue
 		}
@@ -796,6 +829,14 @@ func readExecutableName(word shellwords.Word) string {
 		}
 	}
 	return verb
+}
+
+func powerShellPathListReader(verb string) bool {
+	switch verb {
+	case "get-content", "gc", "type", "select-string", "sls", "copy-item", "cpi", "copy", "move-item", "mi", "move", "format-hex":
+		return true
+	}
+	return false
 }
 
 func hasLiteralPathFlag(words []shellwords.Word) bool {

@@ -29,7 +29,8 @@ func TestScriptOpacityCore(t *testing.T) {
 		{"eval \"$x\"\n", "script-opaque:eval in /ws/t.sh:1"},
 		{"source \"$d/lib.sh\"\n", "script-opaque:source in /ws/t.sh:1"},
 		{". \"$d/lib.sh\"\n", "script-opaque:source in /ws/t.sh:1"},
-		{"source ./lib.txt\n", "script-opaque:source in /ws/t.sh:1"},
+		{"source lib.txt\n", "script-opaque:source in /ws/t.sh:1"},
+		{"source ./lib.txt\n", "script-unreadable in /ws/t.sh:1"},
 		// bash looks a source operand without a slash up in PATH before the working directory, and sh never looks in
 		// the working directory, so a bare name is not the file next to the script even when that file exists.
 		{"source lib.sh\n", "script-opaque:source in /ws/t.sh:1"},
@@ -48,8 +49,8 @@ func TestScriptOpacityCore(t *testing.T) {
 		{"bash < /ws/x\n", "script-opaque:stdin-to-shell in /ws/t.sh:1"},
 		{"zsh -c 'x'\n", "script-opaque:other-shell in /ws/t.sh:1"},
 		{"zsh x\n", "script-opaque:other-shell in /ws/t.sh:1"},
-		{"dash x\n", "script-opaque:other-shell in /ws/t.sh:1"},
-		{"ksh x\n", "script-opaque:other-shell in /ws/t.sh:1"},
+		{"fish x\n", "script-opaque:other-shell in /ws/t.sh:1"},
+		{"csh x\n", "script-opaque:other-shell in /ws/t.sh:1"},
 		{"env -x git status\n", "script-opaque:unsupported-syntax in /ws/t.sh:1"},
 		// builtin runs the builtin it names, so the construct is judged on the word after it.
 		{"builtin eval \"$x\"\n", "script-opaque:eval in /ws/t.sh:1"},

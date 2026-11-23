@@ -1,6 +1,7 @@
 package shellwords
 
 import (
+	"context"
 	"slices"
 	"strings"
 	"testing"
@@ -22,8 +23,8 @@ func chainFiles() fakeReader {
 
 func TestScriptPredecessorsThatKeepTheCallInspected(t *testing.T) {
 	for _, p := range []string{"cd /ws", "git add -A", "git commit -m x", "git status", "mkdir -p x", "echo hi", "head -n 1 f",
-		"cat f", "mytool --x", "bash /ws/inner.sh", "git -C /ws status", "echo hi > /dev/null", "echo hi 2>&1", "echo hi >&2",
-		"ls 2> /dev/null", "sed -n 1p f", "curl -sS u", "go build ./...", "bash --version", "builtin echo hi",
+		"cat f", "bash /ws/inner.sh", "git -C /ws status", "echo hi > /dev/null", "echo hi 2>&1", "echo hi >&2",
+		"ls 2> /dev/null", "bash --version", "builtin echo hi", "FIELD='two words'", "git branch --list 'report*'", "git restore --staged -- report*",
 		// A git line the guard cannot read, with no words left after the options, runs no subcommand.
 		"git --version", "git --exec-path"} {
 		for _, call := range []string{"bash /ws/ok.sh", "bash ./ok.sh"} {
@@ -45,7 +46,9 @@ func TestScriptPredecessorWritersBlock(t *testing.T) {
 		"curl -sSo f u", "wget u", "patch -p1", "git checkout x", "git switch x", "git restore x", "git reset x", "git pull", "git merge x",
 		"git rebase x", "git stash", "git apply x", "git am x", "git read-tree x", "git cherry-pick x", "git revert x", "git clean -f",
 		"git -C /ws checkout x", "git -c a=b pull", "git --git-dir=/x/.git checkout x", "git \"$V\" x", "make", "npm ci", "npx x", "pnpm i", "yarn",
-		"go generate ./...",
+		"go generate ./...", "mytool --x", "sed -n 1p f", "curl -sS u", "go build ./...", "node gen.js", "python gen.py", "report-preview",
+		"git -C work* status", "git restore --staged report*", "git branch --list report*", "git diff report*", "git config --get user.*",
+		`"FIELD=value"`, "-opaque echo hi",
 		// A git line whose options before the subcommand the guard cannot read, with words left over, may run a
 		// subcommand that writes.
 		"git --exec-path checkout .", "git --attr-source HEAD checkout .", "git --super-prefix x status", "git --unknown status",
@@ -57,6 +60,159 @@ func TestScriptPredecessorWritersBlock(t *testing.T) {
 				t.Errorf("%q then %q: got %q", p, call, got)
 			}
 		}
+	}
+}
+
+func TestScriptPredecessorRetainsExecutableSpelling(t *testing.T) {
+	for _, tc := range []struct{ command, head string }{
+		{"If echo hi", "If"},
+		{`"if" echo hi`, "if"},
+		{`"FIELD=value"`, "FIELD=value"},
+		{"-opaque echo hi", "-opaque"},
+	} {
+		res := parseScript(tc.command+"; bash /ws/ok.sh", chainFiles())
+		if len(res.Invocations) < 2 || len(res.Invocations[0].Words) == 0 || res.Invocations[0].Words[0].Text != tc.head ||
+			firstScriptReason(res) == "" || len(res.Scripts) != 0 {
+			t.Errorf("%q: expected retained command %q and no script read, got %+v", tc.command, tc.head, res)
+		}
+	}
+}
+
+func TestScriptPredecessorPowerShell(t *testing.T) {
+	const path = "/ws/report.ps1"
+	files := fakeReader{path: {ID: "report", Text: "Write-Output ready\n"}}
+	for _, p := range []string{"Set-Location /ws", "Get-ChildItem", "Test-Path f", "$x = 'val'", "Write-Output hi"} {
+		t.Run(p, func(t *testing.T) {
+			res := parsePowerShellCall(t, p+"; ./report.ps1", files)
+			if got := firstScriptReason(res); got != "" {
+				t.Fatalf("unexpected refusal %q", got)
+			}
+			if child := scriptChild(res); child == nil || child.Script.Path != path || child.Dialect != PowerShell {
+				t.Fatalf("expected an inspected PowerShell command from %s, got %+v", path, child)
+			}
+		})
+	}
+	for _, p := range []string{
+		"report-preview", "Set-Content notes.txt ready", "Copy-Item input.txt copy.txt",
+		"Move-Item input.txt archive.txt", "Out-File output.txt",
+		"Invoke-WebRequest https://example.invalid -OutFile notes.txt", "Expand-Archive sample.zip",
+	} {
+		t.Run(p, func(t *testing.T) {
+			res := parsePowerShellCall(t, p+"; ./report.ps1", files)
+			if got := firstScriptReason(res); got != "script-predecessor-may-write" {
+				t.Errorf("got %q, want script-predecessor-may-write", got)
+			}
+		})
+	}
+}
+
+func TestPowerShellSortPredecessor(t *testing.T) {
+	files := fakeReader{"/ws/report.ps1": {Text: "Write-Output report\n"}}
+	for _, tc := range []struct{ predecessor, want string }{
+		{"sort -Property Name -Descending", ""},
+		{"Sort-Object Name", ""},
+		{"Sort-Object -Property { Write-Output Name }", "script-predecessor-may-write"},
+	} {
+		res := parsePowerShellCall(t, tc.predecessor+"; ./report.ps1", files)
+		if got := firstScriptReason(res); got != tc.want || (len(res.Scripts) == 1) != (tc.want == "") {
+			t.Errorf("%q: reason %q, want %q, inspected %d scripts", tc.predecessor, got, tc.want, len(res.Scripts))
+		}
+	}
+}
+
+func TestPowerShellPredecessorUsesActiveCommandList(t *testing.T) {
+	files := fakeReader{
+		"/ws/report.ps1": {Text: "Write-Output report\n"},
+		"/ws/next.sh":    {Text: "echo next\n"},
+	}
+	for _, tc := range []struct{ command, want string }{
+		{`pwsh -NoProfile -Command 'Get-ChildItem; ./report.ps1'`, ""},
+		{`pwsh -NoProfile -Command 'Get-ChildItem; ./report.ps1'; bash ./next.sh`, "script-predecessor-may-write"},
+	} {
+		res := parseScriptOn(pathshape.For("linux"), tc.command, files)
+		if got := firstScriptReason(res); got != tc.want || len(res.Scripts) != 1 || res.Scripts[0].Path != "/ws/report.ps1" {
+			t.Errorf("%q: reason %q, want %q, inspected scripts %+v", tc.command, got, tc.want, res.Scripts)
+		}
+	}
+}
+
+func TestPowerShellPipelinePredecessorMembership(t *testing.T) {
+	files := fakeReader{"/ws/report.ps1": {Text: "Write-Output report\n"}}
+	for _, tc := range []struct{ tail, want string }{
+		{"| make --dry-run preview", "script-predecessor-may-write"},
+		{"| Write-Output | make --dry-run preview", "script-predecessor-may-write"},
+		{"; make --dry-run preview", ""},
+		{"| Tee-Object -FilePath preview.txt", ""},
+	} {
+		res := parsePowerShellCall(t, "./report.ps1 "+tc.tail, files)
+		if got := firstScriptReason(res); got != tc.want || len(res.Scripts) != 1 {
+			t.Errorf("%q: reason %q, want %q, inspected %d scripts", tc.tail, got, tc.want, len(res.Scripts))
+		}
+	}
+}
+
+func TestScriptWritePowerShellDestinations(t *testing.T) {
+	const report = "/ws/report.ps1"
+	const summary = "/ws/summary.ps1"
+	const refused = "script-writes-inspected in /ws/report.ps1:2"
+	for _, tc := range []struct {
+		name string
+		line string
+		want string
+	}{
+		{"self path", "Set-Content -WhatIf -Value ready -LiteralPath $PSCommandPath", refused},
+		{"braced self path", "Add-Content -WhatIf -Value ready -Path ${pScOmMaNdPaTh}", refused},
+		{"invocation path", "Out-File -WhatIf -FilePath $MyInvocation.MyCommand.Path", refused},
+		{"invocation definition", "Out-File -WhatIf -FilePath $MyInvocation.MyCommand.Definition", refused},
+		{"script root sibling", `Copy-Item -WhatIf -Destination "$PSScriptRoot\summary.ps1" -Path notes.txt`, refused},
+		{"variable directory sibling", `Copy-Item -WhatIf -Path notes.txt -Destination "$folder/summary.ps1"`, refused},
+		{"named destination", "Copy-Item -WhatIf -Destination summary.ps1 -Path notes.txt", refused},
+		{"named source", "Copy-Item -WhatIf -Destination notes.txt -Path summary.ps1", ""},
+		{"move into directory", "Move-Item -WhatIf -Destination /ws/ -Path archive/summary.ps1", refused},
+		{"clear named path", "Clear-Content -WhatIf -LiteralPath summary.ps1", refused},
+		{"set named path", "Set-Item -WhatIf -Value preview -Path summary.ps1", refused},
+		{"create file in directory", "New-Item -WhatIf -Name summary.ps1 -Path /ws", refused},
+		{"create file in default directory", "New-Item -WhatIf -Name summary.ps1", refused},
+		{"rename destination", "Rename-Item -WhatIf -NewName summary.ps1 -LiteralPath notes.txt", refused},
+		{"CSV output", "Export-Csv -WhatIf -LiteralPath summary.ps1", refused},
+		{"XML output", "Export-Clixml -WhatIf -Path summary.ps1", refused},
+		{"archive destination", "Expand-Archive -WhatIf -DestinationPath /ws -Path sample.zip", refused},
+		{"archive default destination", "Expand-Archive -WhatIf sample.zip", refused},
+		{"tee variable output", "Tee-Object -Variable result", ""},
+		{"web response outside inspected files", "Invoke-WebRequest -Uri https://example.invalid/summary.ps1 -OutFile notes.txt", ""},
+		{"REST response outside inspected files", "Invoke-RestMethod -Uri https://example.invalid/summary.ps1 -OutFile notes.txt", ""},
+		{"value contains script name", "Set-Content -WhatIf -Value summary.ps1 -LiteralPath notes.txt", ""},
+		{"incidental variable", "Set-Content $logPath ready", ""},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			files := fakeReader{
+				report:  {ID: "report", Text: "./summary.ps1\n" + tc.line + "\n"},
+				summary: {ID: "summary", Text: "Write-Output summary\n"},
+			}
+			res := parsePowerShellCall(t, "./report.ps1", files)
+			if len(res.Scripts) != 2 || res.Scripts[0].Path != report || res.Scripts[1].Path != summary {
+				t.Fatalf("expected to inspect %s and %s, got %+v", report, summary, res.Scripts)
+			}
+			if got := firstScriptReason(res); got != tc.want {
+				t.Errorf("got %q, want %q", got, tc.want)
+			}
+		})
+	}
+}
+
+func TestPowerShellWriteListUsesActiveCancellation(t *testing.T) {
+	ctx, cancel := context.WithCancel(t.Context())
+	cancel()
+	word := Word{Text: "one.txt,two.txt", Raw: "'one.txt','two.txt'", Literal: true}
+	if parts, complete := psTargetElements(ctx, []Word{word}); complete || len(parts) != 0 {
+		t.Fatalf("canceled inspection returned usable list elements: %+v, complete=%t", parts, complete)
+	}
+	probe := &callCancelContext{Context: t.Context(), at: 2}
+	const elements = 1000
+	word.Raw = strings.Repeat("notes.txt,", elements-1) + "last.txt"
+	parts, complete := psTargetElements(probe, []Word{word})
+	if complete || len(parts) == 0 || len(parts) >= elements || probe.calls < 2 {
+		t.Fatalf("expected cancellation during list scan, got %d elements, complete=%t, checks=%d", len(parts), complete, probe.calls)
 	}
 }
 
@@ -87,15 +243,15 @@ func TestScriptPredecessorStateBlocks(t *testing.T) {
 	}
 }
 
-// A typed source, . or eval ran text in this shell that the cwd proof cannot follow: a relative call after one is
-// unproven for its directory, and an absolute call, which needs no directory, is refused for the state itself.
 func TestScriptCallAfterTypedSourceAndEval(t *testing.T) {
-	for _, p := range []string{"source x", "source ./x", ". x", "eval x", "eval \"$X\""} {
-		if got := firstScriptReason(parseScript(p+" && bash ./ok.sh", chainFiles())); !strings.HasPrefix(got, "script-cwd-unproven") {
-			t.Errorf("%q then a relative call: got %q", p, got)
-		}
-		if got := firstScriptReason(parseScript(p+" && bash /ws/ok.sh", chainFiles())); !strings.HasPrefix(got, "script-predecessor-state") {
-			t.Errorf("%q then an absolute call: got %q", p, got)
+	for command, want := range map[string]string{
+		"source x": "script-opaque:source", "source ./x": "script-unreadable", ". x": "script-opaque:source", "eval x": "script-opaque:eval", "eval \"$X\"": "script-opaque:eval",
+	} {
+		for _, path := range []string{"./ok.sh", "/ws/ok.sh"} {
+			res := parseScript(command+" && bash "+path, chainFiles())
+			if got := firstScriptReason(res); got != want {
+				t.Errorf("%s then %s: got %q, want %q", command, path, got, want)
+			}
 		}
 	}
 }
@@ -213,6 +369,7 @@ func TestScriptGitWriteTargets(t *testing.T) {
 		{"git checkout -- t.sh", []string{"t.sh"}, nil},
 		{"git -C /ws restore t.sh", []string{"t.sh"}, nil},
 		{"git -C \"$D\" checkout .", []string{"."}, []string{"."}},
+		{"git --git-dir=cache* checkout note.txt", []string{"note.txt"}, nil},
 		{"git rm a b/", []string{"a", "b/"}, []string{"b/"}},
 		{"git -C checkout checkout .", []string{"checkout", "."}, []string{"."}},
 		{"git --exec-path=x checkout .", []string{"."}, []string{"."}},
@@ -238,7 +395,7 @@ func TestScriptGitWriteTargets(t *testing.T) {
 				continue
 			}
 			found = true
-			files, dirs := commandWriteTargets(&inv)
+			files, dirs := commandWriteTargets(t.Context(), &inv)
 			if !slices.Equal(texts(files), tc.files) || !slices.Equal(texts(dirs), tc.dirs) {
 				t.Errorf("%q: files %q dirs %q, want files %q dirs %q", tc.line, texts(files), texts(dirs), tc.files, tc.dirs)
 			}

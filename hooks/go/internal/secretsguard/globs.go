@@ -188,12 +188,15 @@ func (c *shellGlobContext) observeCommand(inv shellwords.Invocation, verb string
 	}
 }
 
-// candidateContext returns the working directory and dialect a command runs under. A wrapper that is a PowerShell
-// host or a POSIX shell sets the dialect; zsh and dash are kept as POSIX although the parser never unwraps them.
+// candidateContext returns the working directory and operand dialect. An
+// inspected script already records the dialect selected for its body.
 func (c *shellGlobContext) candidateContext(inv shellwords.Invocation, dialect shellwords.Dialect) (string, shellwords.Dialect) {
 	cwd := c.cwd
 	if c.groupUnknown || inv.Parent >= 0 || len(inv.Wrappers) != 0 {
 		cwd = ""
+	}
+	if inv.Script != nil {
+		return cwd, inv.Dialect
 	}
 	for _, wrapper := range inv.Wrappers {
 		name := strings.ToLower(shellwords.ExecutableName(wrapper.Text))
