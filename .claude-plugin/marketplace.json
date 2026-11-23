@@ -10,7 +10,7 @@
     "plugins": [
         {
             "name": "agentics",
-            "version": "1.231.0",
+            "version": "1.231.1",
             "source": "./",
             "category": "framework",
             "description": "Workflows and guardrails for AI coding assistants, working toward an enterprise governance baseline. Provides pre-tool hooks and workflow routing."

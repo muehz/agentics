@@ -1,7 +1,7 @@
 {
     "name": "agentics",
     "description": "Workflows and guardrails for AI coding assistants, working toward an enterprise governance baseline. Provides pre-tool hooks, workflow routing, and authoring tools for skills and instructions.",
-    "version": "1.231.0",
+    "version": "1.231.1",
     "author": {
         "name": "Zachary Muehlich"
     },

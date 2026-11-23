@@ -2,7 +2,7 @@
     "$schema": "https://antigravity.google/schemas/v1/plugin.json",
     "name": "agentics",
     "displayName": "Agentics",
-    "version": "1.231.0",
+    "version": "1.231.1",
     "description": "Governed engineering workflows, pre-tool safety guardians, and 26 skills for planning, execution, review, and release gates.",
     "suggestedPrompts": [
         "Use Agentics skills to route this task before editing.",
