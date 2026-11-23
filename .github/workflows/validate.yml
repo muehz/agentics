@@ -346,7 +346,7 @@ jobs:
       # Node 26 ships npm 11. The repository requires npm 12 (engines.npm),
       # and no Node release carries it yet, so install the pinned version.
       - name: Install npm 12
-        run: npm install --global --ignore-scripts npm@12.2.1
+        run: npm install --global --ignore-scripts npm@12.2.2
 
       - name: Install pinned toolchain
         run: npm ci --ignore-scripts
@@ -627,7 +627,7 @@ jobs:
           node-version: 26.12.1
 
       - name: Install npm 12
-        run: npm install --global --ignore-scripts npm@12.2.1
+        run: npm install --global --ignore-scripts npm@12.2.2
 
       - name: Install the pinned TypeScript toolchain
         run: npm ci --ignore-scripts
@@ -721,7 +721,7 @@ jobs:
           node-version: 26.12.1
 
       - name: Install npm 12
-        run: npm install --global --ignore-scripts npm@12.2.1
+        run: npm install --global --ignore-scripts npm@12.2.2
 
       - name: Install pinned toolchain
         run: npm ci --ignore-scripts

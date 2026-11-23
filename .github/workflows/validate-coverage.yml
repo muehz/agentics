@@ -168,7 +168,7 @@ jobs:
           node-version: 26.12.1
 
       - name: Install npm 12
-        run: npm install --global --ignore-scripts npm@12.2.1
+        run: npm install --global --ignore-scripts npm@12.2.2
 
       - name: Install the pinned TypeScript toolchain
         run: npm ci --ignore-scripts

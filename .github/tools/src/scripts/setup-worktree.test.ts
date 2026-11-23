@@ -247,7 +247,7 @@ require('node:child_process').spawnSync = (command, args, options) => {
   const installer = command === process.execPath && JSON.stringify(args) === JSON.stringify(['.github/tools/src/scripts/install-hooks.ts', '--required']);
   if (!(npm || gitVersion || gitRead || go || installer)) throw new Error('Unexpected child command: ' + command + ' ' + args.join(' '));
   const npmVersion = npm && args[args.length - 1].endsWith('--version');
-  return { status: 0, stderr: '', stdout: gitRead ? '.github/husky/_\\n' : npmVersion ? '12.2.1\\n' : '' };
+  return { status: 0, stderr: '', stdout: gitRead ? '.github/husky/_\\n' : npmVersion ? '12.2.2\\n' : '' };
 };
 require("node:module").syncBuiltinESMExports();
 `,
@@ -352,10 +352,10 @@ require("node:module").syncBuiltinESMExports();
 }
 
 test("setup refuses an npm older than engines.npm before installing", (t) => {
-  const { result, calls } = runWithFakeNpm(t, "11.20.0");
+  const { result, calls } = runWithFakeNpm(t, "12.2.1");
   assert.equal(result.status, 1, result.stdout + result.stderr);
-  assert.match(result.stderr, /npm >=12\.2\.1 required; found 11\.20\.0/);
-  assert.match(result.stderr, /npm install --global npm@12\.2\.1/);
+  assert.match(result.stderr, /npm >=12\.2\.2 required; found 12\.2\.1/);
+  assert.match(result.stderr, /npm install --global npm@12\.2\.2/);
   assert.deepEqual(calls, [], "no npm install ran");
   assert.doesNotMatch(result.stdout, /Installing pinned development tools/);
 });
@@ -367,7 +367,7 @@ test("setup refuses npm --version output that is not a version", (t) => {
   assert.deepEqual(calls, []);
 });
 
-for (const version of ["12.2.1", "12.3.0"]) {
+for (const version of ["12.2.2", "12.3.0"]) {
   test(`setup proceeds with npm ${version}`, (t) => {
     const { result, calls } = runWithFakeNpm(t, version);
     assert.equal(result.status, 0, result.stdout + result.stderr);

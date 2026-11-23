@@ -53,7 +53,7 @@ export interface StepOptions {
 const PREFIX = "conformance action";
 
 // The npm the repository requires (engines.npm). Node 26 bundles npm 11, so an older npm is replaced first.
-const NPM_FLOOR = [12, 2, 1] as const;
+const NPM_FLOOR = [12, 2, 2] as const;
 
 const defaultReport = (line: string): void => {
   writeSync(2, `${line}\n`);

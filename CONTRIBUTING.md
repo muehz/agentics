@@ -60,7 +60,7 @@ Scripts under `skills/*/scripts/` run on consumers' machines and must not depend
 | At least one host CLI                    | Trying your change in a real session                                              | `claude`, `copilot`, `codex`, or `agy`; the maintainer CLI detects whichever are installed                                                                  |
 | Go toolchain (see `go.mod` files)        | Hook checks and TypeScript test fixtures                                          | `hooks/go` is the only Go module and takes no external module; the tools script tests need its pinned Go version on `PATH`                                  |
 | Node.js ^22.23.5, ^24.22.3 or >= 26.12.1 | The maintainer CLI, `npm install`, prettier, release, tools and eval engine tests | Node 25 is excluded: npm 12 does not support it. Exact tool versions are pinned by `package.json` + `package-lock.json`                                     |
-| npm >= 12.2.1                            | `npm install`, `npm ci`                                                           | Node 22 bundles npm 10 and Node 24 and 26 bundle npm 11, so on every line run `npm install --global npm@12.2.1` after installing Node                       |
+| npm >= 12.2.2                            | `npm install`, `npm ci`                                                           | Node 22 bundles npm 10 and Node 24 and 26 bundle npm 11, so on every line run `npm install --global npm@12.2.2` after installing Node                       |
 | Installed packages                       | `--validate` and `--validate --fast`                                              | Run `npm ci --ignore-scripts` or `npm install` at the repository root; the conformance `skills` domain needs the `yaml` package                             |
 
 The maintainer CLI runs its TypeScript entrypoint directly, so a Node older than 22.18 cannot load it: Node's own load
@@ -632,7 +632,7 @@ Tool versions are pinned inline on purpose so an upstream release cannot turn a 
 Roll them forward deliberately, in a requirements review.
 
 Node 26.12.1 bundles npm 11, and `engines.npm` requires npm 12. Every job that runs `npm` or `npx` therefore installs
-the pinned npm 12 straight after `setup-node` (`npm install --global --ignore-scripts npm@12.2.1`).
+the pinned npm 12 straight after `setup-node` (`npm install --global --ignore-scripts npm@12.2.2`).
 `ci-workflow.test.ts` fails when a job runs npm without that step, or when the pinned version differs from
 `engines.npm`. A change to the version updates `package.json`, `.github/release/package.json`, the workflows, and the
 recompiled `release.lock.yml` together.

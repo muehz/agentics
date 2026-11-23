@@ -207,16 +207,17 @@ test("install gates on the domain and the npm version", async (t) => {
     "--prefix",
     auditor,
   ];
-  const global = ["install", "--global", "--ignore-scripts", "npm@12.2.1"];
+  const global = ["install", "--global", "--ignore-scripts", "npm@12.2.2"];
   const cases = [
     { domain: "all", version: "11.0.0", global: true },
-    { domain: "all", version: "12.2.1", global: false },
+    { domain: "all", version: "12.2.2", global: false },
     { domain: "all", version: "12.10.0", global: false },
     { domain: "all", version: "12.2.0", global: true },
+    { domain: "all", version: "12.2.1", global: true },
     { domain: "all", version: "12.1.9", global: true },
     { domain: "all", version: "13.0.0", global: false },
     // Only the leading version is read, and in decimal.
-    { domain: "all", version: "012.002.001-pre", global: false },
+    { domain: "all", version: "012.002.002-pre", global: false },
     { domain: "skills", version: "11.0.0", global: true },
   ];
   for (const c of cases)
@@ -290,7 +291,7 @@ test("install follows a dangling node_modules link and installs", (t) => {
     },
     spawn: (call) => {
       calls.push(call.args);
-      return { status: 0, stdout: "12.2.1\n" };
+      return { status: 0, stdout: "12.2.2\n" };
     },
   });
   assert.equal(status, 0);
@@ -320,7 +321,7 @@ test("install and run refuse an empty or unset auditor", async (t) => {
         env,
         spawn: (call) => {
           calls.push(call);
-          return { status: 0, stdout: "12.2.1\n" };
+          return { status: 0, stdout: "12.2.2\n" };
         },
         report,
       });
@@ -376,7 +377,7 @@ test("install stops at the first failing npm call", (t) => {
   assert.equal(status, 5);
   assert.deepEqual(calls, [
     ["--version"],
-    ["install", "--global", "--ignore-scripts", "npm@12.2.1"],
+    ["install", "--global", "--ignore-scripts", "npm@12.2.2"],
   ]);
 });
 
@@ -404,7 +405,7 @@ test("install finds npm on PATH and starts it", (t) => {
   assert.equal(r.status, 0, r.stdout + r.stderr);
   assert.deepEqual(npmCalls(log), [
     ["--version"],
-    ["install", "--global", "--ignore-scripts", "npm@12.2.1"],
+    ["install", "--global", "--ignore-scripts", "npm@12.2.2"],
     ["ci", "--ignore-scripts", "--prefix", auditor],
   ]);
 });
@@ -676,7 +677,7 @@ test("hostile paths and domains reach argv literally", async (t) => {
         domain === "all"
           ? [
               ["--version"],
-              ["install", "--global", "--ignore-scripts", "npm@12.2.1"],
+              ["install", "--global", "--ignore-scripts", "npm@12.2.2"],
               ["ci", "--ignore-scripts", "--prefix", auditor],
             ]
           : [],
