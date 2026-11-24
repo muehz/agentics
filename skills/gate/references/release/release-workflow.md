@@ -100,9 +100,10 @@ Window: <result>: <inside the approved window, no conflicting deploy>
 [gates.md](../../../routing/references/contracts/gates.md#process-gate) defines. Name its cost once: the deploy goes out
 with the listed items unchecked or failing. Offer the two exits: fix the items and re-run `/agentics:gate release`, or
 proceed anyway. A reply that proceeds, in any wording, writes one `waive <item>` row for each failed or skipped item
-with the user's reason or `none given`, writes the `release` verdict row with status `failed` (staged at
-hand-off/close), and moves the run to Phase 2. Ask for no reason. The summary, the deploy summary and the verdict row
-still read those items as failed or not verified.
+with the user's reason or `none given`, moves the run to Phase 2, and records the `release` verdict row (staged at
+hand-off/close) per [Write the rows](#write-the-rows): `failed` when any item failed (or after an escalation or
+rollback), and `pending` when NO-GO came solely from skipped items (unless a higher-priority outcome applies). Ask for
+no reason. The summary, the deploy summary and the verdict row still read those items as failed or not verified.
 
 An unconfirmed irreversible migration is the one item a proceed reply does not waive. It is a destructive step, so it
 stays held at the point of action, as
