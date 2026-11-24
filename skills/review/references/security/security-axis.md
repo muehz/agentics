@@ -94,11 +94,13 @@ domain as not read.
 
 ## Step 4: Score in batches
 
-Send each domain's candidates to one scorer, up to 20 a dispatch, with the change summary, the context paths, the
-repository criteria, and [security-scoring.md](security-scoring.md). The scorer returns one score and a one-line
-justification per candidate. It verifies that the source-to-sink path is real, that the cited line is in scope, and that
-no suppression item applies. Scorers merge nothing across domains; the lead merges a defect two domains both report into
-one finding that keeps the higher severity and cites both.
+Before dispatching scorers, state the actual scorer dispatch count (one per domain that returned candidates, plus one
+extra batch for each further 20 candidates in a domain). Send each domain's candidates to one scorer, up to 20 a
+dispatch, with the change summary, the context paths, the repository criteria, and
+[security-scoring.md](security-scoring.md). The scorer returns one score and a one-line justification per candidate. It
+verifies that the source-to-sink path is real, that the cited line is in scope, and that no suppression item applies.
+Scorers merge nothing across domains; the lead merges a defect two domains both report into one finding that keeps the
+higher severity and cites both.
 
 ## Step 5: Filter
 

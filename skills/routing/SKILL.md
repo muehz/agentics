@@ -55,7 +55,7 @@ Mutating work moves through one sequence selected from inspected state, never wo
 Step 0 sends mutating commissions naming no phase here. Writes no todo list of its own; reads state rather than conversation position.
 
 1. **Continuation check.** Run [continuation check](references/chain-phases.md#continuation-check) first (selects `recall` at most once per request for related work outside the current branch; reuse findings if already run for this item on the same branch).
-2. **Phase selection.** Run `agx flow where`, then `agx flow status` per [Find the flow](references/chain-phases.md#find-the-flow) (including launcher-path fallback and `flow unavailable: <reason>`). Take the first matching condition:
+2. **Phase selection.** Run `agx flow where`, then `agx flow status` per [Find the flow](references/chain-phases.md#find-the-flow) (including launcher-path fallback and `flow unavailable: <reason>`). When `AGENTS.md` / [repo-conventions.md](references/repo-conventions.md) names a work root other than `docs/specs`, prefix every `agx flow` call in the same command with `FLOW_WORK_ROOT=<dir>` and carry the work root in the handoff. Take the first matching condition:
     1. `flow where` or `flow status` exits 1 or 2 -> report the error and stop.
     2. `flow where` exits 5 -> small fix in progress: `execute fix`, or offer `gate` when its `verify fix` row reads `ok`.
     3. `flow where` exits 4, or continuation check found multiple folders -> `recall` with matches named (if `recall` already ran, name matches and ask for the folder).
@@ -64,7 +64,7 @@ Step 0 sends mutating commissions naming no phase here. Writes no todo list of i
     6. Current row's `next` starts with `spec` and [intent approval check](references/chain-phases.md#intent-approval-check) fails -> `intent` for its approval question.
     7. Current row's `next` starts with `gate` -> `gate`, offered and not run.
     8. A flow was found -> the first word of the current row's `next`.
-    9. No flow covers the item (`flow where` exits 3) -> [small-fix classification](references/chain-phases.md#small-fix-classification) (step 3 below).
+    9. No flow covers the item (`flow where` exits 3) -> [small-fix classification](references/chain-phases.md#small-fix-classification) (step 3 below), except when `docs/specs/unassigned/state.tsv` already holds a `pivot fix <branch>` row for this branch, which opens directly at `intent` without re-running small-fix classification.
 3. **Small-fix classification** (condition 9 only). Announce per [The announcement](references/chain-phases.md#the-announcement), then: **small fix** -> invoke `execute fix` in the same turn; **`brief`** ([middle path](references/chain-phases.md#middle-path)) -> invoke `intent` (writes `brief.md`); **full chain** -> invoke `intent`. If a signal fails later, `execute fix` owns moving heavier; the user can move into the chain anytime.
 4. **Announce and hand off.** State the phase and evidence in one line, then invoke it in the same turn with [what a phase handoff carries](#what-a-phase-handoff-carries).
 
@@ -109,7 +109,7 @@ Keep ownership on Agentics. Match by condition, not wording; first match wins:
 
 1. Failure with current user impact, full or partial ("production down", "slow for customers right now") -> `ops` response (`/agentics:ops response`), which classifies severity.
 2. Retrospective or postmortem of a resolved incident -> `ops` postmortem (`/agentics:ops postmortem`).
-3. Runbook workflow invocation (`/agentics:ops author`, `/agentics:ops audit`, `/agentics:ops drill`), or chain-produced runbook work -> `ops`.
+3. Runbook workflow invocation (`/agentics:ops author`, `/agentics:ops audit`, `/agentics:ops drill`), chain-produced runbook work, or operational/on-call runbooks for the user's product (`/agentics:ops author`) -> `ops`.
 4. Failure with no current user impact that is not a [user's change](../execute/references/fix-entry.md#a-users-change) -> `diagnose`.
 5. Pull request with bot findings, check failures, or several human signals -> `triage`, before `review`.
 6. Readiness question ("Is this ready to merge?") -> `gate`, before `review`, forwarded per [Commission, not grammar](#commission-not-grammar).
@@ -129,7 +129,7 @@ Keep ownership on Agentics. Match by condition, not wording; first match wins:
 
 1. **Parse** into independent sub-requests and send each through Step 0 (symptoms of one failure stay one report; ambiguous clauses go to Step 3 alone).
 2. **Sequential.** When one sub-request consumes another's output (by dependency, not conjunction words), announce both and dispatch the dependent one when the earlier finishes or stops at its first approval question. Run `/agentics:gate check` before consuming a high-risk dependency (production request handling, reliability, security, data/auth/schema changes; treat unsure as high-risk).
-3. **Parallel.** Dispatch independent read-only sub-requests in parallel per [Delegation pattern](#delegation-pattern) within the surface concurrency cap ([surface-dispatch.md](references/surface-dispatch.md)), then merge. Mutating sub-requests take the start-or-continue path; `execute` runs parallel implementation waves only from an approved plan.
+3. **Parallel.** Independent read-only review or investigation concerns requested in parallel stay with routing: dispatch them directly as parallel general-purpose subagents per [Delegation pattern](#delegation-pattern) within the surface concurrency cap ([surface-dispatch.md](references/surface-dispatch.md)) — each carrying all seven dispatch items, without routing them to `review`, `intent`, or `execute` and without asking confirmation when the user already requested the reviews — then merge. Mutating sub-requests take the start-or-continue path; `execute` runs parallel implementation waves only from an approved plan.
 
 Drop any sub-request the user says is already handled or owned elsewhere.
 
