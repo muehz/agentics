@@ -100,7 +100,7 @@ This skill writes decision records. Use [adr-format.md](../deepen/references/adr
 
 Build runs three stages; [co-authoring-workflow.md](references/co-authoring-workflow.md) holds each stage's full procedure:
 
-1. **Context gathering.** Ask open meta-context questions, invite an unordered info dump, and close with one clarifying round (only questions that change the draft). Ending a round early applies the recommended answers.
+1. **Context gathering.** Ask open meta-context questions, invite an unordered info dump, and close with one clarifying round (only questions that change the draft). Unanswered questions stay `[open: …]` unless the user explicitly accepts the recommended answers (and the review message states which answers were assumed).
 2. **Draft and refine.** Draft every section from context, marking gaps `[open: …]`. Load [slop-patterns.md](references/slop-patterns.md) and clear tells before showing the draft. Run one full-draft review; drill into sections only when the user names them.
 3. **Reader testing.** Load [surface-dispatch.md](../routing/references/surface-dispatch.md) first to verify the session's dispatch path, then dispatch one fresh subagent with no conversation context to answer predicted reader questions and checks. Use the labeled simulated fresh-read in the workflow reference **only** after verifying that isolated subagent dispatch is unavailable in the session (state why it is unavailable), and never present a simulated read as a real dispatch.
 

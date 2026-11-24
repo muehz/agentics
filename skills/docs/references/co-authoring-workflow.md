@@ -23,7 +23,7 @@ document type.
 - **Constraints:** deadlines, review gates, or context the draft must respect.
 
 In the same message, tell the user they can answer in shorthand ("Q1: platform leads, Q2: none"), dump information in
-any form, or end the round and take the recommended answers.
+any form, or explicitly accept the recommended answers (unanswered questions otherwise stay `[open: <what's missing>]`).
 
 **If the user provides a template:** Read it. Then build the document on its structure.
 
