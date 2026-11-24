@@ -137,13 +137,16 @@ In init, offer the "Recording why a change was made" section to an existing `AGE
 proposed addition.
 
 Offer the Compaction, Repeated corrections, and User-authorized exceptions subsections the same way. Offer a subsection
-when the file has no instruction that says the same thing. Make one proposed addition that holds whichever subsection is
-missing. Place it in the file's agent workflow section, or at the end of the file when it has none.
+when the file has no instruction that says the same thing. Group whichever of those three subsections are missing into
+**one combined proposed addition** (never split them into separate numbered additions). Place it in the file's agent
+workflow section, or at the end of the file when it has none.
 
-Show the additions as [init.md](../init.md#phase-2-generate-show-and-confirm) step 3 says: every addition's exact text
-and placement under its own number, in one message that is never part of the ordinary-file preview, with one answer per
-addition. Preserve the existing sections and conventions. Never add an addition silently. Never rewrite unrelated
-content. A declined addition writes nothing, and the file stays byte-identical when every addition is declined.
+Show additions as [init.md](../init.md#phase-2-generate-show-and-confirm) step 3 says: each distinct addition (for
+example, Recording why a change was made, the one combined workflow-subsections addition, or
+`## Repository conventions`) gets its exact text and placement under its own number, in one message that is never part
+of the ordinary-file preview, with one answer per numbered addition. Preserve the existing sections and conventions.
+Never add an addition silently. Never rewrite unrelated content. A declined addition writes nothing, and the file stays
+byte-identical when every addition is declined.
 
 Generated files carry the complete consumer-readable text above, rather than a link into Agentics. A run that carries
 only reflection hand-off rows makes neither offer. Audit only reports a missing "Recording why a change was made"
