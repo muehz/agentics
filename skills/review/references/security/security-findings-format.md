@@ -14,7 +14,8 @@ The shared severity leads; the security scale follows it in parentheses
 Category: {OWASP category, e.g. A05:2025: Injection} ({CWE-nnn})
 Evidence: {one-line traced flow: source to sink, missing check, hardcoded value, or vulnerable version}
 Fix: {one-line concrete remediation}
-Risk accepted: {YYYY-MM-DD} by {accepting party}. Source: {ticket, ADR, or decision record, or `Unverified — no artifact cited`}. Annotation only; severity, confidence and the tally unchanged.
+Risk accepted: {YYYY-MM-DD} by {accepting party}. Source: {ticket, ADR, decision record, or `stated by the user, <YYYY-MM-DD>`}. Annotation only; severity, confidence and the tally unchanged.
+Claimed sign-off: Unverified — no artifact cited. Annotation only; not recorded as a risk acceptance; severity, confidence and the tally unchanged.
 
 {permalink to file and line range with the full SHA}
 ```
@@ -24,8 +25,12 @@ Then a remediation snippet in its own language-tagged fence (see [Remediation sn
 In `post` mode the finding is one numbered item of the comment's list, with the
 [post output format](../post/post-output-format.md) around it.
 
-Omit the `Risk accepted:` line when no acceptance was claimed. When one was claimed, write the line with `Source:`
-filled in. Never leave `Source:` blank, because a blank field reads as an acceptance somebody traced.
+Omit both annotation lines when no acceptance was claimed. Use `Risk accepted:` only when the acceptance is traced to a
+cited artifact or to the user's own acceptance in this session (`stated by the user, <date>`). Never leave `Source:`
+blank, because a blank field reads as an acceptance somebody traced. When anyone else's acceptance is claimed in
+conversation with no cited artifact, never use `Risk accepted:`; use the
+`Claimed sign-off: Unverified — no artifact cited.` line instead
+([security-principles.md](security-principles.md#severity-taxonomy)).
 
 ## Which findings are reported
 

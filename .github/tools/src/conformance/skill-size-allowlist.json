@@ -1,1 +1,34 @@
-[]
+[
+    {
+        "path": "skills/decompose/references/chain-artifacts.md",
+        "ceiling": 35475
+    },
+    {
+        "path": "skills/execute/references/mode-procedures.md",
+        "ceiling": 33181
+    },
+    {
+        "path": "skills/gh/references/github-mcp-server.md",
+        "ceiling": 30764
+    },
+    {
+        "path": "skills/git/references/base-and-remote.md",
+        "ceiling": 31968
+    },
+    {
+        "path": "skills/git/references/worktrees.md",
+        "ceiling": 33644
+    },
+    {
+        "path": "skills/routing/references/surface-dispatch.md",
+        "ceiling": 31937
+    },
+    {
+        "path": "skills/spec/references/draft.md",
+        "ceiling": 38788
+    },
+    {
+        "path": "skills/triage/references/subagent-contract.md",
+        "ceiling": 33499
+    }
+]

@@ -32,9 +32,13 @@ type `$agentics:<skill>` instead.
 
 Read the rows in order; the first match wins. Each row is marked with its kind, as
 [forwarding.md](../routing/references/forwarding.md#explicit-invocation) defines it. A `cannot` row forwards by that
-protocol, which decides whether the forward is announced or asked first. A `safety stop` row is not a forward:
-[forwarding.md](../routing/references/forwarding.md#explicit-invocation) does not carry it, so the skill hands off at once
-and asks nothing. No partial threat model goes with a forward.
+protocol, which decides whether the forward is announced or asked first — class A targets (such as
+`/agentics:review axes <ref> --security` and `routing`) are announced and forwarded without asking confirmation, while
+class B targets (such as `/agentics:triage pr <N>`) follow `forwarding.md`'s ask-first rule. On pushback against a
+code-reading forward, say in one line that this skill reads no code so a model here would not examine the branch, offer
+to model the design instead, and do not repeat the forward. A `safety stop` row is not a forward:
+[forwarding.md](../routing/references/forwarding.md#explicit-invocation) does not carry it, so the skill hands off at
+once and asks nothing. No partial threat model goes with a forward.
 
 | Order | Input signal                                                                                                                                            | Use this instead                                                                               | Kind        |
 | ----- | ------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------- | ----------- |
@@ -131,7 +135,10 @@ mitigation, and keeps only the ones the user accepts. Composed mode serves that 
 - Every disposition and every mitigation is a proposal. Nothing is recorded as accepted for the user, and the model's
   status is `Draft`.
 - It returns one envelope, defined in the workflow's
-  [Composition](references/threat-model-workflow.md#composition) section, and stops. The caller surfaces it.
+  [Composition](references/threat-model-workflow.md#composition) section, and stops. The caller surfaces it. Embed the
+  complete escaped Markdown threat model (with Markdown Asset and Actor tables, trust-boundary diagram, STRIDE
+  findings, and mitigations) directly inside the JSON `model` string — never write the Markdown outside the JSON and
+  substitute a placeholder string or abbreviated summary inside `model`.
 
 ## References
 

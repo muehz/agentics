@@ -313,10 +313,13 @@ changes nothing.
     separately.
 
 4. Run only the authorized selected checks. Report their actual scope, exit/result and limitations. Tool installation,
-   provider execution or enforcement probes require their own applicable consent. Never skip a hook to finish setup. The
-   existing `audit probe` gate remains unchanged and covers only its defined test/lint probes. A secret-scan refusal
-   demonstration needs a separately scoped preview and approval for inert fixtures in a disposable repository, not the
-   consumer's working tree. Source inspection or an unrun fixture does not establish enforcement.
+   provider execution or enforcement probes require their own applicable consent (a tool installation the user
+   explicitly named in their request is already authorized under
+   [approval.md](../../routing/references/contracts/approval.md#steps-named-up-front): state the exact command and run
+   it). Never skip a hook to finish setup. The existing `audit probe` gate remains unchanged and covers only its defined
+   test/lint probes. A secret-scan refusal demonstration needs a separately scoped preview and approval for inert
+   fixtures in a disposable repository, not the consumer's working tree. Source inspection or an unrun fixture does not
+   establish enforcement.
 
 ### Remote read and exact proposal
 

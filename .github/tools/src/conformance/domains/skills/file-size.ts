@@ -10,15 +10,17 @@ import {
 import type { Family, ResolvedSkillsContext } from "./index.ts";
 
 /**
- * The byte limit of a skill's `SKILL.md`. Codex estimates a tool output's tokens as `ceil(UTF-8 bytes / 4)` and cuts
- * any output over 10,000 tokens, so a file of at most 40,000 bytes, read whole, is never cut.
+ * The byte limit of a skill's `SKILL.md`. Antigravity loads only the first 24,000 bytes of each `SKILL.md` body and
+ * warns on longer files, so capping the whole `SKILL.md` at 24,000 bytes guarantees the body fits with zero truncation
+ * on Antigravity (as well as Claude Code and Codex).
  */
-export const SKILL_MD_BYTE_LIMIT = 40000;
+export const SKILL_MD_BYTE_LIMIT = 24000;
 /**
- * The byte limit of every other tracked file under `skills/`. A reference is read whole as often as a `SKILL.md`, so
- * the same Codex output cut applies: at most 40,000 bytes keeps it under 10,000 estimated tokens.
+ * The byte limit of every other tracked file under `skills/`. Codex estimates a tool output's tokens as
+ * `ceil(UTF-8 bytes / 4)` and cuts any single output over 10,000 tokens (40,000 bytes). Capping raw files at 30,000
+ * bytes leaves headroom for line-number prefixes and tool framing and fits in a single Codex eval reader page.
  */
-export const SKILL_FILE_BYTE_LIMIT = 40000;
+export const SKILL_FILE_BYTE_LIMIT = 30000;
 
 export const FILE_SIZE_RULE = "skill-file-size";
 export const FILE_SIZE_STALE_RULE = "skill-file-size-stale";

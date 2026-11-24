@@ -130,21 +130,22 @@ consistently weak behaviors.
 Every `SKILL.md` follows these rules, whether or not you run the full workflow above. Each rule names the conformance
 rule that checks it.
 
-| Rule                 | Value                                                                             | Checked by                                                                                                       |
-| -------------------- | --------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
-| Size                 | At most 40,000 bytes. Move deep material into `references/`.                      | `skill-file-size`                                                                                                |
-| Description          | At most 1,024 characters.                                                         | `skill-description-length`                                                                                       |
-| Name                 | Lowercase kebab-case, at most 64 characters, equal to the skill's directory name. | `skill-name-format`                                                                                              |
-| Frontmatter contract | The keys and values in [Required frontmatter](#required-frontmatter).             | `skill-frontmatter`, `skill-frontmatter-key`, `skill-frontmatter-value`, `skill-metadata`, `skill-argument-hint` |
-| Routing section      | A `## Don't use when` section.                                                    | `skill-routing-section`                                                                                          |
-| Reference index      | Exactly one `## References`, and it is the last level-two heading.                | `skill-references-index`                                                                                         |
-| Restating block      | No `Capability summary` heading.                                                  | `skill-summary-block`                                                                                            |
-| Duplicate block      | No paragraph or list item that repeats body text verbatim.                        | `skill-duplicate-block`                                                                                          |
+| Rule                 | Value                                                                                                          | Checked by                                                                                                       |
+| -------------------- | -------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
+| Size                 | At most 24,000 bytes for `SKILL.md` (30,000 for other `skills/` files). Move deep material into `references/`. | `skill-file-size`                                                                                                |
+| Description          | At most 1,024 characters.                                                                                      | `skill-description-length`                                                                                       |
+| Name                 | Lowercase kebab-case, at most 64 characters, equal to the skill's directory name.                              | `skill-name-format`                                                                                              |
+| Frontmatter contract | The keys and values in [Required frontmatter](#required-frontmatter).                                          | `skill-frontmatter`, `skill-frontmatter-key`, `skill-frontmatter-value`, `skill-metadata`, `skill-argument-hint` |
+| Routing section      | A `## Don't use when` section.                                                                                 | `skill-routing-section`                                                                                          |
+| Reference index      | Exactly one `## References`, and it is the last level-two heading.                                             | `skill-references-index`                                                                                         |
+| Restating block      | No `Capability summary` heading.                                                                               | `skill-summary-block`                                                                                            |
+| Duplicate block      | No paragraph or list item that repeats body text verbatim.                                                     | `skill-duplicate-block`                                                                                          |
 
-The same 40,000-byte limit applies to every file under `skills/`: references, scripts and any other file, not only
-`SKILL.md` (`skill-file-size`). A host reads a file in one tool call, and on Codex a file over the limit loses its
-middle, as the [size limit](../quality/cso-guide.md) explains. When a step's body moves to a reference file to fit the
-limit, the step keeps its heading and a one-line pointer to where the text went.
+Every `SKILL.md` is capped at 24,000 bytes (Antigravity's `SKILL.md` body load cap), and every other file under
+`skills/` (references, scripts, and any other tracked file) is capped at 30,000 bytes (`skill-file-size`), leaving
+headroom for line-number/tool framing under Codex's 40,000-byte single-read cutoff, as the
+[size limit](../quality/cso-guide.md) explains. When a step's body moves to a reference file to fit the limit, the step
+keeps its heading and a one-line pointer to where the text went.
 
 These are targets, which no script checks:
 

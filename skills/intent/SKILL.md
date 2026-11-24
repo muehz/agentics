@@ -51,7 +51,7 @@ A one-line change to a documented default is mutating; a thousand-line reformat 
 
 **Waiving the chain entry.** Entering the chain is a [process gate](../routing/references/contracts/gates.md#process-gate). When the user declines it, name the cost once (no recorded problem, no challenged assumptions, nothing for a reviewer to reconstruct the decision from). On the next reply that still declines, in any wording, comply:
 
-1. Record one `waive` row (ask for no reason; `why` is the user's reason or `none given`):
+1. Record one `waive` row (ask for no reason; `why` is the user's reason or `none given`; substitute the resolved `<work-root>`, never emit a literal placeholder):
 
         agx flow log intent waive chain ok "<the user's reason, or none given>" none "done change made with the chain entry waived" --folder <work-root>/unassigned
 
@@ -66,9 +66,9 @@ Check the input against **Don't use when**. Forward matching rows via [forwardin
 
 ### Step 1. Gather the direction
 
-Read current project state and any existing intent before asking a question. Extract problem, beneficiary, outcome, scope, constraints, and decisions from conversation and evidence; separate user decisions from recommendations, and look up repository facts yourself. An existing intent with unresolved direction stays here.
+Read current project state, any open issue, PR, or repository file the user names, and any existing intent before asking a question. Extract problem, beneficiary, outcome, scope, constraints, and decisions from conversation and evidence; separate user decisions from recommendations, and look up repository facts yourself (never ask the user to paste an issue or file you can read). An existing intent with unresolved direction stays here.
 
-**How the run arrived** decides which pre-interview checks run (continuation check, phase selection, small-fix classification): read the arrival table in [references/capture-procedures.md](references/capture-procedures.md#step-1-arrival-and-binding). Reuse any classification or findings a handoff or forward carries rather than re-deriving them.
+**How the run arrived** decides which pre-interview checks run (continuation check, phase selection, small-fix classification): read the arrival table in [references/capture-procedures.md](references/capture-procedures.md#step-1-arrival-and-binding) and run every required check before asking any direction question. Reuse any classification or findings a handoff or forward carries rather than re-deriving them.
 
 **A user's change.** When the input carries a [user's change](../execute/references/fix-entry.md#a-users-change) that alters runtime behavior and lacks the user's yes, ask one yes/no question under [question-format.md](../routing/references/contracts/question-format.md) before the interview, any edit, or any row. On no or no answer, write nothing, report it was not captured, and never send it back to `diagnose`. Unattended runs ask nothing and record the missing yes as a `blocker`.
 
@@ -80,7 +80,7 @@ Keep this step on the direction. The [principles check](../routing/references/co
 
 **The empirical fork.** Apply the [empirical questions contract](../routing/references/contracts/empirical-questions.md) before the challenge, recording observed answers as lookups without widening scope.
 
-**The challenge.** Invoke [challenge](../challenge/SKILL.md) on why the work matters, observable success outcome, scope inclusions/exclusions, constraints, and goal-invalidating assumptions. Carry forward answered questions and resume unanswered ones until direction questions resolve (no round limit); keep solution design, interfaces, slicing, and tasks downstream.
+**The challenge.** Read and invoke [challenge](../challenge/SKILL.md) (and [chain-artifacts.md](../decompose/references/chain-artifacts.md) for the Challenge record's exact five fields — never improvise round format or record fields from memory) on why the work matters, observable success outcome, scope inclusions/exclusions, constraints, and goal-invalidating assumptions. Ask the direction questions and wait for the user's actual answers — never invent, assume, or simulate user answers or resolutions in the same turn, and never record a resolution the user did not give. Carry forward answered questions and resume unanswered ones until direction questions resolve (no round limit); keep solution design, interfaces, slicing, and tasks downstream.
 
 **Execution safety gate.** The direction challenge must actually run with at least one round put to the user (or cite a carried-forward `prior record dated YYYY-MM-DD` per [chain-artifacts.md](../decompose/references/chain-artifacts.md)). Naming `challenge`, reading it, or weighing risks privately is not execution. Marking a challenge `ok` without running it is a status claim without evidence ([safety gate](../routing/references/contracts/gates.md#safety-gate)): hold it in that file's shape, offering the round now or a `declined` record.
 
@@ -94,7 +94,7 @@ Keep this step on the direction. The [principles check](../routing/references/co
 
 ### Step 3. Write the intent
 
-Write or update `intent.md` per [chain-artifacts.md](../decompose/references/chain-artifacts.md#intentmd) with the six sections in order: **Problem**, **Outcome**, **Affected users and systems**, **Constraints**, **Decisions**, **Open questions**. Open a new intent with `# Intent: <topic>` (no front matter) and the five-line card from [skim-rules.md](../decompose/references/skim-rules.md#the-card) (`Change`, `Why now`, `Out of scope`, `Risk`, `Source` — no `Ask` line). Preserve existing intents' existing layout unless conversion is requested.
+Write or update `intent.md` per [chain-artifacts.md](../decompose/references/chain-artifacts.md#intentmd) with the six sections in order: **Problem**, **Outcome**, **Affected users and systems**, **Constraints**, **Decisions**, **Open questions**. Open a new intent with `# Intent: <topic>` (no front matter) and the five-line card from [skim-rules.md](../decompose/references/skim-rules.md#the-card) (`Change`, `Why now`, `Out of scope`, `Risk`, `Source` — no `Ask` line). Preserve existing intents' existing layout unless conversion is requested. When delivering or drafting a new `intent.md`, present the actual `# Intent:` title, five-line card, six sections, and `**Challenge record:**` rather than only describing them.
 
 Read [references/capture-procedures.md](references/capture-procedures.md#step-3-writing-and-logging) for section-by-section content rules (allowed code under [Code in artifacts](../decompose/references/chain-artifacts.md#code-in-artifacts), forwarded constraints, user's change recording, Decisions, and the five-field `**Challenge record:**`), plus the `diagnose` waiver row and staging hygiene.
 
@@ -118,7 +118,7 @@ Stage `state.tsv` separately (`git add -- <work-folder>/state.tsv`); never stage
 
     agx flow log intent waive direction-blockers ok "<the user's reason, or none given>" none "intent ask for approval" --folder <work-folder>
 
-**Status line and question.** Print one chat/report line before asking: `Status: <n> open questions (<d> deferred, <w> left for the spec) · approval pending` (or `Status: no open questions · approval pending`). Re-stage `intent.md`, run `agx flow status --folder <work-folder>`, note `hashes: intent.md text=<hash>`, show the path, hash, and a direction summary (full text only on request), and ask:
+**Status line and question.** Print one chat/report line before asking: `Status: <n> open questions (<d> deferred, <w> left for the spec) · approval pending` (or `Status: no open questions · approval pending`). Re-stage `intent.md`, run `agx flow status --folder <work-folder>`, note `hashes: intent.md text=<hash>`, show the concrete resolved path (never `<work-root>/<folder>`), the hash (never `<from flow status>` or `…`), and a direction summary (full text only on request), and ask:
 
 > "Intent written to `<intent-path>`. Approve this direction? Your yes lets `spec draft` define the solution; nothing
 > is implemented."
@@ -131,7 +131,7 @@ Ask in every attended run (including capture-only); unattended runs ask nothing 
 
 If the [approval guard](../execute/references/flow-approval-and-audit.md#the-approval-guard) refuses, `intent.md` changed after display: re-run `flow status`, re-show, and re-ask (never bypass the guard).
 
-**After a yes.** Explain the next step in plain language and name `spec draft` once. If the user authorized continuing past intent (up front or in the approving reply), load and run [spec](../spec/SKILL.md) (`spec draft`) without asking again; otherwise save and report the route without starting `spec draft`. No hand-off authorizes implementation, publication, or scope expansion.
+**After a yes.** Explain the next step in plain language and name `spec draft` once. If the user authorized continuing past intent (up front or in the approving reply), load and run [spec](../spec/SKILL.md) (`spec draft`) in this turn without asking again or stopping at a description of what it would do; otherwise save and report the route without starting `spec draft`. No hand-off authorizes implementation, publication, or scope expansion.
 
 ## References
 
