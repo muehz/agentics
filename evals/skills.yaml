@@ -7,9 +7,10 @@ settings:
 
 skills:
   challenge:
-    last-evaluated: 2026-11-20
-    eval-status: not-run
-    eval-digest: d90b86512d583f83124c39721402689cf43b93f1ff1d86f8ff6e192e1c343848
+    last-evaluated: 2026-11-24
+    eval-status: passing
+    eval-digest: 845a95c31e3163cdd315e7beae035c1139c00b23aa15933a7b5bbd8f249557fe
+    grading-method: separate-provider-v1
   decompose:
     last-evaluated: 2026-11-20
     eval-status: not-run
@@ -67,9 +68,10 @@ skills:
     eval-status: not-run
     eval-digest: 1baf5d9461ac77e8ff80351a70704a5666107e1e2f3fd81d60c33166b8c17ed7
   principles:
-    last-evaluated: 2026-11-20
-    eval-status: not-run
-    eval-digest: 2cfcf66c5300d4bee5ae2cc35ae0ad2b5cf5780ef589268e6f12db57f2901b5c
+    last-evaluated: 2026-11-24
+    eval-status: passing
+    eval-digest: ba2099354bbf483353260f0a5ab58abce836fd7d500904353702ee8cf46da454
+    grading-method: separate-provider-v1
   prototype:
     last-evaluated: 2026-11-20
     eval-status: not-run
@@ -95,9 +97,10 @@ skills:
     eval-status: not-run
     eval-digest: 6bc0ebe3f820b522e3e3f1ca53a911caf013e719f5d9dac28f5c9330c91ac1d1
   tdd:
-    last-evaluated: 2026-11-20
-    eval-status: not-run
-    eval-digest: 93a83921ffdaef10d8dc8d2b38efb53d5f76f6b10fe250d9a65ad0e1727f0d2f
+    last-evaluated: 2026-11-24
+    eval-status: passing
+    eval-digest: 0a7cdf3e60524a282fd8e8d08d105183857d03e18a0df14f8eccf3aa95da972c
+    grading-method: separate-provider-v1
   threat-model:
     last-evaluated: 2026-11-20
     eval-status: not-run
