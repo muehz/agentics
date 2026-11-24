@@ -150,8 +150,9 @@ forward carries the reason, the report, and the yes, and the flow's phase record
       [code-quality-reviewer-prompt.md](code-quality-reviewer-prompt.md). A fix is one task, so this is its whole
       review.
 
-    When the reviewer returns, log `review fix` with status `ok` on `CLEAR` or `failed` on `FINDINGS`, and evidence
-    `kind=quality dispatched=<ts> round=<n> blocked=<seconds>` ([flow-state.md](flow-evidence.md#evidence-forms)). Then:
+    When the reviewer returns, log `review fix` with status `ok` on `CLEAR` or `failed` on `FINDINGS`, always carrying
+    `kind=quality` in evidence: `kind=quality dispatched=<ts> round=<n> blocked=<seconds>`
+    ([flow-state.md](flow-evidence.md#evidence-forms)). Then:
     - On `CLEAR`, commit the staged change and log `verify fix` with status `ok` and evidence `auto`.
     - On `FINDINGS`, no commit exists. Log `verify fix` with status `failed` and evidence
       `branch=<branch> patch-id=<id of the rejected staged diff>`. Fix the findings and continue the same reviewer.
@@ -167,9 +168,10 @@ forward carries the reason, the report, and the yes, and the flow's phase record
    do these steps in order:
     1. Unstage the change. Its content stays in the working tree. Nothing is committed, reverted, or deleted, and
        earlier commits stay.
-    2. Use the same data inputs as for the skip row in step 2. Capture the current branch in this call, read the failed
-       signal and its evidence into `why`, and read what the findings leave open into `next` with an `intent` prefix.
-       Then run `agx flow log execute pivot "fix $branch" ok "$why" "base=$base_oid" "$next" --folder "$folder"`.
+    2. Use the same data inputs as for the skip row in step 2. Capture the current branch in this call, put **every**
+       failed signal and its exact limit/count into `why` (for example, both the line/file size limit and the new-file
+       limit when both fail), and read what the findings leave open into `next` with an `intent` prefix. Then run
+       `agx flow log execute pivot "fix $branch" ok "$why" "base=$base_oid" "$next" --folder "$folder"`.
     3. Forward to `intent` with the findings, the signals, and the paths changed so far, and say that the change is
        unstaged and uncommitted. A change that failed only the size signal and fits one task can take the middle path
        there. For a [user's change](#a-users-change), the forward also carries the reason, the report, and whether the
@@ -207,16 +209,17 @@ When the work root is not `docs/specs`, prefix the call with `FLOW_WORK_ROOT=<di
 [flow-state.md](flow-state.md#where-it-lives) says. When `agx` is unavailable on `PATH`, use the
 [launcher fallback](flow-commands.md#commands).
 
-Read the result:
+Read the result and emit the specific completion handoff or hold report for that outcome:
 
-- Exit 0 with `audit: clean`: make the handoff.
-- Exit 0 with `unaccounted:`, `mismatch:` or `invalid:` lines: the handoff carries each line. Tell the user that `gate`
-  raises each one as a finding. They do not hold the handoff, and no question is asked.
+- Exit 0 with `audit: clean`: make the completion handoff carrying `audit: clean` and any `note:` lines.
+- Exit 0 with `unaccounted:`, `mismatch:` or `invalid:` lines: make the completion handoff carrying each verbatim
+  finding line and tell the user that `gate` raises each one as a finding. They do not hold the handoff, and no question
+  is asked.
 - `note:` lines go in the report.
 - Exit 0 without the `note: scope not checked (small fix: the size signal applies)` line: a flow is bound to this
   branch, and the audit read that flow instead of this fix. Hold the handoff and report
   `not computed (a flow is bound to this branch)`.
-- A non-zero exit: hold the handoff and report `not computed (<reason>)`, with the reason the helper printed. Exit 1 is
-  a usage error, an unexpected failure, or a Git read the audit could not make. Exit 2 is a missing or bad `--base` or
-  an invalid storage setting, exit 3 no small fix open on this branch, and exit 4 more than one match. Never run an
+- A non-zero exit: hold the handoff and report `not computed (<reason>)`, with the exact reason the helper printed. Exit
+  1 is a usage error, an unexpected failure, or a Git read the audit could not make. Exit 2 is a missing or bad `--base`
+  or an invalid storage setting, exit 3 no small fix open on this branch, and exit 4 more than one match. Never run an
   audit by hand in its place.

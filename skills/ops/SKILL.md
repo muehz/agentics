@@ -50,7 +50,7 @@ A request that states current user impact, full or partial, is an incident: it s
 
 Load [references/shared-principles.md](references/shared-principles.md) once the mode is known. It holds the severity table, the branch decision, the roles, the blameless rule, evidence preservation, and the runbook rules every mode assumes. Then load the mode's workflow file and follow it. Announce the mode in one line, once.
 
-Ask every decision question in the format and with the answer collection that [question-format.md](../routing/references/contracts/question-format.md) defines. One question holds one decision.
+Ask every decision question in the exact format and with the answer collection that [question-format.md](../routing/references/contracts/question-format.md) defines: `❓ **Q<n>** - **<title>**:` followed by a line starting with `➡️` giving the recommendation. One question holds one decision.
 
 ### Which mode?
 
@@ -78,7 +78,7 @@ Anything a draft needs that the request does not give becomes a question or an `
 
 ### /agentics:ops response
 
-Coordinate an active incident: declare, assemble, contain, resolve, and hand off. Follow [references/response/response-workflow.md](references/response/response-workflow.md). Its first reply gives containment guidance before any question, and it asks only the decisions whose answer changes what it produces.
+Coordinate an active incident: declare, assemble, contain, resolve, and hand off. Follow [references/response/response-workflow.md](references/response/response-workflow.md). Its first reply gives containment guidance before any question, completes the declaration checklist (severity, branch, incident record draft in a fenced block, channels, and first internal update), and asks only the decisions whose answer changes what it produces. On an early-resolution override (after naming the recovery-window cost once), record the early resolve in the incident record and output the resolved update in a fenced block labeled as a draft (never posted unless `gh` ran).
 
 **Branch.** The declare phase asks whether the incident involves unauthorized access, credential compromise, malicious activity, or unexpected data exposure, unless the request already says. Yes or unsure loads [security-branch.md](references/response/security-branch.md); no loads [reliability-branch.md](references/response/reliability-branch.md); both runs security comms and forensics with reliability customer recovery. The user's own answer decides, including "it's just an outage". When evidence in the session later points the other way, say once what was observed and ask the question again.
 
@@ -88,7 +88,7 @@ Coordinate an active incident: declare, assemble, contain, resolve, and hand off
 
 ### /agentics:ops postmortem
 
-Run a blameless retrospective on a resolved incident. Follow [references/postmortem/postmortem-workflow.md](references/postmortem/postmortem-workflow.md); the artifact follows [postmortem-template.md](references/postmortem/postmortem-template.md). The argument is an optional incident reference, such as the tracking issue number. Without one, ask for the reference and any timeline notes. When the user describes the incident, draft from whatever they give, even when they mention notes they did not paste, with `<angle-bracket>` placeholders for the rest, and ask for the reference and the notes after the draft. Action items always include a regression test or eval, or `n/a: <reason>`.
+Run a blameless retrospective on a resolved incident. Follow [references/postmortem/postmortem-workflow.md](references/postmortem/postmortem-workflow.md); the artifact follows [postmortem-template.md](references/postmortem/postmortem-template.md). The argument is an optional incident reference, such as the tracking issue number. Without one, ask for the reference and any timeline notes. When the user describes the incident, draft from whatever they give, even when they mention notes they did not paste, with `<angle-bracket>` placeholders for the rest (including `Branch` unless the user explicitly supplies it), and ask for the reference and the notes after the draft. Action items always include a regression test or eval, or `n/a: <reason>`. Any promised action-item issue previews appear in fenced blocks in the same reply.
 
 ### /agentics:ops drill
 
@@ -100,7 +100,7 @@ Rehearse the response process with a scenario, or exercise one runbook. Follow [
 | 2     | A scenario name or a free-text scenario     | scenario drill: the deliverable is a debrief with action items                        |
 | 3     | Otherwise (no argument)                     | ask one question: a scenario, or a runbook (recommend runbook when one is in context) |
 
-Both types run as a tabletop (narrated) or a game day (real execution in a non-production environment). The starter scenarios are in [drill-scenarios.md](references/drill/drill-scenarios.md).
+Both types run as a tabletop (narrated) or a game day (real execution in a non-production environment). The starter scenarios are in [drill-scenarios.md](references/drill/drill-scenarios.md). For a security drill on a public repository, keep drill comms and the debrief record in a private drill channel, draft security advisory, or private location—never a public issue.
 
 ### /agentics:ops author
 
@@ -114,14 +114,14 @@ Check one runbook for staleness, command drift, dead links, structural gaps, own
 
 ### Writes outside the machine
 
-Every GitHub artifact this skill produces (a tracking issue, a status comment, a postmortem issue, an action-item issue, a drill debrief, a publishing pull request) is drafted in a fenced block in chat first. [github-artifacts.md](references/github-artifacts.md) holds the templates and [github-publishing.md](references/github-publishing.md) the publishing paths. Comms to channels, status pages and customers are drafts for the user to send.
+Every GitHub artifact this skill produces (a tracking issue, a status comment, a postmortem issue, an action-item issue, a drill debrief, a publishing pull request, or a draft security advisory) is drafted in full in a fenced block in chat first—never promise a draft without including its fenced block in the reply. [github-artifacts.md](references/github-artifacts.md) holds the templates and [github-publishing.md](references/github-publishing.md) the publishing paths. Comms to channels, status pages and customers are drafts for the user to send.
 
-- **Authorization.** A post goes out on any clear affirmative to its draft, or without a second question when the user named that post up front, as [approval.md](../routing/references/contracts/approval.md) says. A named post that a skill previews first is the exception, as [approval.md](../routing/references/contracts/approval.md#a-named-post-a-skill-previews-first) says. Naming a kind of post counts: "post the cadence updates on the tracking issue" authorizes each cadence update for this incident, and each is shown in chat as it goes. A post of the same kind is confirmed with its batch: the action-item issues of one postmortem are previewed together and confirmed once. A blanket "post everything, don't ask" authorizes the kinds the agent lists back in one line at that point; the line names any post it will still show first.
+- **Authorization.** A post goes out on any clear affirmative to its draft, or without a second question when the user named that post up front, as [approval.md](../routing/references/contracts/approval.md) says. A named post that a skill previews first is the exception, as [approval.md](../routing/references/contracts/approval.md#a-named-post-a-skill-previews-first) says. Naming a kind of post counts only for that kind: "post the cadence updates on the tracking issue" authorizes each cadence update for this incident (shown in chat as it goes), and does **not** authorize creating the tracking issue itself—still show the tracking issue draft for a yes. A post of the same kind is confirmed with its batch: the action-item issues of one postmortem are previewed together and confirmed once. A blanket "post everything, don't ask" authorizes the kinds the agent lists back in one line at that point; the line names any post it will still show first.
 - **Outbound checks.** Before any post, run the [outbound checks](../gh/references/posting-envelope.md#outbound-checks). The envelope's marker and footer rules apply to every comment and issue body.
 - **A security incident on a public repository is never drafted as an issue or a comment there.** The tracking record and the postmortem go to a draft security advisory, or to a private location the user names, as [security-branch.md](references/response/security-branch.md#where-the-record-lives) says.
-- **Status of a post.** Report a post as made only when this session ran it and captured its URL.
+- **Status of a post.** Report a post as made or cite a URL **only** when this session actually ran the command and captured its URL; otherwise label it drafted/proposed (never claim a simulated post succeeded or invent a returned URL).
 
-These are [safety gates](../routing/references/contracts/gates.md#safety-gate) for posts the user has not authorized and for content the outbound checks withhold: a request does not lift them. When one holds, say once what is held, the harm, and what the user can do instead (post it themselves, or use the private channel). A repeated request gets a one-line pointer back.
+These are [safety gates](../routing/references/contracts/gates.md#safety-gate) for posts the user has not authorized and for content the outbound checks withhold: a request does not lift them. When one holds, say once what is held, the harm, and what the user can do instead (post it themselves, or use the private channel). A repeated request gets **exactly one sentence on one line** pointing back to that alternative (do not restate the harm or repeat the full hold).
 
 The skill cannot act on a timer. It does not promise a cadence post or a drill inject at a later time; it says when the next one is due and drafts it on the user's next message. A run that is [unattended](../routing/references/contracts/unattended.md) posts only what was named up front and returns every other draft in its report.
 
@@ -132,7 +132,7 @@ Never state as verified what this session did not produce and check. This is the
 - **`Last tested`** changes when a drill completed in this session, or when the user gives the date of their team's own drill, recorded as given by them. An audit, an edit, or a partial drill does not change it.
 - **Audit and drill results** report only the checks that ran. A check that could not run is `uncertain` or `pending user decision`.
 - **Posted, opened, merged** is claimed only after the command ran and succeeded in this session.
-- **Timings and test claims** the user states about their own systems are recorded as stated by them ("per the requester: completes in under 30 seconds"). A claim with no source is marked `estimated` and gets a drill action item to confirm it.
+- **Timings and test claims** the user states about their own systems are recorded verbatim as stated by them (keeping every part of their statement, e.g., `"per the requester: tested in production; usually completes in under 30 seconds"`), and repeated in full if pressed without dropping the production-test clause or changing `Last tested`. A claim with no source is marked `estimated` and gets a drill action item to confirm it. Unsupplied postmortem fields stay `<angle-bracket>` placeholders with no source label.
 - **A postmortem** never states a cause the session's evidence contradicts, and never drops a material contributing factor the user has stated; the blameless rule in [shared-principles.md](references/shared-principles.md#blameless-framing) reframes such a factor in terms of the system.
 
 When it holds, say once what is held, the harm, and the alternative: the user can edit and publish their own text.

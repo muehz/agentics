@@ -35,7 +35,7 @@ First match wins. On explicit invocation ([forwarding.md](../routing/references/
 | 7     | Separate checkout wanted before coding                                                    | better elsewhere | `git` (`worktrees`) |
 | 8     | Otherwise                                                                                 | runs             | execute             |
 
-New content re-reads from row 1; a plain repeat gets the same one-line forward, never a refusal script.
+New content re-reads from row 1; a plain repeat gets the same one-line forward, never a refusal script. When multiple requests or pushback turns are presented, render each concrete forward explicitly rather than summarizing.
 
 ## Entry points
 
@@ -49,7 +49,7 @@ Accepts a plan (`/agentics:execute [auto [pause]|pair|arena] <plan> [S<n>]`), a 
 
 Every mode runs the same model reviews; user reviews never replace them. Load [mode-procedures.md](references/mode-procedures.md#modes) and [execution-rubrics.md](references/execution-rubrics.md#modes-comparison).
 
-**The controller rule.** In `auto` and `arena`, only subagents write code. The controller writes only flow artifacts (`state.tsv`, `## Divergences`, `## Standing orders`) and host task records, making only task, red, and `git revert --no-edit <sha>` commits. Findings, failed verifications, and harness repairs go to an implementer. A user request for the controller to patch code is a process gate ([gates.md](../routing/references/contracts/gates.md#process-gate)): state cost once; on the next asking reply, patch, commit, and log `commit user` + `waive controller-rule`. `fix` is the exception ([fix-entry.md](references/fix-entry.md)).
+**The controller rule.** In `auto` and `arena`, only subagents write code. The controller writes only flow artifacts (`state.tsv`, `## Divergences`, `## Standing orders`) and host task records, making only task, red, and `git revert --no-edit <sha>` commits. Findings, failed verifications, and harness repairs go to an implementer. A user request for the controller to patch code is a process gate ([gates.md](../routing/references/contracts/gates.md#process-gate)): state cost once; on the next asking reply, patch, commit, and log `commit user` (evidence `auto:<sha>`) + `waive controller-rule`. `fix` is the exception ([fix-entry.md](references/fix-entry.md)).
 
 ## Mode selection & dispatch preview
 
@@ -57,7 +57,7 @@ Pick first match (no mode menu): (1) explicit argument or request for `pair`, `a
 
 **Dispatch permission.** Typed `/agentics:execute` grants dispatch on request-gated surfaces; `routing`-selected or forwarded runs ask once ([surface dispatch](../routing/references/surface-dispatch.md#dispatch-permission)), stopping per [Native dispatch by surface](#native-dispatch-by-surface) on no.
 
-**Dispatch preview.** Print once in Step 1 (before native task load, without waiting) with plan path, proportionality, waves/tiers/demotions, review groups & cycle check, verification preflight, Stage 1 statuses, total dispatch count, and selection records ([model ladder](../routing/references/model-ladders.md#unavailable-selections-and-reporting)). Checklist: [execution-rubrics.md](references/execution-rubrics.md#dispatch-preview).
+**Dispatch preview.** Print once in Step 1 (before native task load, without waiting) with concrete computed values (no placeholder tokens): plan path, proportionality, waves/tiers/demotions, review groups & cycle check, verification preflight, Stage 1 statuses, total dispatch count, and selection records ([model ladder](../routing/references/model-ladders.md#unavailable-selections-and-reporting)). Checklist: [execution-rubrics.md](references/execution-rubrics.md#dispatch-preview).
 
 **Demotions never block.** A claimed-parallel group failing independence runs as one-task waves in `auto`, stays one review group, and logs `demote wave-<N>`. Overriding is a process gate: state finding and cost once; on the next asking reply, run parallel with `waive "independence <group>"` (shared-file tasks still run serially).
 
@@ -102,10 +102,10 @@ Every claimed-parallel pair must pass all five checks (no shared writes, no outp
 Load [mode-procedures.md](references/mode-procedures.md#step-2-execute-waves) before wave 1; load each prompt on first dispatch (never from memory): [spec-reviewer-prompt.md](references/spec-reviewer-prompt.md), [implementer-prompt.md](references/implementer-prompt.md), [code-quality-reviewer-prompt.md](references/code-quality-reviewer-prompt.md), [aggregate-reviewer-prompt.md](references/aggregate-reviewer-prompt.md) ([review-gated-process.md](references/review-gated-process.md), [controller-example.md](references/controller-example.md)).
 
 - **Fresh context & propagation:** inline full task contract and acceptance criteria (bulk grounding as pointers), full `## Standing Orders` verbatim (or `None recorded.`), and open divergences fenced as data. Mid-run changes: constraint -> `order` row; rule exception -> [user-authorized divergence](references/plan-divergence-and-trail.md#user-authorized-divergence); scope/criteria -> `decompose`.
-- **Verify, commit, account:** on `DONE`/`DONE_WITH_CONCERNS`, commit only implementer-changed files with explicit pathspec ([commit contract](../git/references/commit.md#the-commit-contract)), verify yourself ([Running it](../routing/references/repo-conventions.md#running-it)), log `verify <task-id>` `pending` (`auto:<sha>`), then `ok`/`failed` at verdict (never amend; undo with `git revert --no-edit <sha>`). One task commit per task, never push; other commits log `commit <fix|triage|user|housekeeping>` (`auto:<sha>`, [flow-state.md](references/flow-approval-and-audit.md#commit-accounting)). Isolated worktrees: [isolated-packets.md](references/isolated-packets.md).
+- **Verify, commit, account:** load [flow-evidence.md](references/flow-evidence.md) before the first `verify` row. On `DONE`/`DONE_WITH_CONCERNS`, commit only implementer-changed files with explicit pathspec ([commit contract](../git/references/commit.md#the-commit-contract)), verify yourself ([Running it](../routing/references/repo-conventions.md#running-it)), log `verify <task-id>` `pending` (`auto:<sha>`), then `ok`/`failed` with `commit=<sha> patch-id=<id>` at verdict (never amend; undo via `git revert --no-edit <sha>`). One task commit per task, never push; other commits log `commit <fix|triage|user|housekeeping>` (`auto:<sha>`, [flow-state.md](references/flow-approval-and-audit.md#commit-accounting)). Isolated worktrees: [isolated-packets.md](references/isolated-packets.md).
 - **Red commit (bug fix):** shared worktree runs `RED` leg first, controller confirms failure and commits test files (`verify red-<task-id>`, or no-commit form [flow-state.md](references/flow-evidence.md#evidence-forms) if hook rejects — never bypass hooks), then fix leg.
 - **Snapshot reviews & review groups:** pass explicit commit lists, never live tree/ranges. One fresh quality reviewer per review group once non-stopped tasks are verified or waived (`waive "quality-review <group>"` clears quality review, not aggregate). Log UTC `review` rows (`kind`, `dispatched`, `round`, `blocked`) and `escape` rows for later Critical/Important defects. Statuses: [execution-rubrics.md](references/execution-rubrics.md#implementer-statuses).
-- **Boundary check:** at each review-group boundary and before handoff, check `agx flow status` `unaccounted:` (stack-filtered via [the stack-base resolver](references/plan-divergence-and-trail.md#the-stack-base-resolver); `not computed` != `none`) and diff commit paths vs packet `**Files:**` (`diverge` for extra paths) before releasing dependents. Standalone fixes run [standalone fix commit audit](references/fix-entry.md#standalone-fix-commit-audit) before handoff.
+- **Boundary check:** at each review-group boundary and before handoff, check `agx flow status` `unaccounted:` (stack-filtered via [the stack-base resolver](references/plan-divergence-and-trail.md#the-stack-base-resolver); `not computed` != `none`) and diff commit paths vs packet `**Files:**` (`diverge` with target `<task-id> file scope` for extra paths) before releasing dependents. Standalone fixes run [standalone fix commit audit](references/fix-entry.md#standalone-fix-commit-audit) before handoff.
 - **Wave end & state:** run wave integration verification (`verify wave-<N>`), skeleton Outcome proof, and plan divergence before releasing later tasks. Read/close no tracker issues; update host task tool per `native-plan-projection.md`.
 
 ### Stage 1 dispatch rule
@@ -114,7 +114,7 @@ Reviews task packets against the approved plan at Deep tier before implementatio
 
 ### Aggregate wave review
 
-Runs at each review-group boundary after quality review clears; 2+ mutually independent groups also get one final integration review. Load [aggregate-wave-review.md](references/aggregate-wave-review.md) before the first boundary.
+Runs at **every** review-group boundary (including middle waves, never only first/last) after quality review clears—each group gets either a `review` (`kind=integration`) return or an evidenced `waive aggregate-review` row before `verify group-<name>`; 2+ mutually independent groups also get one final integration review. Load [aggregate-wave-review.md](references/aggregate-wave-review.md) before the first boundary.
 
 ### Two-strike stop
 
@@ -134,11 +134,11 @@ Two `diverge`/`pivot`/`block` rows, findings, or concerns of the same shape acro
 
 ## Decision trail
 
-Log decisions to the plan folder's `state.tsv` via `agx flow log` ([flow-state.md](../execute/references/flow-state.md), [plan-divergence-and-trail.md](references/plan-divergence-and-trail.md#decision-trail)). Task commits log `verify <task-id>` `pending`; dropped tasks/dependents log `drop <task-id>` `cancelled`; unfinished turns log `pause run`.
+Log decisions to `state.tsv` via `agx flow log` with an explicit one-line `why` on every controller-written row ([flow-state.md](../execute/references/flow-state.md), [plan-divergence-and-trail.md](references/plan-divergence-and-trail.md#decision-trail)). Task commits log `verify <task-id>` `pending` (`auto:<sha>`), then close `ok`/`failed` (`commit=<sha> patch-id=<id>`) when the group verdict renders; dropped tasks log `drop <task-id>` `cancelled`; unfinished turns log `pause run`.
 
 ## Model tiers
 
-Apply [model ladder](../routing/references/model-ladders.md) without restating it. Stage 1 = Deep; quality/aggregate/final = Deep, escalating to Max if the group had a Deep implementer (Standard only when all tasks are Light with `**Packet review:** no`). Keep a separate reviewer per review group. Rubric: [execution-rubrics.md](references/execution-rubrics.md#model-tiers).
+Load [model ladder](../routing/references/model-ladders.md) before resolving any tier, model, or effort (never reconstruct from memory; distinguish user-requested effort overrides from model base efforts, and report observed dispatch bindings). Stage 1 = Deep; quality/aggregate/final = Deep, escalating to Max if the group had a Deep implementer (Standard only when all tasks are Light with `**Packet review:** no`). Keep a separate reviewer per review group. Rubric: [execution-rubrics.md](references/execution-rubrics.md#model-tiers).
 
 ## Parallel lanes
 
@@ -150,7 +150,7 @@ Dispatch by available tools ([Surface dispatch](../routing/references/surface-di
 
 ## Gates
 
-Safety gates (no status claim without run evidence; plan review before approval; commit hooks and signing) and repository policy (draft PRs, no push/merge) never waive. Process gates state cost once and yield on the next declining reply with one `waive` row (ignoring rows in `flow status` `invalid:`, [flow-state.md](references/flow-commands.md#invalid-rows)): `waive "quality-review <group>"`, `waive "verification <task-ids>"` ([deferred verification](references/verification-preflight.md#deferred-verification)), `waive controller-rule` (+ `commit user`), `waive "independence <group>"`, `waive "deepen <shape>"`, plus Stage 1, wave-pause, and preflight waivers. Table: [execution-rubrics.md](references/execution-rubrics.md#gates).
+Safety gates (no status claim without run evidence; plan review before approval; commit hooks and signing) and repository policy (draft PRs, no push/merge) never waive. Process gates state cost once and yield on the next declining reply with one `waive` row (ignoring rows in `flow status` `invalid:`, [flow-state.md](references/flow-commands.md#invalid-rows)): `waive "quality-review <group>"`, `waive "verification <task-ids>"` ([deferred verification](references/verification-preflight.md#deferred-verification)), `waive controller-rule` (+ `commit user`), `waive "independence <group>"`, `waive "deepen <shape>"`, plus Stage 1, wave-pause, and preflight waivers (carrying the unverified-waiver notice in the dispatch preview, task packets, and run report). Table: [execution-rubrics.md](references/execution-rubrics.md#gates).
 
 **The completion handoff.** After the final **boundary check**, offer `gate` and wait (naming waived unverified/unreviewed tasks). If close-out was already named ("commit, push, and open a draft PR", "then gate it"), run `gate` directly; earlier draft-PR/push naming answers only the plain draft proposal, never `gh stack` ([gate's Answers](../gate/references/branch/propose-and-execute.md#answers)). Execute never pushes; "not yet" logs `pause`.
 
@@ -173,18 +173,18 @@ Upstream: `decompose`, `diagnose` ([A diagnosed fix](#a-diagnosed-fix)). Mid-run
 
 ## References
 
-- [mode-procedures.md](references/mode-procedures.md): mode rules, Step 0–2 mechanics, boundary check, red commit, settled-design escalation.
-- [execution-rubrics.md](references/execution-rubrics.md): entry points, modes, preview/independence checklists, statuses, tiers, gates.
-- [aggregate-reviewer-prompt.md](references/aggregate-reviewer-prompt.md): aggregate reviewer prompt and delta.
-- [aggregate-wave-review.md](references/aggregate-wave-review.md): group-boundary and final integration review.
-- [arena-mode.md](references/arena-mode.md): bakeoff phases, cost preview, re-run, synthesis.
-- [code-quality-reviewer-prompt.md](references/code-quality-reviewer-prompt.md): review-group quality reviewer prompt.
+- [mode-procedures.md](references/mode-procedures.md): Steps 0–2, boundary check, red commit, escalation.
+- [execution-rubrics.md](references/execution-rubrics.md): entries, modes, checklists, statuses, tiers, gates.
+- [aggregate-reviewer-prompt.md](references/aggregate-reviewer-prompt.md): aggregate reviewer prompt.
+- [aggregate-wave-review.md](references/aggregate-wave-review.md): group-boundary and final review.
+- [arena-mode.md](references/arena-mode.md): bakeoff phases, preview, re-run, synthesis.
+- [code-quality-reviewer-prompt.md](references/code-quality-reviewer-prompt.md): quality reviewer prompt.
 - [controller-example.md](references/controller-example.md): worked `auto` run.
 - [fix-entry.md](references/fix-entry.md): `/agentics:execute fix`, records, audit.
-- [flow-state.md](references/flow-state.md): flow-state layout, storage, events, operands, and phase selection.
-- [flow-evidence.md](references/flow-evidence.md): evidence forms, `verify` validation, rows each skill writes, pre-v2 notes.
-- [flow-approval-and-audit.md](references/flow-approval-and-audit.md): approval guard, reapproval, clone ledger, commit accounting, branch audit.
-- [flow-commands.md](references/flow-commands.md): `agx flow` commands, exit codes, flow lookup, `flow status`, slice scope.
+- [flow-state.md](references/flow-state.md): flow layout, storage, events, phase selection.
+- [flow-evidence.md](references/flow-evidence.md): evidence forms, `verify` validation, per-skill rows.
+- [flow-approval-and-audit.md](references/flow-approval-and-audit.md): approval guard, reapproval, commit accounting, branch audit.
+- [flow-commands.md](references/flow-commands.md): `agx flow` commands, exits, lookup, `flow status`.
 - [implementer-prompt.md](references/implementer-prompt.md): implementer prompt, red leg, sketch rule.
 - [isolated-packets.md](references/isolated-packets.md): isolated worktree commits, release, repair, cleanup.
 - [parallel-lanes.md](references/parallel-lanes.md): lanes, launch packets, union rule, native dispatch.
