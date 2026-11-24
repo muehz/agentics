@@ -176,10 +176,11 @@ End the aggregate with exactly one `Lanes:` line, after the one-line summary. It
 
     Lanes: standards <state> | spec <state> | security <state>
 
-Each `<state>` is `run`, `skipped: <reason>`, or `failed: <reason>`. The security state adds `(fast)` or `(full)` after
-`run`. A lane that was dispatched and returned nothing is `failed: no result`, never `run`. The forms for an omitted
-lane are `Standards: failed: <reason>.`, `Spec: skipped — no spec available.`, and `Security: not run. <reason>`. A
-report without the `Lanes:` line is incomplete, and no consumer reads it as a full review.
+Each `<state>` is `run`, `skipped: <reason>`, or `failed: <reason>`. The security state adds `(fast)` or `(full)` only
+after `run`, never after `skipped:` or `failed:`. A lane that was dispatched and returned nothing is
+`failed: no result`, never `run` and never `failed (fast)`. The forms for an omitted lane are
+`Standards: failed: <reason>.`, `Spec: skipped — no spec available.`, and `Security: not run. <reason>`. A report
+without the `Lanes:` line is incomplete, and no consumer reads it as a full review.
 
 **The security limits statement.** Carry it into the report verbatim. It is the one part of the aggregate that you must
 never summarize away. It matters most when the Security axis found nothing. A `## Security` heading with no findings and

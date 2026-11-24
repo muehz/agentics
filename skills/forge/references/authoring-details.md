@@ -23,10 +23,19 @@ guess its content:
    decide it, and ask for the value. Honor any limit the user sets on clarification turns.
 2. **Scope:** When the user asks to see the intended change first, show a summary and wait. After the user approves the
    scope, proceed, and record each remaining nonblocking gap as an open requirement.
-3. **Delivery:** Deliver what the user asked for at the stage they authorized: the complete asset, shown in full or as a
-   diff, and written to the permitted files after the exact-text yes required by
-   [Shared rules](../SKILL.md#shared-rules). A plan, proposal, or checklist does not satisfy a request to implement an
-   asset. When validation is unavailable, say so.
+3. **Delivery:** Deliver what the user asked for at the stage they authorized: the complete, verbatim asset (full file,
+   exact diff, or runnable server/hook code with zero elision markers like `...`, `(unchanged)`, or comment-only
+   function bodies), shown in the same turn as the write-confirmation question and written to the permitted files only
+   after the exact-text yes required by [Shared rules](../SKILL.md#shared-rules). When revising one section of an
+   existing asset, keep all unrelated sections untouched. For Linux MCP file reads under a mutable root, write actual
+   handle-relative `open`/`openat` (`O_DIRECTORY | O_NOFOLLOW | O_NONBLOCK`), `fstat` (`isFile()` and `nlink === 1`),
+   and handle-read code—never comment-only placeholders. In simulated eval iterations where the user authorized a
+   revision or reusable helper, deliver the complete simulated edit and consolidated helper code verbatim (labeled
+   unapplied) rather than only proposing them. A plan, proposal, or checklist does not satisfy a request to implement an
+   asset. When validation is unavailable, say so. When authoring a skill with a completeness guarantee (such as never
+   dropping or inventing items), include explicit pagination/limit handling plus an independent count/ID verification
+   against the source. For Linux handle-relative opens, use a real supported API (e.g., native `fs.open` / `openat`
+   binding) and close every intermediate directory handle in `finally`.
 4. **Hook specifics:** A hook asset must state the event it runs on, the input it reads, what its exit codes or output
    do on this host, and whether a fault in the script lets the call proceed (fail-open) or blocks it (fail-closed). Test
    with recorded sample events before shipping: one it blocks, one it allows, and a malformed one. When no event can be

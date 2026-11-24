@@ -156,9 +156,10 @@ Run the same structure in a shared document over 24–48 hours. The postmortem o
 3. **Cross-link the original tracking issue** with a comment that links the postmortem, when a tracking issue exists.
    The comment is a separate post: draft it and post it under the same rule, on its own clear affirmative or because the
    user named the cross-link up front. Approving the postmortem does not authorize it.
-4. **Track action items.** Draft one GitHub issue for each action item, preview them together, and post them on one
-   confirmation. Link the postmortem to each. An `n/a: <reason>` line in place of the regression test or eval gets no
-   issue. Its Issue cell stays "—". On a security incident the action items go where the postmortem went, by
+4. **Track action items.** Draft one GitHub issue for each action item, previewing every promised draft in a fenced
+   block in the same reply (never promise a draft for later), and post them on one confirmation. Link the postmortem to
+   each. An `n/a: <reason>` line in place of the regression test or eval gets no issue. Its Issue cell stays "—". On a
+   security incident the action items go where the postmortem went, by
    [Where the record lives](../response/security-branch.md#where-the-record-lives): no action-item issue is drafted on a
    public, internal or unreadable repository. An item the outbound checks withhold is recorded in that location instead,
    and its Issue cell names the location.

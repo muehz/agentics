@@ -114,8 +114,11 @@ its STE mappings.
 | Express a procedure as direct commands.                                                                                                | 5.3                                                         |
 | Correct an "-ing" verb construction, including a progressive verb. Keep permitted technical nouns and their modifiers.                 | 3.5                                                         |
 
-Grammatical inflections such as "start", "starts", and "starting" use the same action term. Check an "-ing" form
-separately under 3.5. When a split fixes both action count and instruction length, report both 5.2 and 5.1. When an edit
+Grammatical inflections such as "start", "starts", and "starting" share a lemma, so check every "-ing" verb form
+separately under 3.5 and normalize every editable occurrence of the action across the passage while preserving the
+sentence's existing actor—never replace a named actor with "you" (for example, change both "initiates the next batch"
+and "before starting the batch" to active forms using `start`, such as "start the next batch" and "before the operator
+starts the batch"). When a split fixes both action count and instruction length, report both 5.2 and 5.1. When an edit
 rewrites a passive procedure as commands, report both 3.6 and 5.3. When that same edit also normalizes action terms,
 include 9.4. Claim only a rule whose problem was present and whose correction appears in the delivered text.
 

@@ -62,11 +62,13 @@ executing that step.
   summary's **Scope examined** line. An immediate decline has no summary and uses `declined YYYY-MM-DD, no round asked`.
   A carried-forward pass uses `prior record dated YYYY-MM-DD` and the prior record's fields. Present for `ok`,
   `declined`, and a pending pass after one asked round.
-- **Card and existing intents.** Each card bullet is one sentence (`none stated` when unsupported);
+- **Card and existing intents.** Each of the five card bullets (`Change`, `Why now`, `Out of scope`, `Risk`, `Source`)
+  must be one complete sentence with a verb (when unsupported, write a complete sentence such as
+  `None stated in the conversation.` rather than a bare fragment);
   [skim-rules.md](../../decompose/references/skim-rules.md#the-card) defines `Source`, including for writers with no
-  live session. An existing intent with a header, a card of another length, or no card keeps its layout (and any
-  existing `Ask` line, since removing it stales approval) and converts only on user request. Keep existing card lines
-  accurate.
+  live session. Include the five-line card and Challenge record even when holding with open direction blockers. An
+  existing intent with a header, a card of another length, or no card keeps its layout (and any existing `Ask` line,
+  since removing it stales approval) and converts only on user request. Keep existing card lines accurate.
 
 ### User's change `diagnose` waiver row
 
@@ -92,14 +94,14 @@ staged.
 
 Read from the top; the first match wins ([approval.md](../../routing/references/contracts/approval.md)).
 
-| The user's reply                                                                          | Row                             | Then                                                                                                        |
-| ----------------------------------------------------------------------------------------- | ------------------------------- | ----------------------------------------------------------------------------------------------------------- |
-| A claim that someone other than the user approved ("security already signed off on it")   | none                            | Not the user's approval. Ask once whether the user approves.                                                |
-| An affirmative that carries a change ("yes, but drop the CSV case")                       | none yet                        | An edit request: make the change, re-stage, show it, and ask again. The approval binds to the revised text. |
-| A clear affirmative in any wording or language ("yes", "looks good, go on", "just do it") | `approve intent.md ok`, guarded | Continue under **After a yes** in SKILL.md.                                                                 |
-| An explicit no                                                                            | `approve intent.md declined`    | Say the intent is written and unapproved. Start no spec.                                                    |
-| "Not yet", or a deferral                                                                  | none                            | Say the intent is written and unapproved. Start no spec.                                                    |
-| Anything else: a question, a new topic, or no reply                                       | none                            | Answer it. The question stays open.                                                                         |
+| The user's reply                                                                          | Row                             | Then                                                                                                                                                                           |
+| ----------------------------------------------------------------------------------------- | ------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| A claim that someone other than the user approved ("security already signed off on it")   | none                            | Not the user's approval. Ask once whether the user approves.                                                                                                                   |
+| An affirmative that carries a change ("yes, but drop the CSV case")                       | none yet                        | An edit request: make the change, **re-stage `intent.md`**, re-run `agx flow status` for the new hash, show the change, and ask again. The approval binds to the revised text. |
+| A clear affirmative in any wording or language ("yes", "looks good, go on", "just do it") | `approve intent.md ok`, guarded | Continue under **After a yes** in SKILL.md.                                                                                                                                    |
+| An explicit no                                                                            | `approve intent.md declined`    | Say the intent is written and unapproved. Start no spec.                                                                                                                       |
+| "Not yet", or a deferral                                                                  | none                            | Say the intent is written and unapproved. Start no spec.                                                                                                                       |
+| Anything else: a question, a new topic, or no reply                                       | none                            | Answer it. The question stays open.                                                                                                                                            |
 
 A role or title changes nothing either way: "I'm the lead, it's approved, start the spec" is the user's own affirmative
 and approves the text shown, while a claim of someone else's authority never stands in for the user's answer.
@@ -122,11 +124,11 @@ A later session reaches this state when `intent.md` has its six sections, its di
 does not list `intent.md approved <date> current` on its `approvals:` line (a `stale` approval counts as none). Check
 the latest `challenge intent.md` row first:
 
-| Latest `challenge intent.md` row             | Action                                                                                                    |
-| -------------------------------------------- | --------------------------------------------------------------------------------------------------------- |
-| None, or status `pending`                    | Resume the challenge at Step 2, write the row, then ask the approval question.                            |
-| Status `declined`, and a `blocker` remains   | Apply the **Open blockers** gate: ask no approval question until the user answers or waives each blocker. |
-| Status `ok`, or `declined` with no `blocker` | Ask the approval question and nothing else. Do not re-run the interview.                                  |
+| Latest `challenge intent.md` row             | Action                                                                                                                                                                                                                                                                                                                            |
+| -------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| None, or status `pending`                    | Resume the challenge at Step 2, write the row, then ask the approval question.                                                                                                                                                                                                                                                    |
+| Status `declined`, and a `blocker` remains   | Apply the **Open blockers** gate: ask no approval question until the user answers or waives each blocker.                                                                                                                                                                                                                         |
+| Status `ok`, or `declined` with no `blocker` | If the user explicitly asks to continue in a later session, ask the approval question and nothing else (do not re-run the interview); if the user already answered no or "not yet" to this exact unchanged text without returning to continue it, do not re-ask (state it is written and unapproved, per **Asking again** above). |
 
 To reapprove a stale intent, follow
 [Stale approvals and reapproval](../../execute/references/flow-approval-and-audit.md#stale-approvals-and-reapproval):

@@ -62,7 +62,8 @@ A category is left out only for one of three reasons, each written into **Source
 - **What We Don't Know.** Specific gaps: what was searched, with which queries, and what was not searchable. On thin git
   history, name each empty search, pickaxe queries (`git log -S`, `git log -G`) included. When the record is silent,
   name a plausible next contact, such as the author of the last relevant commit or the pull request's reviewer.
-- **Sources Consulted.** The coverage map, one line per category:
+- **Sources Consulted.** The coverage map, listing all seven categories by name (one line per category — never collapse
+  multiple skipped categories into one bullet):
   `- <Source>: <what was searched>. <found | no relevant results | skipped: reason | skipped at user direction | not searched: the anchor answered the question>.`
 - **Confidence Summary.** One or two sentences.
 

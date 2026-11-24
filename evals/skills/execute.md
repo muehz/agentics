@@ -2068,9 +2068,16 @@ fails twice as this pattern instead of the Two-strike stop.
 
 ### Phase append: execute carries the previous list into tdd
 
-Starting state: tdd selected execute as Task 2's delivery path in an approved, current plan. The fixture supplies the
-actual todo list returned by the routing bank's Phase append beat. Task 2 is the same threshold behavior. Another item
-still waits for the report format. The selected run is auto and the approved plan has a runnable verification command.
+Starting state: tdd selected execute as Task 2's delivery path in an approved, current plan. The prior todo list
+returned by routing is:
+
+1. `[completed]` Routing: classify request and select execution phase
+2. `[skipped]` Routing: optional docs check (skipped: not requested)
+3. `[blocked]` Resolve open report format question — blocked on user answer ("Should the summary emit JSON or
+   Markdown?")
+
+Task 2 is the same threshold behavior (reject values below zero). The selected run is auto and the approved plan has a
+runnable verification command.
 
 ```text
 Run Task 2 test-first with the plan's existing scope. Show the resulting progress list before the test-first
