@@ -322,9 +322,13 @@ git commit --file "$message_file"
 passphrase prompt. Do these steps:
 
 1. Stop the run. Leave the index staged as it is.
-2. Give the user an inline, immediately copy-pasteable `git commit -m '<concrete subject>' -m '<concrete body>'` command
-   containing the complete actual commit subject and body drafted from the diff (never `--file "$message_file"`,
-   `<subject>`, or `<body from the message draft>`), to run in their own terminal, where the prompt can appear.
+2. Give the user an inline, immediately copy-pasteable retry of the failed `git commit` command for their own terminal
+   (where the prompt can appear), preserving every original option, scope flag, and pathspec (such as
+   `--only -- <paths>` for user-named paths) and replacing only `--file "$message_file"` with
+   `-m '<concrete subject>' -m '<concrete body>'` containing the complete actual commit subject and body drafted from
+   the diff (for example, `git commit -m '<concrete subject>' -m '<concrete body>'`, or
+   `git commit --only -m '<concrete subject>' -m '<concrete body>' -- <paths>` for user-named paths; never
+   `--file "$message_file"`, `<subject>`, or `<body from the message draft>`).
 3. Do not run the commit again with signing turned off, and do not change a signing setting.
 4. Continue from step 6 once the user says the commit exists.
 
