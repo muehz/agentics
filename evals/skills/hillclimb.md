@@ -138,8 +138,8 @@ direction, and target proposal.
 Assertions:
 
 - **HC-E1:** Runs hillclimb (does not forward to `diagnose`) and starts no optimization loop on the unmeasured goal.
-- **HC-E2:** Proposes a concrete metric, direction, and target together in one ❓/➡️ decision question and states that a
-  reproducible slow case comes before any harness.
+- **HC-E2:** Proposes a concrete metric, direction, and target together in one ❓/➡️ decision question, states that a
+  reproducible slow case comes before any harness, and names what starts the climb if no evidence exists yet.
 
 ### The noise never settles
 
