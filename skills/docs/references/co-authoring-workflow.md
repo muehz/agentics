@@ -23,7 +23,7 @@ document type.
 - **Constraints:** deadlines, review gates, or context the draft must respect.
 
 In the same message, tell the user they can answer in shorthand ("Q1: platform leads, Q2: none"), dump information in
-any form, or end the round and take the recommended answers.
+any form, or explicitly accept the recommended answers (unanswered questions otherwise stay `[open: <what's missing>]`).
 
 **If the user provides a template:** Read it. Then build the document on its structure.
 
@@ -48,9 +48,10 @@ them as one round, each with a ➡️ recommendation. Let the user answer in sho
 
 - "Q1: yes, Q2: see the wiki page, Q3: no because backwards compat"
 
-Ask a follow-up only when an answer is ambiguous. Do not open a fresh round. A gap the round does not close becomes an
-`[open: …]` marker in the Stage 2 draft. A question the user left unanswered by ending the round takes its recommended
-answer, and the draft's review message says which answers were assumed.
+Ask a follow-up only when an answer is ambiguous. Do not open a fresh round. Any clarifying question or gap that the
+user has not answered stays as an inline `[open: <what's missing>]` marker in the Stage 2 draft—do not fill it with an
+assumed answer unless the user explicitly tells you to take the recommended answers (in which case the draft's review
+message states which answers were assumed).
 
 **Exit condition:** Context is sufficient when you can ask about edge cases and trade-offs, and the user does not need
 to explain the basics.
@@ -148,7 +149,8 @@ Generate 5–10 questions that real readers would ask when they first find this 
 
 The subagent answers every question from the document content alone. It has no context from the authoring conversation.
 
-Summarize what the fresh reader got right and wrong for each question.
+In the Stage 3 report (whether from a fresh subagent or a `Simulated fresh-read`), explicitly summarize **both** what
+the reader got **right** and what it got **wrong** (or could not answer) across the predicted questions.
 
 ### Step 3: additional checks
 
@@ -216,7 +218,10 @@ Detailed step rules and reporting contract for [Unslop mode](../SKILL.md#unslop-
 
 ### The change report
 
-For each catalog pattern and each Layer 3 rule the revision fixed, give one `Before:` and `After:` pair in fenced text
-blocks at column zero, quoting the original and the delivered text exactly. Name the patterns and rule numbers each pair
-shows, and only those. A fix counts only when the problem is in the original and gone from the final text. Patterns
-found only in protected text are not reported. If you skipped the STE pass, say so.
+Give **one separate entry per cited catalog pattern number and per cited Layer 3 STE rule number**—each naming the
+verified pattern or rule number and its short rule text from [slop-patterns.md](slop-patterns.md) or
+[technical-writing.md](technical-writing.md#layer-3-make-statements-load-one-at-a-time-ste), followed by its own
+`Before:` and `After:` fenced text blocks at column zero quoting the original and the delivered text exactly. Never
+bundle multiple pattern numbers or multiple STE rule numbers under a single shared `Before:`/`After:` pair. A fix counts
+only when the problem is in the original and gone from the final text. Patterns found only in protected text are not
+reported. Do not claim full STE compliance. If you skipped the STE pass, say so.
