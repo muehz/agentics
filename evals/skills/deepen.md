@@ -1,6 +1,6 @@
 # Pinned eval scenarios: deepen
 
-Bank version 10 (2026-11-24): adds explicit per-sub-scenario `Assertions:` inventories (`DP-H1..DP-A4`), explicit `###`
+Bank version 10 (2026-11-24): adds explicit per-sub-scenario `Assertions:` inventories (`DP-H1..DP-A8`), explicit `###`
 headings on lead scenarios, inline fixture diff code for s14 (`src/export/wrapper.ts`), and inline fixture summaries in
 sliced cross-category references (`Resume from a recap`, `The candidate pick is skipped twice`,
 `A bare goal pressed again`). Scores are not comparable to v9.
@@ -184,7 +184,8 @@ Assertions:
 
 - **DP-E1:** take the design-time path with no exploration and no candidate list. Separate the two concerns the user has
   conflated: a public provider port, which with one real source the skill recommends against (one adapter means a
-  hypothetical seam), and testability, which needs no public port: pass the rate lookup in ("acce...
+  hypothetical seam), and testability, which needs no public port: pass the rate lookup in ("accept dependencies, don't
+  create them"), keep the math pure and returning a result, use an internal seam, and apply the deletion test forward.
 
 ### Absorbed convention-discovery card: GLOSSARY.md layout
 
@@ -231,14 +232,18 @@ Assertions:
 Fixture facts: a `src/billing/` module; no glossary, no context map, no decision-record directory, no `AGENTS.md`
 pointer.
 
-Correct behavior: resolve to the defaults and create a root `CONTEXT.md` only when recording the settled term; create no
-decision-record directory. Creating `GLOSSARY.md`, `docs/adr/`, or any glossary before the term is settled is a failure.
+Correct behavior: take the language path, resolve to the default root `CONTEXT.md`, and write a concrete one-sentence
+draft entry for "settlement" (marked to confirm) into root `CONTEXT.md` in the same turn alongside any sharpening
+question, without asking permission first and without presenting the draft as already settled; create no decision-record
+directory. Creating `GLOSSARY.md` or `docs/adr/`, leaving a blank placeholder, deferring the authorized same-turn draft,
+or marking an unconfirmed draft as settled is a failure.
 
 Assertions:
 
-- **DP-E4:** resolve to the defaults and create a root `CONTEXT.md` only when recording the settled term; create no
-  decision-record directory. Creating `GLOSSARY.md`, `docs/adr/`, or any glossary before the term is settled is a
-  failure.
+- **DP-E4:** Resolves to the default root `CONTEXT.md` on the language path, writes a concrete one-sentence draft entry
+  for "settlement" (marked to confirm, not as an already-settled definition) into root `CONTEXT.md` in the same turn
+  alongside any sharpening question without asking permission first, and creates neither `GLOSSARY.md` nor any
+  decision-record directory (`docs/adr/`).
 
 ### Absorbed convention-discovery card: root context map
 
@@ -337,7 +342,8 @@ Assertions:
 
 - **DP-E9:** before settling the interface, produce at least two structurally distinct whole-shape designs, through two
   to four parallel sub-agents with different constraints, screen each against the four red flags (shallow module,
-  information leakage, temporal decomposition, pass-through method), name any flag found, compare ...
+  information leakage, temporal decomposition, pass-through method), name any flag found, compare the survivors on
+  depth, and recommend one.
 
 ### The pause recap
 
@@ -449,18 +455,22 @@ The caller asks for the refactor path on a newly introduced wrapper. The fixture
 `src/export/wrapper.ts` (sole caller: `src/cli/export.ts:18`; hides no policy; `runExport` in `src/export/run.ts` is
 already the public interface):
 
-````diff
+```diff
 +import { runExport, type ExportRequest, type ExportResult } from "./run";
 +export class ExportWrapper {
 +    execute(req: ExportRequest): Promise<ExportResult> {
 +        return runExport(req);
 +    }
 +}
-``` Fixture leaf excerpt (`laziness-protocol` self-test): "1. How many layers must a reader cross to reach the real work? 2. Is there a second caller or a distinct policy hidden behind this layer? If there is one caller and no hidden policy, delete the layer and keep the existing interface."
+```
+
+Fixture leaf excerpt (`laziness-protocol` self-test): "1. How many layers must a reader cross to reach the real work? 2.
+Is there a second caller or a distinct policy hidden behind this layer? If there is one caller and no hidden policy,
+delete the layer and keep the existing interface."
 
 ```text
 Inspect this diff and help me choose what to keep before I commit to a refactor.
-````
+```
 
 Correct behavior: read the actual diff, shortlist `laziness-protocol` because the choice concerns an extra layer, and
 read its leaf in full before citing it. Apply the leaf's questions about layers and a second caller to the diff. A
@@ -576,7 +586,8 @@ Assertions:
 
 - **DP-R4:** take the language path and skip exploration and candidates. Force the precision ("tenant": the Organization
   or the Workspace?) with a ❓ question that proposes a resolution or a split, and record the settled term in
-  `CONTEXT.md` the moment it resolves, without asking first, because the request asked for the glossar...
+  `CONTEXT.md` the moment it resolves, without asking first, because the request asked for the glossary. Close by the
+  language-path done rule: no module design, no settled-design summary, no planning question.
 
 ### Request E: open exploration under an explicit invocation
 
@@ -659,9 +670,14 @@ as a real second adapter; a stub or `// TODO: interface here` offered instead of
 
 Assertions:
 
-- **DP-A1:** recommend a deep sender with a small interface that takes the SES call as an accepted dependency, and state
-  once that a port with one real adapter is a hypothetical seam whose cost is paid on every read, and that adding it
-  when the second adapter is real is cheap.
+- **DP-A1:** Turn 1 recommends a deep sender with a small interface that takes the SES call as an accepted dependency,
+  and states once that a port with one real adapter is a hypothetical seam whose cost is paid on every read and that
+  adding it when the second adapter is real is cheap.
+- **DP-A2:** Turn 2 follows the user's choice by designing the `NotificationChannel` port and the SES adapter behind it
+  (no refusal, no placeholder stub, and no second statement of the cost), and notes in the summary that the user chose
+  the port against the recommendation.
+- **DP-A3:** Turn 3 states plainly that a forecast channel ("probably coming next quarter") is not an existing second
+  adapter, without reversing the port the user already chose and without re-arguing it.
 
 ### The candidate pick is skipped twice
 
@@ -688,8 +704,12 @@ interface on turn 1 before the cost is named.
 
 Assertions:
 
-- **DP-A2:** present the candidates, name the cost of skipping the pick once (the first interface that comes to mind
-  gets locked in, not the one a comparison would find), and ask which candidate to explore.
+- **DP-A4:** Turn 1 presents the candidates, names the cost of skipping the pick once (the first interface that comes to
+  mind gets locked in, not the one a comparison would find), and asks which candidate to explore without proposing an
+  interface yet.
+- **DP-A5:** Turn 2 takes the recommended candidate 1, says which, records the waiver as a `Waived by the user` line in
+  the summary, and continues into the interface design for it without restating the full boundary or asking for a
+  reason.
 
 ### A bare goal pressed again
 
@@ -710,7 +730,8 @@ Failures: asking the same question again; stopping; scanning the whole repo when
 
 Assertions:
 
-- **DP-A3:** take the recommended area, say which, and start the refactor path on it.
+- **DP-A6:** Turn 2 takes the recommended area (`src/orders/`), says which, and starts the refactor path on it without
+  re-asking the question or scanning the whole repo.
 
 ### Absorbed convention-discovery card: two glossaries
 
@@ -734,6 +755,8 @@ Failures: writing to either file before turn 2; creating a third file; asking th
 
 Assertions:
 
-- **DP-A4:** report the conflict naming both files by path and ask once, as a ❓ question with a ➡️ recommendation,
-  which file is canonical. Write nothing to either file before the answer. "Wherever" was said before the user knew
-  there were two files, so it does not settle the conflict.
+- **DP-A7:** Turn 1 reports the conflict naming both files (`GLOSSARY.md` and `CONTEXT.md`) by path and asks once, as a
+  ❓ question with a ➡️ recommendation, which file is canonical, writing nothing to either file before the answer
+  (treating pre-question "wherever" as not settling the conflict).
+- **DP-A8:** Turn 2 treats "Pick one" as an answer, takes the recommended file, says which, and records `"chargeback"`
+  there without re-asking the conflict question or creating a third file.
