@@ -60,9 +60,9 @@ function overLimit(rel: string, bytes: number, limit = SKILL_FILE_BYTE_LIMIT) {
   };
 }
 
-test("both limits are 40,000 bytes", () => {
-  assert.equal(SKILL_MD_BYTE_LIMIT, 40000);
-  assert.equal(SKILL_FILE_BYTE_LIMIT, 40000);
+test("limits are 24,000 bytes for SKILL.md and 30,000 bytes for other skills/ files", () => {
+  assert.equal(SKILL_MD_BYTE_LIMIT, 24000);
+  assert.equal(SKILL_FILE_BYTE_LIMIT, 30000);
 });
 
 test("the family has its own name and rules and runs after skill-shell-data", () => {
@@ -81,8 +81,8 @@ test("the real skills tree is within its limits and the allowlist has no stale e
 });
 
 test("an unlisted SKILL.md over the limit is reported", async () => {
-  assert.deepEqual(await audit({ "skills/a/SKILL.md": 40001 }), [
-    overLimit("skills/a/SKILL.md", 40001, SKILL_MD_BYTE_LIMIT),
+  assert.deepEqual(await audit({ "skills/a/SKILL.md": 24001 }), [
+    overLimit("skills/a/SKILL.md", 24001, SKILL_MD_BYTE_LIMIT),
   ]);
 });
 
@@ -93,11 +93,11 @@ test("every unlisted file kind over the limit is reported, in path order", async
     "skills/a/references/r.md",
   ];
   assert.deepEqual(
-    await audit(Object.fromEntries(files.map((rel) => [rel, 40001]))),
+    await audit(Object.fromEntries(files.map((rel) => [rel, 30001]))),
     [
-      overLimit("skills/a/references/r.md", 40001),
-      overLimit("skills/a/references/tests/t.md", 40001),
-      overLimit("skills/a/run.sh", 40001),
+      overLimit("skills/a/references/r.md", 30001),
+      overLimit("skills/a/references/tests/t.md", 30001),
+      overLimit("skills/a/run.sh", 30001),
     ],
   );
 });
@@ -105,8 +105,8 @@ test("every unlisted file kind over the limit is reported, in path order", async
 test("a file of exactly the limit is not reported", async () => {
   assert.deepEqual(
     await audit({
-      "skills/a/SKILL.md": 40000,
-      "skills/a/references/r.md": 40000,
+      "skills/a/SKILL.md": 24000,
+      "skills/a/references/r.md": 30000,
     }),
     [],
   );
@@ -115,7 +115,7 @@ test("a file of exactly the limit is not reported", async () => {
 test("an untracked file and a file outside skills/ are not sized", async () => {
   assert.deepEqual(
     await audit(
-      { "skills/a/extra.md": 40001, "docs/big.md": 40001 },
+      { "skills/a/extra.md": 30001, "docs/big.md": 30001 },
       { tracked: ["docs/big.md"] },
     ),
     [],
@@ -127,17 +127,17 @@ test("a tracked path missing from the working tree is not sized", async () => {
 });
 
 test("a listed file at its ceiling passes; one byte more is reported", async () => {
-  const allowlist: Entry[] = [{ path: "skills/a/SKILL.md", ceiling: 41000 }];
+  const allowlist: Entry[] = [{ path: "skills/a/SKILL.md", ceiling: 25000 }];
   assert.deepEqual(
-    await audit({ "skills/a/SKILL.md": 41000 }, { allowlist }),
+    await audit({ "skills/a/SKILL.md": 25000 }, { allowlist }),
     [],
   );
-  assert.deepEqual(await audit({ "skills/a/SKILL.md": 41001 }, { allowlist }), [
+  assert.deepEqual(await audit({ "skills/a/SKILL.md": 25001 }, { allowlist }), [
     {
       rule: FILE_SIZE_RULE,
       path: "skills/a/SKILL.md",
       message:
-        "skills/a/SKILL.md is 41001 bytes; its allowlist ceiling is 41000 and the limit is 40000. A listed file may shrink but not grow",
+        "skills/a/SKILL.md is 25001 bytes; its allowlist ceiling is 25000 and the limit is 24000. A listed file may shrink but not grow",
     },
   ]);
 });
@@ -145,10 +145,10 @@ test("a listed file at its ceiling passes; one byte more is reported", async () 
 test("an entry for an untracked path is stale", async () => {
   assert.deepEqual(
     await audit(
-      { "skills/a/gone.md": 41000 },
+      { "skills/a/gone.md": 31000 },
       {
         tracked: [],
-        allowlist: [{ path: "skills/a/gone.md", ceiling: 41000 }],
+        allowlist: [{ path: "skills/a/gone.md", ceiling: 31000 }],
       },
     ),
     [
@@ -164,11 +164,11 @@ test("an entry for an untracked path is stale", async () => {
 test("an entry for a file at or under the limit is stale", async () => {
   assert.deepEqual(
     await audit(
-      { "skills/a/SKILL.md": 39000, "skills/b/SKILL.md": 40000 },
+      { "skills/a/SKILL.md": 23000, "skills/b/SKILL.md": 24000 },
       {
         allowlist: [
-          { path: "skills/a/SKILL.md", ceiling: 41000 },
-          { path: "skills/b/SKILL.md", ceiling: 41000 },
+          { path: "skills/a/SKILL.md", ceiling: 25000 },
+          { path: "skills/b/SKILL.md", ceiling: 25000 },
         ],
       },
     ),
@@ -177,13 +177,13 @@ test("an entry for a file at or under the limit is stale", async () => {
         rule: FILE_SIZE_STALE_RULE,
         path: ALLOWLIST,
         message:
-          "allowlist entry for skills/a/SKILL.md is stale: the file is 39000 bytes, within the limit of 40000. Remove the entry",
+          "allowlist entry for skills/a/SKILL.md is stale: the file is 23000 bytes, within the limit of 24000. Remove the entry",
       },
       {
         rule: FILE_SIZE_STALE_RULE,
         path: ALLOWLIST,
         message:
-          "allowlist entry for skills/b/SKILL.md is stale: the file is 40000 bytes, within the limit of 40000. Remove the entry",
+          "allowlist entry for skills/b/SKILL.md is stale: the file is 24000 bytes, within the limit of 24000. Remove the entry",
       },
     ],
   );
@@ -191,12 +191,12 @@ test("an entry for a file at or under the limit is stale", async () => {
 
 test("findings sort by path, then message", async () => {
   const result = await audit(
-    { "skills/z/SKILL.md": 40001, "skills/a/SKILL.md": 39000 },
+    { "skills/z/SKILL.md": 24001, "skills/a/SKILL.md": 23000 },
     {
       tracked: ["skills/z/SKILL.md", "skills/a/SKILL.md"],
       allowlist: [
-        { path: "skills/a/SKILL.md", ceiling: 41000 },
-        { path: "skills/b/gone.md", ceiling: 41000 },
+        { path: "skills/a/SKILL.md", ceiling: 25000 },
+        { path: "skills/b/gone.md", ceiling: 31000 },
       ],
     },
   );
@@ -205,7 +205,7 @@ test("findings sort by path, then message", async () => {
     [
       [ALLOWLIST, "allowlist entry for skills/a/SKILL.md is"],
       [ALLOWLIST, "allowlist entry for skills/b/gone.md nam"],
-      ["skills/z/SKILL.md", "skills/z/SKILL.md is 40001 bytes; the li"],
+      ["skills/z/SKILL.md", "skills/z/SKILL.md is 24001 bytes; the li"],
     ],
   );
 });
@@ -219,36 +219,41 @@ for (const [label, allowlist, reason] of [
   ],
   [
     "has an entry without a path",
-    [{ ceiling: 41000 }],
+    [{ ceiling: 25000 }],
     "entry 0 needs a string path and an integer ceiling",
   ],
   [
     "has an entry with a non-integer ceiling",
-    [{ path: "skills/a/SKILL.md", ceiling: 41000.5 }],
+    [{ path: "skills/a/SKILL.md", ceiling: 25000.5 }],
     "entry 0 needs a string path and an integer ceiling",
   ],
   [
     "has an entry outside skills/",
-    [{ path: "docs/a.md", ceiling: 41000 }],
+    [{ path: "docs/a.md", ceiling: 31000 }],
     "entry 0 names a path outside skills/",
   ],
   [
     "has a duplicate path",
     [
-      { path: "skills/a/SKILL.md", ceiling: 41000 },
-      { path: "skills/a/SKILL.md", ceiling: 42000 },
+      { path: "skills/a/SKILL.md", ceiling: 25000 },
+      { path: "skills/a/SKILL.md", ceiling: 26000 },
     ],
     "entry 1 duplicates an earlier entry for skills/a/SKILL.md",
   ],
   [
     "has a ceiling at the limit",
-    [{ path: "skills/a/SKILL.md", ceiling: 40000 }],
-    "entry 0 has ceiling 40000, at or below the limit of 40000",
+    [{ path: "skills/a/SKILL.md", ceiling: 24000 }],
+    "entry 0 has ceiling 24000, at or below the limit of 24000",
+  ],
+  [
+    "has a reference ceiling at the limit",
+    [{ path: "skills/a/references/r.md", ceiling: 30000 }],
+    "entry 0 has ceiling 30000, at or below the limit of 30000",
   ],
 ] as const) {
   test(`an allowlist that ${label} is a read error`, async () => {
     await assert.rejects(
-      async () => audit({ "skills/a/SKILL.md": 41000 }, { allowlist }),
+      async () => audit({ "skills/a/SKILL.md": 25000 }, { allowlist }),
       { message: `skills: ${ALLOWLIST}: ${reason}` },
     );
   });
