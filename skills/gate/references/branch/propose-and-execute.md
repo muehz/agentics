@@ -150,18 +150,24 @@ other way asks first, as [push.md](../../../git/references/push.md#authorization
 
 **Before anything leaves the machine.** Read the repository's visibility, then apply the
 [outbound text rule](../../SKILL.md#cross-cutting-rules-all-four-modes) to every text this option sends: the body, the
-evidence, and each finding sentence.
+evidence, and each finding sentence. On a public repository, withhold any unfixed security finding from the PR body,
+deliver it to the user in this session naming the repository's private channel (GitHub Private Vulnerability Reporting
+or a draft Security Advisory), and report what was withheld.
 
 **The push.** Run git's push workflow for this branch: [push.md](../../../git/references/push.md#before-the-push) and
 its checks, the resolved push remote, and the verification after the push. Never force-push from this option. When the
 branch already has an open pull request, the same workflow pushes to it.
 
 **The pull request.** Create it, or refresh the open one, by `gh`'s
-[Pull request creation workflow](../../../gh/SKILL.md#pull-request-creation-workflow), loaded in this session. That
-workflow owns the draft rule, issue linkage, the merge-settings read, the template, the body contract, and the
+[Pull request creation workflow](../../../gh/SKILL.md#pull-request-creation-workflow), loaded in this session. If `gh`'s
+issue-linkage check asks whether to link an issue or proceed unlinked, stop and wait for the user's answer before
+creating the pull request—never assume the answer and create the PR in the same turn. That workflow owns the draft rule,
+issue linkage, the merge-settings read, the template, the body contract, and the
 [repository policy](../../../gh/SKILL.md#repository-policy) on drafts and merging. The yes to the proposal is the
 authorization for the pull request, so the workflow asks no second confirmation for it, and still resolves linkage as it
-always does. On a host or plan with no draft pull requests, the workflow hands the user the create command.
+always does. On a host or plan with no draft pull requests, or an unsupported forge host, push the branch and show the
+exact create command or URL the user runs next (for example
+`glab mr create --draft --source-branch <branch> --target-branch <base>` or the forge's create-MR/PR URL).
 
 **The evidence gate passes to `gh`.** The before and after are Step 7's command and result on the branch, and a before
 exists only when the same command ran on the base in this session; otherwise the body says no before was run. Beyond

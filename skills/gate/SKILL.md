@@ -45,14 +45,14 @@ names work gate can do, which another skill does better.
 | Merge a pull request or mark it ready                                     | `/agentics:gh`         | cannot           | That is repository policy, which gh states.                                                  |
 | A code review of a diff, with no completion decision                      | `/agentics:review`     | better elsewhere | Gate runs the same review, but adds the tests, the audit and a disposition.                  |
 
-**Cannot.** Carry the input to the owner as [forwarding.md](../routing/references/forwarding.md) describes: announce and
-run a local-only target, ask one yes/no question before a target that writes, pushes or posts, and forward once. After
-a forwarded fix, offer one re-run of gate on the fixed work.
+**Cannot.** Load [forwarding.md](../routing/references/forwarding.md) and carry the input to the owner: announce and
+run a local-only target, ask one yes/no question before a target that writes, pushes or posts (including a merge via
+`gh` or a plain push via `git`), and forward once. After a forwarded fix, offer one re-run of gate on the fixed work.
 
 **Better elsewhere.** Under an explicit invocation, say in one line that the other skill fits better, name it, and run
-gate: `/agentics:gate branch` for a review request on a branch or pull request. Under `/agentics:gate check`, a review
-request first gets that one line naming `/agentics:review`; with no artifact or pass criteria, check mode's own preflight
-line then ends the run. When the model loaded gate on its own, forward it like a cannot row.
+gate: `/agentics:gate branch` for a review request on a diff, branch, or pull request. Under `/agentics:gate check`, a
+review request first gets that one line naming `/agentics:review`; with no artifact or pass criteria, check mode's own
+preflight line then ends the run. When the model loaded gate on its own, forward it like a cannot row.
 
 ## Which mode?
 
@@ -87,7 +87,8 @@ merge?"), and selects no mode, answer it from fresh evidence on the current `HEA
    [repo-conventions.md](../routing/references/repo-conventions.md#verification-command) resolves, as branch mode's
    [Step 7](references/branch/review-and-audit.md#step-7-verify-tests) does. The user's own readiness question is the
    named-verification request that [Running it](../routing/references/repo-conventions.md#running-it) describes, and
-   the answer names the command; the fork-code clause of that rule still decides first.
+   the answer names the command; the fork-code clause of that rule still decides first. If no verification command
+   resolves or cannot run in this session, report tests as unverified rather than assuming a command or result.
 2. Read the CI state of `HEAD`, the open findings tally of the latest review, the open tasks, and the latest verdict row
    in the flow's `state.tsv`.
 3. Answer in a few sentences. Evidence that predates `HEAD`, or that the read could not reach, is reported as stale or
@@ -134,10 +135,11 @@ non-trivial deploy with no change-record gets a soft suggestion from Phase 1, ne
 ## `/agentics:gate change`
 
 Change mode writes a CAB-style change-record for an infra or production change. It drafts eight parts: identify,
-classify, risk, approval chain, rollback, comms, schedule, and record submission. It asks one question round, renders the
-record once, and takes one confirmation before it writes the file. Store the artifact as markdown at
-`change-records/<YYYY-MM-DD>-<slug>.md` in the consuming repo. The record can also be posted through an adapter: change
-mode asks which one, unless the user named it, and the file alone is the record when the answer is `none`.
+classify, risk, approval chain, rollback, comms, schedule, and record submission. It asks one question round, renders
+all eight sections of the record once in full (never abbreviating or eliding sections), and takes one confirmation
+before it writes the file. Store the artifact as markdown at `change-records/<YYYY-MM-DD>-<slug>.md` in the consuming
+repo. The record can also be posted through an adapter: change mode asks which one, unless the user named it, and the
+file alone is the record when the answer is `none`.
 
 Load [references/change/change-workflow.md](references/change/change-workflow.md). Follow it. Template:
 [references/change/change-record-template.md](references/change/change-record-template.md). Classification guidance:

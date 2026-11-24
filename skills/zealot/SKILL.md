@@ -51,7 +51,11 @@ However Zealot was loaded, run the selected mode's workflow whole. A result buil
 
 ## Step 0: Preflight
 
-Check the request against [Don't use when](#dont-use-when) before loading any mode reference, on every invocation. A matching row forwards by [forwarding.md](../routing/references/forwarding.md) before any scope is resolved. Otherwise select the mode below.
+**Read nothing else first.** Before Step 0 preflight and mode selection finish, read no mode workflow or charter file
+(neither `comments/` nor `tests/`), resolve no scope, and make zero tool calls on an ambiguous or non-matching request.
+Check the request against [Don't use when](#dont-use-when) before loading any mode reference, on every invocation. A
+matching row forwards by [forwarding.md](../routing/references/forwarding.md) before any scope is resolved. Otherwise
+select the mode below.
 
 ## Which mode?
 

@@ -148,11 +148,12 @@ The audit's last line sets the `Controller audit:` line:
 - A `note: scope not checked (<reason>)` line adds `; scope not checked (<reason>)` to the line. It is no finding.
 - Each `note: exempt` and `note: merge commit` line is listed in the report. The audit does not see an edit made inside
   a merge commit, and the report says so.
-- Each `unaccounted:`, `mismatch:`, `out-of-scope:` and `invalid:` line is an Important finding of lane `audit`. Its
-  locator is `commit:<sha>` for an `unaccounted:` or `mismatch:` line, with the sha the line names, `<path>` for an
-  `out-of-scope:` line, and `task:<target>` with the invalid row's target for an `invalid:` line, as in `task:task-3`
-  for an invalid `verify task-3` row, or `task:fix` and `task:red-fix` on a small fix. Step 11 asks each one as a
-  finding. Gate asks nothing else about them and writes no row here.
+- Each `unaccounted:`, `mismatch:`, `out-of-scope:` and `invalid:` line is an Important finding of lane `audit`.
+  Reproduce the audit line verbatim in the finding rather than paraphrasing it. Its locator is `commit:<sha>` for an
+  `unaccounted:` or `mismatch:` line, with the sha the line names, `<path>` for an `out-of-scope:` line, and
+  `task:<target>` with the invalid row's target for an `invalid:` line, as in `task:task-3` for an invalid
+  `verify task-3` row, or `task:fix` and `task:red-fix` on a small fix. Step 11 asks each one as a finding. Gate asks
+  nothing else about them and writes no row here.
 
 `flow status` prints an `unaccounted:` line too: a count and short shas, measured from the default branch. The audit
 prints one `unaccounted:` line per commit, with 12 characters of its sha and its subject, measured from `<compare>`.
