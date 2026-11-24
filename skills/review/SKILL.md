@@ -69,9 +69,10 @@ that routes the input back here ends the exchange with an explanation, never a l
 the review. A plain diff review of a PR that has bot findings or open threads is review's job; the note is never a stop.
 When the model loaded review on its own, offer `/agentics:triage pr` once with its side-effect scope, as a cannot row.
 
-A PR whose only signals come from `dependabot[bot]` or `renovate[bot]` is review's
-([feedback classification](../triage/SKILL.md#feedback-classification)): read the diff, and treat the bot's comments as
-context.
+A PR opened by `dependabot[bot]` or `renovate[bot]` stays in review even when CI checks are red
+([feedback classification](../triage/SKILL.md#feedback-classification)): read the diff, treat the bot's comments as
+context, and if any CI check is red, add a one-line note (never a forwarding offer or stop) that `/agentics:triage pr`
+settles the red checks.
 
 ## Which mode?
 
@@ -231,8 +232,9 @@ A multi-agent pipeline reviewing a PR into one review comment. Load
 
 ## interactive
 
-A guided single-reviewer review with checklist, lead-judgment buckets, and verdict from the open tally. Load
-[references/interactive/interactive-review.md](references/interactive/interactive-review.md) and
+A guided single-reviewer review with checklist, lead-judgment buckets, and verdict from the open tally. Emit each
+surviving finding once inside its bucket with its shared severity in front (never print a separate findings list above
+the buckets). Load [references/interactive/interactive-review.md](references/interactive/interactive-review.md) and
 [references/interactive/review-conduct-guidelines.md](references/interactive/review-conduct-guidelines.md).
 
 ## feedback

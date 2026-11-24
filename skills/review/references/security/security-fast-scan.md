@@ -35,9 +35,9 @@ Also load [security-principles.md](security-principles.md) and [security-scoring
 
 Resolve the target to a concrete set of lines:
 
-- **A fixed point** (the usual case): reuse the one `axes` Step 1 pinned, and diff from the merge base with the
-  three-dot form, `git diff <fixed-point>...HEAD`. A two-dot diff against the base tip would show the base's own later
-  changes as if this branch had reverted them.
+- **A fixed point** (the usual case): name the pinned fixed point `axes` Step 1 resolved, and diff from its merge base
+  with the three-dot form, `git diff <fixed-point>...HEAD`. A two-dot diff against the base tip would show the base's
+  own later changes as if this branch had reverted them.
 - **A path a caller named:** the whole file is in scope.
 
 Record the files, the line ranges, and the full head SHA.
