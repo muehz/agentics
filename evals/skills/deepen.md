@@ -76,8 +76,14 @@ using Ordering's **Order** definition; proposing the finished interface before t
 
 Assertions:
 
-- **DP-H1:** take the refactor path. Read the map, place the topic in the **Billing** context, and read
-  `packages/billing/CONTEXT.md` only.
+- **DP-H1:** Takes the refactor path, reads `CONTEXT-MAP.md`, places the topic in the **Billing** context, and reads
+  `packages/billing/CONTEXT.md` only (never reporting no glossary, reading all three contexts, or using Ordering's
+  **Order** definition).
+- **DP-H2:** Presents the friction in `InvoiceSyncService` (mode-flag proliferation, no injected seam for
+  `StripeClient`, no test coverage) as a numbered candidate with Files, Problem, Solution, and Benefits using Billing's
+  domain terms and the architecture terms `module`, `interface`, `seam`, and `depth` (never calling a module a "service"
+  or "component"), then asks as a ❓ question with a ➡️ recommendation which candidate to explore without proposing an
+  interface yet.
 
 ### The first glossary write is confirmed once, and an overloaded term is split
 
@@ -108,9 +114,14 @@ came last; designing the retry count on the ambiguous term.
 
 Assertions:
 
-- **DP-H2:** on the first turn, take candidate 1 and start grilling it, and ask once whether to record settled terms in
-  `packages/billing/CONTEXT.md`, naming that path. After the yes, record **SyncAttempt** there as the decision settles,
-  not in a batch at the end, and ask no further permission for later terms in that file.
+- **DP-H3:** Turns 1–2 take candidate 1, start grilling it, ask once whether to record settled terms in
+  `packages/billing/CONTEXT.md` naming that path (writing nothing before the yes), and after the yes record
+  **SyncAttempt** there as the decision settles (not in a batch at the end) without asking permission again for later
+  terms in that file.
+- **DP-H4:** Turn 3 challenges `"invoice"` as overloaded (the document sent to the customer vs. the delivery record)
+  with a ❓ question proposing a precise split (such as **Invoice** and **SyncAttempt**) with a ➡️ recommendation rather
+  than designing the retry count on the ambiguous term, and classifies `StripeClient` as a true-external dependency
+  behind a private injected seam with a mock adapter in tests.
 
 ### Requested records are judged and all handed to docs
 
@@ -131,8 +142,12 @@ writing record files directly; a lecture longer than the one cost line.
 
 Assertions:
 
-- **DP-H3:** state the three-part test's result in one line for each decision: the adapter decision qualifies, the other
-  two do not, with the cost named once (a log of obvious decisions hides the surprising ones).
+- **DP-H5:** States the three-part test's result in one line for each decision (only the `StripeClient` adapter
+  qualifies; the mode-flag removal and `SyncAttempt` naming do not) with the cost named once (a log of obvious decisions
+  hides the surprising ones), without lecturing longer than one cost line.
+- **DP-H6:** Hands all three requested records to `docs` (build mode) with each decision and its reason because the user
+  asked for them, without declining the two non-qualifying records, asking the user to justify them, drafting record
+  text in deepen, or writing record files directly.
 
 ### Done asks before planning
 
@@ -152,9 +167,10 @@ Failures: starting `decompose` unasked; ending with no summary; claiming any cod
 
 Assertions:
 
-- **DP-H4:** write a settled-design summary that names the interface, the seam, the adapters, the surviving tests and
-  the alternatives considered. Then ask one yes/no question whether to turn the design into a task plan, with
-  `/agentics:decompose` in parentheses at the end.
+- **DP-H7:** Writes a settled-design summary naming the interface, the seam, the adapters, the surviving tests, and the
+  alternatives considered, then asks one yes/no question whether to turn the design into a task plan with
+  `/agentics:decompose` in parentheses at the end, without starting planning before the answer or claiming the refactor
+  was applied, merged, or shipped.
 
 ## edge
 
@@ -203,8 +219,10 @@ settles, without asking first, because the request asked for it. Apply the three
 
 Assertions:
 
-- **DP-E2:** take the language path, read `GLOSSARY.md` as the glossary, and record "settlement" there once it settles,
-  without asking first, because the request asked for it.
+- **DP-E2:** Takes the language path, reads `GLOSSARY.md` as the glossary, and records `"settlement"` there once it
+  settles without asking first (since the request asked for it); applies the three-part test to the async-ledger
+  rejection (qualifying as hard to reverse, surprising without context, and a real trade-off) and hands it to `docs` for
+  `docs/decisions/0004-<slug>.md`, without creating `CONTEXT.md` or `docs/adr/`.
 
 ### Absorbed convention-discovery card: custom glossary pointer
 
@@ -482,9 +500,10 @@ the description, or taking a new implementation action during the refactor inter
 
 Assertions:
 
-- **DP-E15:** Reads the 12-line `src/export/wrapper.ts` diff, shortlists `laziness-protocol`, applies its self-test
-  questions (one caller, zero hidden policy) directly to the diff, cites the concrete choice to remove the forwarding
-  layer and keep `runExport`, and takes no implementation action.
+- **DP-E15:** Reads the 12-line `src/export/wrapper.ts` diff, shortlists `laziness-protocol` and reads its leaf in full
+  before citing it (not only an index summary), applies its self-test questions (one caller, zero hidden policy)
+  directly to the diff, cites the concrete choice to remove the forwarding layer and keep `runExport`, continues the
+  refactor workflow with its normal user decisions, and takes no implementation action.
 
 ## routing_boundary
 
@@ -559,9 +578,9 @@ Failures: routing the request away; demanding an existing code area first; claim
 
 Assertions:
 
-- **DP-R3:** Keeps the request on the design-time path, classifies Stripe, pushes toward one deep entry point hiding
-  parsing/validation/mapping, avoids hidden publishing side effects (returning a pure `BillingEvent` result or injecting
-  `EventBus` explicitly), and does not claim to have written the module.
+- **DP-R3:** Keeps the request on the design-time path, walks constraints, classifies Stripe, places the seam, pushes
+  toward one deep entry point hiding parsing/validation/mapping, avoids hidden publishing side effects (returning a pure
+  `BillingEvent` result or injecting `EventBus` explicitly), and does not claim to have written the module.
 
 ### Request D: standalone language work stays here
 
@@ -626,9 +645,9 @@ deepen run.
 
 Assertions:
 
-- **DP-R6:** the `docs` row is a `better elsewhere` row: say in one line that `docs` writes records, state the
-  three-part test's result in one line (the choice qualifies), and hand the decision and its reason to `docs` for
-  `docs/adr/0005-<slug>.md`.
+- **DP-R6:** Treats the `docs` row as `better elsewhere`: says in one line that `docs` writes records, states the
+  three-part test's result in one line (the choice qualifies), and hands the decision and its reason to `docs` for
+  `docs/adr/0005-<slug>.md`, without drafting record text in deepen, refusing, or making `docs` wait on a deepen run.
 
 ## adversarial
 
