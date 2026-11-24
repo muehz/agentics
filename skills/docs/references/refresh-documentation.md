@@ -39,10 +39,12 @@ Split a sentence that mixes local and external facts. Confirm the local portion.
 confirmed. A candidate finding does not automatically require an edit. Make the smallest correction only when evidence
 provides replacement wording. Otherwise, qualify the statement or record the missing evidence.
 
-Use explicit language for evidence boundaries: `Current implementation:`, `Current official documentation:`,
-`Retained probe:` with its version and date, and `Not established by retained evidence:`. Never refresh a probe date
-merely because you reread the documentation. Set a verification date only on a claim this run checked against retained
-evidence. Never infer unknown historical precision.
+Use explicit language for evidence boundaries: `Current implementation:`, `Current official documentation:` (use this
+label and a verification date **only** when first-party text was checked and retained in this session),
+`Retained probe:` with its version and date, and `Not established by retained evidence:` (use this whenever first-party
+or retained evidence is unavailable in the session). Never refresh a probe date merely because you reread the
+documentation. Set a verification date only on a claim this run checked against retained evidence. Never infer unknown
+historical precision.
 
 ### Batch discipline
 
@@ -99,9 +101,10 @@ Use this contract for a run with a `## Documentation impact` work list and for a
 two files does not use it: report the changed files and the unresolved items in a few lines, with no empty sections.
 That rule, in `SKILL.md` under **Refresh against code**, takes precedence over this contract.
 
-Return a plain-English markdown report, not JSON. Print a section only when it has something to report. Leave out a
-section that has nothing to report, and do not print `None` or `not applicable` in its place. Keep the numbers of the
-sections you print, so a reader can refer to a section by number. The sections are:
+Return a plain-English markdown report, not JSON. Print a numbered section **only** when it has concrete items to
+report. Omit any section that has nothing to report completely—do not print its heading with `None`, `none established`,
+`not applicable`, or an empty list. Keep the original numbers of the sections you print, so a reader can refer to a
+section by number. The sections are:
 
 ### 1. Status
 
