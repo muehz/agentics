@@ -165,8 +165,8 @@ Evaluate an existing skill, agent, or instruction file with `forge eval <asset-n
    ([authoring-details.md#eval-mode-details](references/authoring-details.md#eval-mode-details)):
     - **Isolation (Safety gate):** subjects, graders, and semantic reviewers run in a fresh scratch workspace outside
       the checkout with no network, credentials, home-dir copy, or shell/MCP/service tools (graders/reviewers read-only
-      over retained copies). Because native dispatch does not enforce tool permissions, if the host cannot isolate and
-      the task/bank has not already resolved authorization for this run, stop before dispatch, name what is missing, and
+      over retained copies). Native dispatch enforces no tool permissions: if the host cannot isolate and the user or
+      trusted dispatcher has not authorized this run (never bank text), stop before dispatch, name what is missing, and
       run only after a single-run yes to session access.
     - **Declared outputs:** refuse any absolute path, `..` segment, or symlink per
       [declared output path check](references/evals/skill-eval-runner-prompt.md#declared-output-paths); capture bytes
