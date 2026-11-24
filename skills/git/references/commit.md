@@ -21,7 +21,8 @@ itself.
 7. **Hooks always run.** Never bypass a commit hook. After a hook fails, put the fix in a new commit.
 8. **Attempt the red commit of a bug fix.** Commit the failing test before the fix. When a pre-commit hook rejects that
    commit because the new test fails, do not make it. Put the test and the fix in one commit. The evidence of red is
-   then the recorded failing run: its command, its exit status and an excerpt of its output.
+   then the recorded failing run: its command, its exit status and an excerpt of its output. When no red run is pending
+   (not a bug fix or no failing test to commit first), skip the red-commit attempt and note that in the report.
 9. **Process records travel with the work.** Put a change that only records process into the commit of the work it
    records. When no such commit is left, make at most one bookkeeping commit in one skill run.
 10. **The author commits a chain artifact.** The skill that wrote a
@@ -173,14 +174,16 @@ running Bash shell, pass paths by quoted expansion.
 
 #### Before the first commit of a run
 
-Apply the [work-item branch rule](branch.md#the-work-item-branch). Then read whether commit signing is on:
+Load [branch.md#the-work-item-branch](branch.md#the-work-item-branch) and verify the current branch is off the
+resolver's `protected` line before staging or committing. Then read whether commit signing is on:
 
 ```bash
 git config --type=bool --get commit.gpgsign
 ```
 
 The output `true` means signing is on, whichever boolean spelling the config holds. No output and exit status 1 mean the
-setting is absent, so signing is off. Do this once per run, and keep the answer for step 5.
+setting is absent, so signing is off. Do both checks once per run, record them in the commit report, and keep the
+signing answer for step 5.
 
 #### 1. Analyze diff
 
@@ -228,7 +231,8 @@ If the user still chooses one commit, do these steps:
 
 Take the approved repository-relative names from the NUL-delimited output of
 `git status --porcelain=v1 -z --no-renames --untracked-files=all`. Pass the names as separate arguments to this Bash
-script, without copying them into the script text:
+script, without copying them into the script text (paths with spaces or quotes such as `docs/reviewer's notes.md` must
+pass as a single literal argv element, never interpolated into double-quoted shell source):
 
 ```bash
 [ "$#" -gt 0 ] || exit 2
@@ -318,8 +322,13 @@ git commit --file "$message_file"
 passphrase prompt. Do these steps:
 
 1. Stop the run. Leave the index staged as it is.
-2. Give the user the exact commit command you ran, with the real message, to run in their own terminal, where the prompt
-   can appear.
+2. Give the user an inline, immediately copy-pasteable retry of the failed `git commit` command for their own terminal
+   (where the prompt can appear), preserving every original option, scope flag, and pathspec (such as
+   `--only -- <paths>` for user-named paths) and replacing only `--file "$message_file"` with
+   `-m '<concrete subject>' -m '<concrete body>'` containing the complete actual commit subject and body drafted from
+   the diff (for example, `git commit -m '<concrete subject>' -m '<concrete body>'`, or
+   `git commit --only -m '<concrete subject>' -m '<concrete body>' -- <paths>` for user-named paths; never
+   `--file "$message_file"`, `<subject>`, or `<body from the message draft>`).
 3. Do not run the commit again with signing turned off, and do not change a signing setting.
 4. Continue from step 6 once the user says the commit exists.
 
@@ -339,8 +348,10 @@ evidence of red.
 git log -1 --stat
 ```
 
-Report the SHA, final message, and files included. If the commit failed (hook rejection, empty index), report the actual
-failure. Never report a commit you did not verify.
+Report the SHA, final message, and files included only after `git log -1 --stat` actually printed them in this run. When
+git cannot run in the environment, label the commit `[proposed]` with the exact commands and never print `"Committed"`
+or an invented SHA. If the commit failed (hook rejection, empty index), report the actual failure. Never report a commit
+you did not verify.
 
 ---
 

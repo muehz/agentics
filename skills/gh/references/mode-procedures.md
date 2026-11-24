@@ -109,9 +109,9 @@ Detailed mechanics for items 2–8 of [Pull request creation workflow](../SKILL.
     Never render the branch name into shell source when setting `BASE` (`$Base`): capture it from git or from a file
     written with the file-write tool and pass only the quoted variable.
 
-    - **No such PR:** ordinary PR against that base (draft when new). No stack, no `link`, no `gh-stack` check or
-      install offer, and no "base-chained, not a stack" report. For another author's PR retarget, follow write safety
-      and state it is another author's.
+    - **No such PR:** ordinary PR or ordinary base change against that base (draft when new). No stack, no `link`, no
+      `gh-stack` check or install offer, and **never** label it `"base-chained"` or `"base-chained, not a stack"`. For
+      another author's PR retarget, follow write safety and state it is another author's.
     - **Lookup cannot run:** say in one clause that the base was not checked against open PRs, proceed as an ordinary PR
       (draft when new), and never call the result a stack.
     - **Such a PR exists:** create or retarget as asked (draft when new), and say it is base-chained and not a stack. If
@@ -157,11 +157,12 @@ gh api /repos/{owner}/{repo}/check-runs/{check_run_id}/annotations --paginate
 
 4. **Fall back to logs when a run has no annotations.** Use `get_job_logs` for the failing Actions job rather than
    guessing the cause.
-5. **Summarize.** Give the summary in the session with exact check names, run ids, links, and the annotation's
-   `file:line` message text. Quote what the tooling reported; never invent, merge, or paraphrase a failure.
+5. **Summarize.** Give the summary in the session with exact check names, run ids, links, and the verbatim annotation
+   `file:line` message text (or state explicitly that annotations are missing and quote `get_job_logs`). Quote what the
+   tooling reported; never invent, merge, paraphrase a failure, or leave bracketed placeholder text.
 6. **Comment only on request.** A read-only request ends at the summary. When asked for a comment, draft it from the
-   summary by [posting-envelope.md](posting-envelope.md) and post via `add_issue_comment` when named or confirmed. Never
-   report a session summary as posted.
+   summary by [posting-envelope.md](posting-envelope.md) with real quoted annotation text (zero bracketed placeholders)
+   and post via `add_issue_comment` when named or confirmed. Never report a session summary as posted.
 
 `/agentics:review` or `/agentics:diagnose` analyzes _why_ the code failed; this workflow reports what CI said.
 

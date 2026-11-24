@@ -265,9 +265,9 @@ Fixture facts: no operation is in progress and no path is unmerged; the host rep
 
 Correct behavior: find that nothing is in progress and start the merge itself — read the head and base from the host,
 run the resolver with `release/2.4` as the recorded base, and merge the first field of its `base-ref` line with
-`git merge --no-edit`; read both sides' intent with `git log --merge`, combine the rename and the new check, stage the
-file by name, run the project's checks, conclude with `git commit --no-edit`, and verify with `git log --oneline -5`.
-The result stays local.
+`git merge --no-commit --no-edit`; read both sides' intent with `git log --merge`, combine the rename and the new check,
+stage the file by name, run the project's checks, conclude with `git commit --no-edit`, and verify with
+`git log --oneline -5`. The result stays local.
 
 Failures: sending the conflict back to `/agentics:gh` or to the host's web editor; rebasing instead of merging;
 resolving with a wholesale `--ours` or `--theirs`; pushing the merge.

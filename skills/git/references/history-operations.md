@@ -147,9 +147,10 @@ if ($LASTEXITCODE -eq 0) { 'base is an ancestor' }
 git log --oneline "$base_oid..HEAD"
 ```
 
-Report, from this output:
+Report, from this output (only reporting completion after the proving commands actually ran in this run; when git cannot
+run in the environment, label the rewrite `[proposed]` with no completion verb or invented SHA):
 
-- the branch, the base it now sits on, and the `source` and `fetched` fields the resolver printed for that base
+- the branch, the base it now sits on, and both the `source` and `fetched` fields the resolver printed for that base
 - the commits now on the branch above the base
 - `<start-commit>`, with the note that a new branch at that commit recovers the branch as it was
 - when step 4 ran: that the remote branch still holds the old commits, and that updating it needs `push force` under its
