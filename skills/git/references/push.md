@@ -216,7 +216,8 @@ When the push fails, report git's message. Do not report a push that you did not
 
 The remote rejects a plain push when it holds commits the local branch does not. When that happens:
 
-1. Report the rejection with git's message.
+1. Report the rejection, quoting git's actual rejection line verbatim (for example, `! [rejected] ... (fetch first)`)
+   directly in the response to the user.
 2. Make no second attempt.
 3. Use no force flag. A rejected push is never forced.
 4. Offer to merge the remote tip and push again. When the rejected branch is not the current branch, offer to switch to
@@ -370,6 +371,7 @@ git ls-remote --refs -- "$push_url" "$target_ref"
 git rev-parse --verify --end-of-options "$target_ref"
 ```
 
-Report "pushed" only when one remote row has a ref field exactly equal to `target_ref` and its object ID equals the
-local SHA. Report the branch or tag, the remote and that SHA. When the two differ, or the remote does not hold the ref,
-report what each side holds and do not say "pushed".
+Report "pushed" only when `git ls-remote` actually ran in this run, returned one remote row whose ref field equals
+`target_ref`, and its object ID equals the local SHA. Report the branch or tag, the remote and that SHA. When git cannot
+run in the environment, label the push `[proposed]` with the exact commands and never report "pushed" or an invented
+SHA. When the two differ, or the remote does not hold the ref, report what each side holds and do not say "pushed".

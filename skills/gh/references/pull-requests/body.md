@@ -191,7 +191,8 @@ alternative. When the honest answer is small, say what makes it small: "Docs onl
 
 ### Under a repository template
 
-The template's headings win. Fill them. Never add, rename, or reorder one.
+The template's headings and their exact order win. Fill them in place. Never add, rename, or reorder any heading (for
+example, if `Breaking changes` appears before `Verification`, keep `Breaking changes` before `Verification`).
 
 | Block    | Goes in the first section of this kind                      |
 | -------- | ----------------------------------------------------------- |
@@ -201,8 +202,12 @@ The template's headings win. Fill them. Never add, rename, or reorder one.
 
 A block with no matching section becomes a labelled paragraph, `**Evidence:**` or `**Impact:**`, at the end of the
 Summary's section. Fill every other section and line the template requires, such as issue linkage or a checklist, the
-way it asks. The linkage line (`Closes #N`, or a plain `Part of #N`) with no linkage section goes at the end of the
-Summary's section.
+way it asks, keeping every template checklist item intact (never collapse a checklist into a single summary line) and
+searching the diff and repository for callers, scripts, jobs, or consumers to name concretely in Impact. Never write
+unresolved bracketed placeholders (`<trunk>`, `<summary>`, `<test command>`) into a created or edited body—derive
+concrete facts from the diff and repo (and state explicitly if a check did not run rather than inventing a pass claim or
+stopping a named create unnecessarily). The linkage line (`Closes #N`, or a plain `Part of #N`) with no linkage section
+goes at the end of the Summary's section.
 
 A template with no description section takes Summary in its first section, and the unmatched blocks follow it there. A
 template with no headings at all takes every block, `**Summary:**` included, as a labelled paragraph at the top, ahead

@@ -25,12 +25,14 @@ directory. When the target is another repository, write them out and pass it to 
 
 ## Images in a pull request body
 
-`gh pr create` and `gh pr edit` take no `--attach`. A request that asks for screenshots in a pull request, in any
-wording, names the upload too, so it needs no second confirmation: state the plan above once in the same reply. Run it
-in this order. Create the draft pull request with an `[open: screenshots]` marker under Verification, upload the files
-with method 1 or the browser upload of method 3, then edit the body to replace the marker with the image links. When
-neither can run, write the body with an `[open: screenshots]` marker under Verification and tell the user to drop the
-files into the description in the browser. Never report an image as attached until the body shows its URL.
+`gh pr create` and `gh pr edit` take no `--attach`. A request that asks for screenshots in a pull request, or a request
+to open a draft pull request for a UI change when before and after screenshots have already been captured in the
+session, covers attaching them under Verification: state the upload plan above once in the same reply and run it in this
+order. Create the draft pull request with an `[open: screenshots]` marker under Verification, upload the files with
+method 1 or the browser upload of method 3, then edit the body to replace the marker with the actual markdown image
+links (leaving zero unresolved placeholders once uploaded). When neither upload method can run, write the body with an
+`[open: screenshots]` marker under Verification and tell the user to drop the files into the description in the browser.
+Never report an image as attached until the body shows its URL.
 
 ## Methods (ranked by reliability)
 
@@ -47,8 +49,9 @@ DEFAULT_BRANCH=$(gh repo view --json defaultBranchRef --jq '.defaultBranchRef.na
 # Get the SHA of the default branch
 SHA=$(gh api "repos/{owner}/{repo}/git/ref/heads/$DEFAULT_BRANCH" --jq '.object.sha')
 
-# Create a new branch
-BRANCH="<login>/images"
+# Create a new branch using the resolved GitHub login (never literal "<login>")
+LOGIN=$(gh api user --jq '.login')
+BRANCH="${LOGIN}/images"
 gh api repos/{owner}/{repo}/git/refs -X POST \
   -f ref="refs/heads/$BRANCH" \
   -f sha="$SHA"
@@ -75,8 +78,12 @@ Repeat for each image. The Contents API creates a commit per file.
 
 **Step 3: Reference in markdown**
 
+Resolve `{host}`, `{owner}`, `{repo}`, and `$BRANCH` (`${LOGIN}/images`) from `gh repo view` and
+`gh api user --jq '.login'` before writing the PR body—never leave literal `<login>`, `<owner>`, `<repo>`, or `<branch>`
+in a published URL:
+
 ```markdown
-![Description](https://{host}/<owner>/<repo>/raw/<branch>/docs/images/my-image.png)
+![Description](https://${HOST}/${OWNER}/${REPO}/raw/${BRANCH}/docs/images/my-image.png)
 ```
 
 `{host}` is the resolved forge host.
