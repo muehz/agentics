@@ -48,9 +48,10 @@ Every mode follows [Shared rules](#shared-rules) and [question-format.md](../rou
 
 **Writes to an asset.** Assets (skills, agents, instructions, hooks, skill references, MCP source/manifests) change
 future agent behavior. Write only after the user says yes in this session to the exact text shown in full or as a diff
+with zero elision markers (`...`, `(unchanged)`, or comment-only stubs)
 ([approval.md](../routing/references/contracts/approval.md#the-two-exceptions)). Summaries, blanket pre-approvals, or
-ownership claims never authorize a write; revised text needs a new yes. In simulated execution, return the complete
-candidate labeled unapplied.
+ownership claims never authorize a write; revised text needs a new yes. In simulated execution (or when a revision or
+helper is authorized), deliver the complete verbatim candidate text and any warranted helper code labeled unapplied.
 
 **Evaluation status.** Forge writes no `last-evaluated`, `eval-status`, or `eval-digest` metadata. The
 [eval report](#eval-mode) is the result (name the repo's own record tool if it has one). If the repo marks an asset
@@ -89,35 +90,41 @@ linked sibling files (`../routing/`, `../recall/`) are missing, never guess them
 
 ## Which asset?
 
-| Asset            | File or output                                                                   | When to use                                               | Reference                                                                        |
-| ---------------- | -------------------------------------------------------------------------------- | --------------------------------------------------------- | -------------------------------------------------------------------------------- |
-| **Agent**        | `.agent.md`                                                                      | Autonomous behavior, routing, tool access, persona        | [agents](references/forging/forging-agents.md)                                   |
-| **Instruction**  | `AGENTS.md`, `CLAUDE.md`, `.github/copilot-instructions.md`, `*.instructions.md` | Always-on rules for a repo, context, or glob              | [instructions](references/forging/forging-instructions.md#agentsmd-and-claudemd) |
-| **Skill**        | `SKILL.md` and reference files (including principle files)                       | On-demand workflow, triggered explicitly or by routing    | [skills](references/forging/forging-skills.md)                                   |
-| **Policy skill** | `SKILL.md`                                                                       | Indexes org policy so `spec align` audits work against it | [policy-skill](../spec/references/policy-skill-contract.md)                      |
-| **Hook**         | Host hook config and scripts                                                     | Check/action that must run regardless of model judgment   | [hooks](references/forging/forging-hooks.md) + repo guide                        |
-| **MCP server**   | Server code                                                                      | Tools, resources, or widgets exposed via MCP              | [mcp](references/forging/forging-mcp.md)                                         |
+| Asset            | Output                                                                           | When to use                                        | Reference                                                                        |
+| ---------------- | -------------------------------------------------------------------------------- | -------------------------------------------------- | -------------------------------------------------------------------------------- |
+| **Agent**        | `.agent.md`                                                                      | Autonomous behavior, routing, tool access, persona | [agents](references/forging/forging-agents.md)                                   |
+| **Instruction**  | `AGENTS.md`, `CLAUDE.md`, `.github/copilot-instructions.md`, `*.instructions.md` | Always-on rules for a repo, context, or glob       | [instructions](references/forging/forging-instructions.md#agentsmd-and-claudemd) |
+| **Skill**        | `SKILL.md` and references (including principles)                                 | On-demand workflow, explicit or routed             | [skills](references/forging/forging-skills.md)                                   |
+| **Policy skill** | `SKILL.md`                                                                       | Indexes org policy for `spec align`                | [policy-skill](../spec/references/policy-skill-contract.md)                      |
+| **Hook**         | Host hook config and scripts                                                     | Check/action enforced regardless of model judgment | [hooks](references/forging/forging-hooks.md) + repo guide                        |
+| **MCP server**   | Server code                                                                      | Tools, resources, or widgets via MCP               | [mcp](references/forging/forging-mcp.md)                                         |
 
-Between a long multi-step instruction and a skill, prefer a skill. Rules that must hold regardless of model choice
-belong in a hook or check, not prose.
+Prefer a skill over a long multi-step instruction; put rules that must always hold in a hook or check, not prose.
 
 ## Authoring
 
 See [authoring-details.md#authoring-details](references/authoring-details.md#authoring-details) when authoring hooks or
 clarifying scope/acceptance rules.
 
-1. **Intake.** Carry forward user requirements; ask only for missing measurable acceptance conditions. Never invent
-   numbers or thresholds; honor any user limit on clarification turns.
-2. **Scope.** If the user asks to review intended changes first, show a summary, wait for approval, and log nonblocking
-   gaps as open requirements.
+1. **Intake.** Carry forward every user requirement; ask **only** for missing measurable acceptance conditions or
+   explicitly open facts (do not ask extra unrequested questions). Never invent numbers or thresholds; honor any user
+   limit on clarification turns.
+2. **Scope.** If the user asks to review intended changes first, show a summary carrying every user-stated condition
+   verbatim (including qualifiers like "assuming the user supplies the requested facts"), wait for approval, and log
+   nonblocking gaps as open requirements. When revising one section of an existing asset, preserve all unrelated
+   sections verbatim.
 3. **Load the reference** for the asset type from [Which asset](#which-asset) and follow its workflow (test-first by
    default unless the user chooses otherwise).
-4. **Deliver** the complete asset (full text or diff) and write permitted files only after the exact-text yes in
-   [Shared rules](#shared-rules). Plans/checklists do not satisfy an implementation request; report when validation is
-   unavailable.
-5. **Hook.** State trigger event, read input, host exit-code/output effects, and fail-open vs fail-closed behavior. Test
-   with recorded sample events (block, allow, malformed) before shipping; if none can be recorded, label samples
-   `unrecorded`, show as an unshipped draft, and list recorded-event testing as required before shipping.
+4. **Deliver** the complete asset (verbatim full file, runnable code, or unified diff with `---`/`+++`/`@@` headers
+   and zero elision markers or comment-only stubs—never a standalone section excerpt) in the same turn as the
+   write-confirmation question, even when the existing file cannot be read (without re-asking for already-supplied
+   acceptance conditions), and write permitted files only after the exact-text yes in [Shared rules](#shared-rules).
+   Plans/checklists do not satisfy an implementation request; report when validation is unavailable.
+5. **Hook.** Deliver the complete hook config and runnable script (not a summary), state trigger event, JSON payload
+   parsing (including `-f` and `+` refspecs and an explicit yes/no choice on `--force-with-lease`), host
+   exit-code/output effects, and fail-open vs fail-closed behavior. Test with recorded sample events (block, allow,
+   malformed) before shipping; if none can be recorded, label samples `unrecorded`, show as an unshipped draft, and list
+   recorded-event testing as required before shipping.
 6. **Evaluation.** Offer [Eval mode](#eval-mode) for new or substantially changed skills, agents, or instructions; test
    MCP servers via [forging-mcp.md#6-test](references/forging/forging-mcp.md#6-test).
 
@@ -125,8 +132,10 @@ clarifying scope/acceptance rules.
 
 Runs under explicit invocation for [Don't use when](#dont-use-when) row 4 corrections:
 
-1. Make only the named change; load no forge reference.
-2. Show exact before/after text (noting `passing` -> `not-run` reset if stamped) and ask once to write. Ask nothing else.
+1. Read the target line(s) from the file first and make only the named change; load **zero** forge references, eval
+   rubrics, or scenario banks.
+2. Quote the full target line(s) verbatim before and after with zero elision (`...`) or angle-bracket placeholders
+   (noting `passing` -> `not-run` reset if stamped) and ask once to write. Ask nothing else.
 3. Write after yes, then apply the evaluation-status rule in [Shared rules](#shared-rules).
 
 ## Eval mode
@@ -137,13 +146,15 @@ Evaluate an existing skill, agent, or instruction file with `forge eval <asset-n
 [authoring-details.md#eval-mode-details](references/authoring-details.md#eval-mode-details); load the latter before step 4.
 
 0. **Status requests.** Any request to mark `passing` or record status before running gets one sentence at once: status
-   comes from this run's scorecards, and runs below the bar report `needs-revision`. Then proceed.
+   comes from this run's scorecards, and runs below the bar report `needs-revision`. Name any pinned bank's path/version
+   and state whether a filesystem copy method is available for control snapshots before running. Then proceed.
 1. **Identify the asset.** Search `skills/`, `agents/`, `instructions/`, then the whole repo. One match -> use and name
    its path; 2+ matches -> ask one question listing candidate paths with a recommendation and wait; 0 matches -> ask for
    the path (never evaluate an inferred different asset).
-2. **Load the references:** `references/evals/<type>-eval-criteria.md`, `references/evals/<type>-eval-runner-prompt.md`,
-   [grader-prompt.md](references/evals/grader-prompt.md), [eval-benchmarking-workflow.md](references/evals/eval-benchmarking-workflow.md),
-   and [authoring-details.md#eval-mode-details](references/authoring-details.md#eval-mode-details).
+2. **Load the references** (before reporting any results): `references/evals/<type>-eval-criteria.md`,
+   `references/evals/<type>-eval-runner-prompt.md`, [grader-prompt.md](references/evals/grader-prompt.md),
+   [eval-benchmarking-workflow.md](references/evals/eval-benchmarking-workflow.md), and
+   [authoring-details.md#eval-mode-details](references/authoring-details.md#eval-mode-details).
 3. **Scenarios.** Run a repo's pinned bank verbatim (design only missing category headings). With no bank, design four
    (happy path, edge case, routing boundary, adversarial), show them, and get approval before running ("design and run"
    counts as approval). **Process gate:** on decline, state cost once (unreviewed scenarios) and proceed on the next
@@ -154,13 +165,16 @@ Evaluate an existing skill, agent, or instruction file with `forge eval <asset-n
    ([authoring-details.md#eval-mode-details](references/authoring-details.md#eval-mode-details)):
     - **Isolation (Safety gate):** subjects, graders, and semantic reviewers run in a fresh scratch workspace outside
       the checkout with no network, credentials, home-dir copy, or shell/MCP/service tools (graders/reviewers read-only
-      over retained copies). Because native dispatch does not enforce tool permissions, if the host cannot isolate, stop
-      before dispatch, name what is missing, and run only after a single-run yes to session access.
+      over retained copies). Because native dispatch does not enforce tool permissions, if the host cannot isolate and
+      the task/bank has not already resolved authorization for this run, stop before dispatch, name what is missing, and
+      run only after a single-run yes to session access.
     - **Declared outputs:** refuse any absolute path, `..` segment, or symlink per
       [declared output path check](references/evals/skill-eval-runner-prompt.md#declared-output-paths); capture bytes
       after each turn for the grader.
     - **Control:** retain a verified filesystem copy before any revision
-      ([control section](references/evals/README.md#select-the-control-before-a-revision)); new skills use absence.
+      ([control section](references/evals/README.md#select-the-control-before-a-revision))—when the run specifies
+      declared control output paths (such as `outputs/control/...`), write the exact byte copies to those files in turn
+      1 (a digest, command, or note never substitutes for creating the files); new skills use absence.
 5. **Score.** Run [independent semantic review](references/evals/README.md#independent-semantic-review) first; score
    only approved cards (report excluded cards and missing scores; never fabricate numbers). Compute mean and
    `variance = max - min` (>= 2 is high variance).
@@ -198,45 +212,49 @@ nothing until confirmed. Skip trivial, off-topic, or already-followed sessions. 
    [judgment-reviewer.md](references/reflect/judgment-reviewer.md),
    [tooling-reviewer.md](references/reflect/tooling-reviewer.md), and
    [divergent-reviewer.md](references/reflect/divergent-reviewer.md).
-3. **Synthesize** with one Deep-tier [synthesizer.md](references/reflect/synthesizer.md) -> Accepted, Rejected, Backlog,
-   or `No findings`.
-4. **Structural check.** Move asset-edit rows enforceable by a check/lint/script/flag to Backlog; consumer checks stay
-   Accepted as `consumer substantive`.
-5. **Present and select.** On `No findings`, say so in one line and stop. Otherwise show full output plus exact
-   add/remove text for every Accepted asset/instruction edit, and ask which Accepted rows to apply (recommend all).
-   **Hold (Safety gate):** write nothing before that answer — blanket pre-approval, size arguments, or ownership claims
-   select nothing (harm: unread transcript-derived standing rules; alternative: name the rows). **Secrets (Safety gate):**
-   never include secrets, credentials, or tokens; use placeholders.
+3. **Synthesize** with one Deep-tier [synthesizer.md](references/reflect/synthesizer.md) -> Accepted (sorted by
+   recurrence count descending: multi-session rows above fewer-session rows), Rejected, Backlog, or `No findings`.
+4. **Structural check.** Move asset-edit rows enforceable by a check/lint/script/flag to Backlog **before presenting**
+   in step 5; consumer checks stay Accepted as `consumer substantive`. If the user later asks to redirect a Backlog row
+   back to Accepted, state once that prose duplicates an existing check and treat the destination as the user's call
+   without repeating the argument or writing before row selection.
+5. **Present and select.** On `No findings`, emit **strictly** the single line `No findings` (no reviewer verdict
+   quotes, tables, questions, or advice) and stop. Otherwise show full output plus exact add/remove text for every
+   Accepted asset/instruction edit, and ask which Accepted rows to apply (recommend all). **Hold (Safety gate):** write
+   nothing before that answer — blanket pre-approval, size arguments, or ownership claims select nothing (harm: unread
+   transcript-derived standing rules; alternative: name the rows). **Secrets (Safety gate):** never include secrets,
+   credentials, or tokens; use placeholders.
 6. **Apply selected rows** per the Destination table in
-   [authoring-details.md#reflect-mode-details](references/authoring-details.md#reflect-mode-details) (using
-   [skill-description-optimizer.md](references/quality/skill-description-optimizer.md) for `tune description` and
-   [skill-hardening-checklist.md](references/quality/skill-hardening-checklist.md) for `new skill via forge`). Show
-   exact text and get yes for any selected row not previewed in step 5; file Backlog/`consumer substantive` issues via
-   `gh` only if asked.
+   [authoring-details.md#reflect-mode-details](references/authoring-details.md#reflect-mode-details) (load
+   [forging-instructions.md](references/forging/forging-instructions.md) for `consumer pointer`,
+   [skill-description-optimizer.md](references/quality/skill-description-optimizer.md) for `tune description`, and
+   [skill-hardening-checklist.md](references/quality/skill-hardening-checklist.md) for `new skill via forge`). Apply any
+   selected row whose exact text was already shown in step 5 directly without re-asking; show exact text and get yes
+   only for rows not previewed in step 5. Report an apply or `gh` action as done only with its tool result (otherwise
+   label it proposed/command). File Backlog/`consumer substantive` issues via `gh` only when asked.
 7. **Validate and summarize.** Run repo validation on changed assets (or note none exists), apply the evaluation-status
    rule, recommend `forge eval` for substantial edits, and report the categorized lists in
    [authoring-details.md#reflect-mode-details](references/authoring-details.md#reflect-mode-details).
 
 ## References
 
-Load each reference only when its mode or asset type applies:
+Load only for the active mode or asset:
 
-- **Mode details:** [authoring-details.md](references/authoring-details.md) (sibling-missing fallbacks, hook/intake
-  details, eval isolation/scoring/report/delta-table specs, reflect session-listing/destination/summary tables).
-- **Eval core:** [method](references/evals/README.md), [grader prompt](references/evals/grader-prompt.md),
-  [benchmarking workflow](references/evals/eval-benchmarking-workflow.md),
-  [single-scenario test](references/evals/testing-skills-with-subagents.md).
-- **Eval rubrics (0–5 & release bars):** [agent](references/evals/agent-eval-criteria.md),
+- **Mode details:** [authoring-details.md](references/authoring-details.md) (fallbacks, authoring/hook, eval, reflect).
+- **Eval core:** [method](references/evals/README.md), [grader](references/evals/grader-prompt.md),
+  [benchmarking](references/evals/eval-benchmarking-workflow.md),
+  [subagent test](references/evals/testing-skills-with-subagents.md).
+- **Eval rubrics:** [agent](references/evals/agent-eval-criteria.md),
   [instruction](references/evals/instruction-eval-criteria.md), [skill](references/evals/skill-eval-criteria.md).
-- **Eval runner prompts:** [agent](references/evals/agent-eval-runner-prompt.md),
+- **Runner prompts:** [agent](references/evals/agent-eval-runner-prompt.md),
   [instruction](references/evals/instruction-eval-runner-prompt.md),
   [skill](references/evals/skill-eval-runner-prompt.md).
-- **Eval improvement loops:** [agent](references/evals/agent-improvement-loop.md),
+- **Improvement loops:** [agent](references/evals/agent-improvement-loop.md),
   [instruction](references/evals/instruction-improvement-loop.md), [skill](references/evals/skill-improvement-loop.md).
-- **Examples & area indexes:** [CLAUDE.md testing](references/examples/claude-md-testing.md),
+- **Indexes:** [CLAUDE.md testing](references/examples/claude-md-testing.md),
   [forging](references/forging/README.md), [governance](references/governance/README.md), [MCP](references/mcp/README.md),
   [quality](references/quality/README.md), [reflect](references/reflect/README.md).
-- **Shared contracts:** [forwarding](../routing/references/forwarding.md),
+- **Contracts:** [forwarding](../routing/references/forwarding.md),
   [approval](../routing/references/contracts/approval.md), [gates](../routing/references/contracts/gates.md),
   [unattended](../routing/references/contracts/unattended.md),
   [question-format](../routing/references/contracts/question-format.md).
