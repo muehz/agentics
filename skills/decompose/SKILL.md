@@ -79,9 +79,9 @@ Classes follow [gates.md](../routing/references/contracts/gates.md). Hold a **sa
 - **User's own approval of spec and plan (Step 6) [safety]:** held — only the user's reply writes an `approve` row ([approval.md](../routing/references/contracts/approval.md)).
 - **True status ("validated", "reviewed", recorded results) (Step 6) [safety]:** held — name the outstanding checks instead.
 - **Plan Validation Checklist [process]:** `waive checklist`; `**Result:**` reads `not run`, so `execute` reviews every task at Stage 1.
-- **No implementation or test code in the plan (row 8) [process]:** `waive no-code` naming the tasks; row 8 records the waiver and the plan reviewer is informed.
-- **Plan challenge (Step 4b) [process]:** `challenge plan.md` row with status `declined`.
-- **Proportionality check (Step 5) [process]:** `waive proportionality`; `**Proportionality:**` reads `override by user`.
+- **No implementation or test code in the plan (row 8) [process]:** `waive no-code` naming the **actual concrete task IDs** (e.g., `task-1, task-2`, never `<all task ids>`); adding code changes reviewed scope (new plan revision, rerunning challenge/review), row 8 records the waiver with those IDs, the plan reviewer is informed, and never claim the review found no code in those waived tasks.
+- **Plan challenge (Step 4b) [process]:** `challenge plan.md` row with status `declined`, logged **immediately** on the turn the user declines after the one-time cost warning (never wait for a third turn).
+- **Proportionality check (Step 5) [process]:** `waive proportionality`; `**Proportionality:**` reads `override by user` with the real computed counts (never placeholder tokens like `<real counts>`).
 - **Blocking coverage item (Step 5) [process]:** `waive coverage` with item IDs in `why`, listed under `waived` on `**Coverage:**`.
 
 **Don't use when** is ownership, not a gate: this skill plans and does not implement ("while you're in there, just make the change" gets one `execute` offer while planning continues).
@@ -121,7 +121,7 @@ Use the source's defined solution; record chosen shape and rejected alternatives
 
 #### Step 4a: Write the plan
 
-Before the first write, record whether `plan.md` already exists in the directory `flow path --folder <work-folder>` prints (Step 6 needs this for `create`). Write the full plan against [references/plan-template.md](references/plan-template.md) and [references/skim-rules.md](references/skim-rules.md) with padded tables, no implementation or test code (`## Code in artifacts` in [references/chain-artifacts.md](references/chain-artifacts.md)), and `**Validated:** not run` / `**Result:** not run`. Read [references/step-procedures.md](references/step-procedures.md#step-4a-task-fields-and-folder-hygiene) for `**Tier:**`, `**Packet review:**`, `**Review group:**`, `**Role:**` ([proportionality-check.md](references/proportionality-check.md#task-roles)), `**Reproduction:**`, and folder hygiene (`temp/`).
+Before the first write, record whether `plan.md` already exists in the directory `flow path --folder <work-folder>` prints (Step 6 needs this for `create`). Load and write the actual plan content against [references/plan-template.md](references/plan-template.md), [references/slicing.md](references/slicing.md) (every `## S<n>` slice carries `**Outcome:**` and `**Scope:**`, even in slicing-only runs), and [references/skim-rules.md](references/skim-rules.md) with padded tables, concrete steps/quotes (never narrative summaries in place of plan content), no implementation or test code (`## Code in artifacts` in [references/chain-artifacts.md](references/chain-artifacts.md)), and `**Validated:** not run` / `**Result:** not run`. Read [references/step-procedures.md](references/step-procedures.md#step-4a-task-fields-and-folder-hygiene) for `**Tier:**`, `**Packet review:**`, `**Review group:**`, `**Role:**` ([proportionality-check.md](references/proportionality-check.md#task-roles)), `**Reproduction:**`, and folder hygiene (`temp/`).
 
 #### Step 4b: Challenge the written plan
 
@@ -129,10 +129,10 @@ Invoke `challenge` on `plan.md` (passing settled intent/spec decisions) to exami
 
 ### Step 5: Validate the Plan
 
-Run in order (once each unless noted):
+Run and report items 1 to 7 in this exact order before any approval question (once each unless noted):
 
 1. **Plan Validation Checklist.** Run all ten rows below; fix failures or leave unfixable rows `failed` with what they need.
-2. **Proportionality check.** Run [references/proportionality-check.md](references/proportionality-check.md); report all five signals and offer dispositions when any fire. Rerun once after a reorder/resize/slice; reject any resize dropping the **Outcome proof**.
+2. **Proportionality check.** Load and run [references/proportionality-check.md](references/proportionality-check.md); on the very first proportionality report (including under override pressure), print the **actual computed count and evidence for all five signals** reconciled against the computed task graph (never placeholders like `N support tasks` or `<real counts>`, and if signal 5 is absent/unestablished state that status honestly rather than claiming all five passed), write every user-environment effect (such as browser authentication) unconditionally on `User-environment effects` (never "or dropped"), and offer dispositions when any fire. Rerun once after a reorder/resize/slice; reject any resize dropping the **Outcome proof**.
 3. **Refill.** If tasks changed, re-mark lanes, refill `**Size:**` and `## Task index`, and rerun checklist rows on changed tasks.
 4. **Coverage check.** When `spec.md` or `intent.md` sits beside `plan.md`, run [references/coverage-check.md](references/coverage-check.md). Unwaived blocking items hold approval.
 5. **Artifact validator.** Run the repo's plan-artifact / provenance-header validator if present and record its real result (or state none exists).
@@ -145,7 +145,7 @@ Run in order (once each unless noted):
 
 **Save, stage, and log.** Save to [session storage](references/session-plan.md) only if explicitly asked; otherwise save to repository storage with provenance header (`derived-from:`), stage, and log strictly per [references/save-and-stage.md](references/save-and-stage.md). Read [references/step-procedures.md](references/step-procedures.md#step-6-storage-tier-and-hand-off) for folder derivation, `review plan` evidence format, slicing-only logging, tier escalation (plain meaning in [vocabulary.md](../routing/references/contracts/vocabulary.md)), and failed-plan override handling.
 
-**Project, approve, commit, and route.** Upsert the canonical plan into native plan/task tools per [native-plan-projection.md](../routing/references/native-plan-projection.md) (report unavailability rather than claiming success). Ask the approval question per [references/approval.md](references/approval.md) and [approval.md](../routing/references/contracts/approval.md) (edits require re-review before re-asking). On yes, write approval and `order` rows, stage `state.tsv`, and commit together under the [commit contract](../git/references/commit.md#the-commit-contract) on the [work-item branch](../git/references/branch.md#the-work-item-branch), then route to [execute](../execute/SKILL.md) (or `/agentics:git worktrees` first if isolation is needed). On no/"not yet", stop with nothing implemented.
+**Project, approve, commit, and route.** Upsert the canonical plan into native plan/task tools per [native-plan-projection.md](../routing/references/native-plan-projection.md) (report unavailability rather than claiming success). Before every approval question, print the plan path, the `flow status` `text=<hash>` for repository-stored plans (for session-only plans per [references/session-plan.md](references/session-plan.md), show the absolute path without a hash and create no repository state), a summary of at most five lines (goal, size, tier + plain meaning, what to look at), and the artifact validator result. Ask the approval question per [references/approval.md](references/approval.md) and [approval.md](../routing/references/contracts/approval.md) (when the checklist was waived or the plan challenge was declined, name that explicitly instead of calling the plan "ready"; edits require re-review before re-asking). On yes, for repository-stored plans write approval and `order` rows, stage `state.tsv`, and commit together under the [commit contract](../git/references/commit.md#the-commit-contract) on the [work-item branch](../git/references/branch.md#the-work-item-branch) (session-only plans write no rows and commit nothing), then route to [execute](../execute/SKILL.md) (or `/agentics:git worktrees` first if isolation is needed). On no/"not yet", stop with nothing implemented.
 
 ---
 
@@ -161,7 +161,7 @@ Run every check before hand-off and record real results; never mark `[x]` on unr
 6. **Top failure modes covered:** Risk Notes table has >= 3 rows (or 1 per task when < 3 tasks).
 7. **Exact file paths:** every path is specific and repository-relative (no "somewhere in src/").
 8. **Specific steps, no code:** steps name behaviors, test cases, commands + expected output, or pseudocode; only allowed code blocks; validation rules state what they reject.
-9. **Exact commands and output:** every verification step has a command and expected result; steps needing absent credentials/hardware name the runner (user or CI).
+9. **Exact commands and output:** inspect the repo's runner config first (or ask the user once for the test command when no runner config is available—never invent a command or write generic phrases like "the test command passes" or "the test suite passes"); every verification step names that exact command and its expected result, and steps needing absent credentials/hardware name the runner (user or CI).
 10. **Testable goal:** one sentence a test could verify.
 
 ## Related Skills

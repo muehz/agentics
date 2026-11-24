@@ -29,8 +29,8 @@ When one option is plainly right, say so with the reason, and give the short for
 When discern runs on `routing`'s ambiguity ladder to pick an owner:
 
 - An owner found: name the skill and the reason, and return that to the caller.
-- No owner found: return "no owner" as the result, with the reason. Do not escalate back to the ladder that called this
-  mode; `routing` takes its next rung.
+- No owner found: return strictly "no owner" as the result, with the reason. Do not escalate back to the ladder or say
+  the request returns to `routing`'s ladder; `routing` takes its next rung on its own.
 - Run directly by the user: when no Agentics skill owns the work, say so, and say the work can be done in the session.
 
 ## Reasoning preflight
@@ -92,8 +92,11 @@ Unless the user asks for another format, the response ends with:
 - `[Speculation]`: plausible but not grounded in current evidence.
 - `[Unverified]`: stated as fact elsewhere but not checked here.
 
-Do not present an inference as a confirmed fact. Qualify or support an unsourced absolute such as "prevent",
-"guarantee", or "will never". When a gap only the user can close remains, ask rather than guess.
+Do not present an inference as a confirmed fact. Attach `[Inference]`, `[Speculation]`, or `[Unverified]` consistently
+to **every** unsourced comparative claim across all lenses (including cost, volume/scale, and feature comparisons like
+immutability or object lock)—never leave some comparative points unlabeled while others carry labels. Qualify or support
+an unsourced absolute such as "prevent", "guarantee", or "will never". When a gap only the user can close remains, ask
+rather than guess.
 
 **A decision needed now.** When the user wants a decision now despite missing facts, or tells you not to ask for
 context:
