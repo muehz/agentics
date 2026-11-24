@@ -11,10 +11,16 @@ truncation dropped the waiver guidance in a gate reference at about 53,600 bytes
 
 ## Rules
 
-### Every file under skills/ is at most 40,000 bytes
+### Every file under skills/ is capped in bytes (`SKILL_MD_BYTE_LIMIT` = 24,000; `SKILL_FILE_BYTE_LIMIT` = 30,000)
 
-- **Rule:** The conformance rule `skill-file-size` caps every git-tracked file under `skills/` at 40,000 bytes: each
-  `SKILL.md`, each reference, each script and any other file. The limit lives in two named constants,
+_Amended 2026-11-23:_ Lowered `SKILL_MD_BYTE_LIMIT` from 40,000 to **24,000 bytes** (matching Antigravity's 24,000-byte
+`SKILL.md` body load cap so local conformance catches breaches before CI; all 26 `SKILL.md` files already pass) and
+lowered `SKILL_FILE_BYTE_LIMIT` from 40,000 to **30,000 bytes** (matching Codex's 30,000-byte eval reader page and
+leaving framing/line-number headroom below Codex's 40,000-byte rendered-output cut; the 8 reference files between 30,000
+and 38,788 bytes are allowlisted shrink-only in `.github/tools/src/conformance/skill-size-allowlist.json`).
+
+- **Original Rule:** The conformance rule `skill-file-size` caps every git-tracked file under `skills/` at 40,000 bytes:
+  each `SKILL.md`, each reference, each script and any other file. The limit lives in two named constants,
   `SKILL_MD_BYTE_LIMIT` for `SKILL.md` and `SKILL_FILE_BYTE_LIMIT` for every other file, and both are 40,000 today. A
   file of at most 40,000 bytes is at most 10,000 tokens by Codex's estimate, so read whole it is never cut. The byte
   rule is forge's single size limit, and `skill-line-limit` is retired. When a step's body moves to a reference file to
