@@ -323,7 +323,7 @@ that test, when [signal 4](#small-fix-signals) says what covers it instead. A us
 check.
 
 **A small fix in progress.** When `flow where` exits 5, the branch is a small fix in progress. Announce it with the
-`skip chain` row as evidence. Continue with `execute fix`, or hand it to `gate` when its `verify fix` row reads `ok`.
+`skip chain` row as evidence. Continue with `execute fix`, or offer `gate` when its `verify fix` row reads `ok`.
 
 ## What selection does not decide
 

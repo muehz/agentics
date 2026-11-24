@@ -98,10 +98,12 @@ human feedback is never forwarded, drafted, or posted; its row is `Pending Revie
 ## Step 0 — Preflight (run before any mode)
 
 1. **Match the input** against [Don't use when](#dont-use-when) and [Feedback classification](#feedback-classification).
-   For `/agentics:triage pr <N>`, inspect before any worktree, sync, or push: `gh pr view <N> --json author,comments,reviews,statusCheckRollup`
-   and unresolved review threads per [source-detection.md](references/source-detection.md). A dependabot/renovate-only
-   or single-human-thread PR routes here and ends the run. For work on an issue, see
-   [Continuing from a displayed issue](#continuing-from-a-displayed-issue).
+   For `/agentics:triage pr <N>`, check open state **first** (`gh pr view <N> --json state`) and stop immediately on
+   `MERGED`/`CLOSED` before any author, comment, review, or checks fetch and before creating any worktree. Once open,
+   fetch `gh pr view <N> --json author,headRefName,comments,reviews,statusCheckRollup` and unresolved review threads per
+   [source-detection.md](references/source-detection.md) (so branch and author login are known before any approval
+   question, or state they could not be read). A dependabot/renovate-only or single-human-thread PR routes here and ends
+   the run. For work on an issue, see [Continuing from a displayed issue](#continuing-from-a-displayed-issue).
 2. **Check the host.** Triage supports github.com and GitHub Enterprise Server via `gh`. On any other host, say
    `host not supported: <host>` once and stop.
 3. **Hold the gates below**, classed per [gates.md](../routing/references/contracts/gates.md).
@@ -139,16 +141,21 @@ as a draft so they can edit and post it themselves; the footer still follows rep
 Pushing fixes and posting replies/rollup are outward effects governed by
 [approval.md](../routing/references/contracts/approval.md#steps-named-up-front):
 
-- `/agentics:triage pr <N>` (typed or scheduled) authorizes both push and posts.
+- `/agentics:triage pr <N>` (typed or scheduled) authorizes both push and posts—apply and push confirmed automatic-lane
+  fixes once code inspection verifies the finding is real (never downgrade verified automatic-lane fixes to drafts).
 - A natural-language request naming push, replies, or PR comments authorizes what it names.
-- A request naming neither ("can you get it cleaned up?") gets one question before the first push/post: "This pushes
-  the fixes to `<branch>` and posts replies and one summary comment on #N. Go ahead?"
+- A request naming neither ("can you get it cleaned up?") prepares local fixes, shows the **complete** proposed rollup
+  (summary header, table, full sections, and replies with concrete values and the literal attestation footer) before the
+  first push/post, and asks one question: "This pushes the fixes to `<branch>` and posts replies and one summary comment
+  on #N. Go ahead?"
 - An unattended run naming neither does local work, reports it, and pushes/posts nothing.
 
-State what the run will do in its opening line, including push/post status. Authorized actions remain bounded by the
-gates above, the draft lane, [paths triage never pushes](references/subagent-contract.md#paths-triage-never-pushes), and
-[outbound checks](../gh/references/posting-envelope.md#outbound-checks) (never post an unfixed security finding on a
-public repo; honor any user-declared embargo).
+State what the run will do in its opening line, including push/post status. Before the first post, load
+[outbound checks](../gh/references/posting-envelope.md#outbound-checks) and
+[lifecycle-verify.md](references/lifecycle-verify.md) and report each check's actual result (never "assumed to pass").
+Authorized actions remain bounded by the gates above, the draft lane,
+[paths triage never pushes](references/subagent-contract.md#paths-triage-never-pushes), and outbound checks (never
+post an unfixed security finding on a public repo; honor any user-declared embargo).
 
 ## Attestation footer
 
@@ -162,8 +169,9 @@ and draft; session requests cannot toggle it — name the setting once instead.
 
 ## Continuing from a displayed issue
 
-When the user follows an issue read with implementation language ("implement it", "let's work on this"), hand off to
-`routing`'s start-or-continue path ([Lifecycle phases](../routing/SKILL.md#lifecycle-phases)). This explicit request
+When the user follows an issue read with implementation language ("implement it", "let's work on this"), load
+[Lifecycle phases](../routing/SKILL.md#lifecycle-phases) and hand off to `routing`'s start-or-continue path, carrying
+the concrete handoff packet verbatim in the reply (not merely predicting downstream retention). This explicit request
 authorizes the local handoff ([forwarding.md](../routing/references/forwarding.md#explicit-implementation-request)):
 announce and proceed without extra confirmation.
 
@@ -186,15 +194,23 @@ stderr (never discard stderr with `2>/dev/null`). Match exit code first, then st
 
 ## `/agentics:triage pr`
 
-Load [references/pr-mode.md](references/pr-mode.md) and follow it; [references/orchestration-lifecycle.md](references/orchestration-lifecycle.md)
-is the canonical 8-phase pipeline (Phases 0–7: base sync by merge, source detection, isolated per-source subagents,
-developer draft decisions, cherry-pick integration, combined verification and inspection, one push, thread replies, one
-rollup, and posted-formatting check).
+Load [references/pr-mode.md](references/pr-mode.md), [references/rollup-template.md](references/rollup-template.md), and
+[references/orchestration-lifecycle.md](references/orchestration-lifecycle.md) before drafting **any** PR rollup
+(including blocked or adversarial runs); load [checks-triage.md](references/checks/checks-triage.md) when checks fail
+and [copilot-triage.md](references/pull-requests/copilot/copilot-triage.md) before Copilot dispositions (restating every
+sweep search count and fixed match). Attach each Phase 4.2 draft commit's full diff. Render every rollup section
+verbatim with literal HTML markers (`<!-- agentics:triage:section:base-sync -->`, end anchor), name/category/outcome/
+redacted excerpt, verified counts, mapped severities (`CRITICAL` -> `Critical`, `HIGH` -> `Important`, `MEDIUM`/`LOW` ->
+`Minor`), concrete `needs-you` bullets, and concrete fixture-backed values (no `...`, parentheticals, or unrendered
+placeholders). Pipeline: Phases 0–7 (base sync, source detection, isolated subagents, draft decisions, cherry-pick,
+combined verification, one push, replies, one rollup, posted-formatting check).
 
 - **Open PRs only:** stop on `MERGED`/`CLOSED` in preflight before creating any worktree. Dirty local trees, in-progress
   ops, or earlier kept branches are notes only.
 - **Blocked base sync:** stop before source dispatch, push nothing, keep sync branch/worktree, and post one blocked
-  rollup (`@{PR_AUTHOR} — 1 needs you`, Base sync block, no table).
+  rollup (`@{PR_AUTHOR} — 1 needs you`, literal `<!-- agentics:triage:section:base-sync -->` block with concrete
+  branch/worktree values, no table—do not print template commentary like "No needs-you list, no table, no Details" inside
+  the comment body).
 - **Plain fast-forward push:** push via [push workflow](../git/references/push.md). If the PR head moved mid-run, push
   nothing and keep branches (never merge new tip, rebase, or force-push).
 - **Replies required after push:** post every automatic-lane and accepted-draft reply unless the push failed/skipped,
@@ -217,7 +233,10 @@ Move issues through category (`bug` / `enhancement`) and state (`needs-triage` /
 `ready-for-human` / `wontfix`). With no number, surface issues needing attention; with a number, gather context,
 recommend a disposition, optionally grill, and apply the outcome.
 
-Load [references/issue-mode.md](references/issue-mode.md) and follow its workflow.
+Load [references/issue-mode.md](references/issue-mode.md) and follow its workflow. On every cohort line state both the
+total and checked count returned by the search API (for example, `showing 3 of 40, 30 checked` or `12 needs-triage`,
+disclosing any unchecked count), and when asking to post an agent brief comment, render the complete exact brief text
+verbatim in the reply (never `[exact text shown]` placeholders).
 
 ## Logging escapes
 
@@ -238,49 +257,43 @@ the full 7-step field mapping and [flow-state.md](../execute/references/flow-sta
 
 ## Related Skills
 
-- `git`: worktrees, fork code, setup/baseline (`worktrees.md`), push (`push.md`), merge conflict resolution (`/agentics:git resolve`).
-- `gh`: posting envelope, author ownership, drafts/merging/threads policy, and bare-number lookup.
-- `execute`: parallel subagent dispatch pattern and flow-state contract.
-- `review`: human-authored review when there is no automated signal.
-- `ops`: live incidents triaged from signal (`/agentics:ops response`).
+- `git`: worktrees, fork code, push, merge conflicts (`/agentics:git resolve`).
+- `gh`: posting envelope, ownership, drafts/threads policy, bare-number lookup.
+- `execute`: parallel subagents and flow-state contract.
+- `review`: human-authored review without automated signal.
+- `ops`: live incidents (`/agentics:ops response`).
 
 ## References
 
-Load each reference only when its mode or source applies:
+Load only when the mode or source applies:
 
-- **PR orchestration:** [PR mode](references/pr-mode.md),
-  [lifecycle (Phases 1–4)](references/orchestration-lifecycle.md),
-  [lifecycle preflight (Phase 0)](references/lifecycle-preflight.md),
-  [lifecycle publish (Phases 5–6)](references/lifecycle-publish.md),
-  [lifecycle verify (Phase 7 & follow-ups)](references/lifecycle-verify.md),
-  [mode procedures (auto-detect, escape logging)](references/mode-procedures.md),
-  [source detection & bot routing](references/source-detection.md),
-  [automated source detection](references/source-detection-automated.md),
-  [subagent contract & paths never pushed](references/subagent-contract.md),
-  [rollup template](references/rollup-template.md),
-  [rollup details & examples](references/rollup-details-and-examples.md), [crash recovery](references/recovery.md).
-- **Issue mode:** [workflow](references/issue-mode.md), [agent brief](references/issues/agent-brief.md),
-  [label mapping](references/issues/label-mapping.md), [out-of-scope KB](references/issues/out-of-scope.md).
+- **PR:** [pr-mode](references/pr-mode.md), [lifecycle](references/orchestration-lifecycle.md),
+  [preflight](references/lifecycle-preflight.md), [publish](references/lifecycle-publish.md),
+  [verify](references/lifecycle-verify.md), [mode-procedures](references/mode-procedures.md),
+  [source-detection](references/source-detection.md), [automated](references/source-detection-automated.md),
+  [subagent-contract](references/subagent-contract.md), [rollup-template](references/rollup-template.md),
+  [rollup-details](references/rollup-details-and-examples.md), [recovery](references/recovery.md).
+- **Issue:** [workflow](references/issue-mode.md), [agent-brief](references/issues/agent-brief.md),
+  [label-mapping](references/issues/label-mapping.md), [out-of-scope](references/issues/out-of-scope.md).
 - **Checks:** [index](references/checks/README.md), [workflow](references/checks/checks-triage.md),
-  [tier policy](references/checks/checks-tier-policy.md), [categories](references/checks/checks-categories.md),
-  [log parsing](references/checks/checks-log-parsing.md).
+  [tier-policy](references/checks/checks-tier-policy.md), [categories](references/checks/checks-categories.md),
+  [log-parsing](references/checks/checks-log-parsing.md).
 - **Bot Review:** [index](references/pull-requests/bot-review/README.md),
   [workflow](references/pull-requests/bot-review/bot-review-triage.md).
-- **Checkmarx One:** [index](references/pull-requests/checkmarx/README.md),
+- **Checkmarx:** [index](references/pull-requests/checkmarx/README.md),
   [workflow](references/pull-requests/checkmarx/checkmarx-triage.md),
-  [comment parsing](references/pull-requests/checkmarx/checkmarx-comment-parsing.md),
+  [parsing](references/pull-requests/checkmarx/checkmarx-comment-parsing.md),
   [categories](references/pull-requests/checkmarx/checkmarx-finding-categories.md),
-  [Actions JS/TS fixes](references/pull-requests/checkmarx/checkmarx-remediation-patterns-actions-js.md),
-  [generic fixes](references/pull-requests/checkmarx/checkmarx-remediation-patterns-generic.md).
-- **Copilot Review:** [index](references/pull-requests/copilot/README.md),
+  [actions-js](references/pull-requests/checkmarx/checkmarx-remediation-patterns-actions-js.md),
+  [generic](references/pull-requests/checkmarx/checkmarx-remediation-patterns-generic.md).
+- **Copilot:** [index](references/pull-requests/copilot/README.md),
   [workflow](references/pull-requests/copilot/copilot-triage.md),
   [dispositions](references/pull-requests/copilot/copilot-finding-dispositions.md),
-  [scope sweep](references/pull-requests/copilot/copilot-scope-sweep.md).
-- **Code Quality & Security:** [Code Quality index](references/pull-requests/github-code-quality/README.md),
-  [Code Quality workflow](references/pull-requests/github-code-quality/code-quality-triage.md),
-  [Code Security index](references/pull-requests/github-code-security/README.md),
-  [Code Security workflow](references/pull-requests/github-code-security/code-security-triage.md).
-- **Human Feedback & Base Sync:** [human feedback](references/pull-requests/human-feedback/human-feedback-triage.md),
-  [merge conflicts](references/pull-requests/merge-conflicts/merge-conflicts-triage.md).
-- **Cross-skill routing:** [lifecycle phases](../routing/SKILL.md#lifecycle-phases),
-  [forwarding](../routing/references/forwarding.md).
+  [scope-sweep](references/pull-requests/copilot/copilot-scope-sweep.md).
+- **Code Quality & Security:** [quality-index](references/pull-requests/github-code-quality/README.md),
+  [quality](references/pull-requests/github-code-quality/code-quality-triage.md),
+  [security-index](references/pull-requests/github-code-security/README.md),
+  [security](references/pull-requests/github-code-security/code-security-triage.md).
+- **Human & Sync:** [human-feedback](references/pull-requests/human-feedback/human-feedback-triage.md),
+  [merge-conflicts](references/pull-requests/merge-conflicts/merge-conflicts-triage.md).
+- **Routing:** [lifecycle](../routing/SKILL.md#lifecycle-phases), [forwarding](../routing/references/forwarding.md).

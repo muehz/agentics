@@ -51,7 +51,7 @@ Read the rows in order. The first match wins.
 This skill writes no code. When the request asks for a change, give the shortlist and the citations first, then pass the change on with them as constraints:
 
 - A change to behavior, an interface, or a contract goes to `routing`, announced and run ([forwarding.md](../routing/references/forwarding.md#target-classification)). `routing` assigns the delivery path, so a direct invocation of this skill is never a way around it.
-- A change with no runtime behavior, such as a typo or formatting, is normal implementation. This skill has no workflow for it, and the session makes the edit directly.
+- A change with no runtime behavior, such as a typo or formatting, is normal implementation. This skill has no workflow for it; do not forward it, and let the session make the edit directly with no ceremony.
 
 ### Worked example
 
@@ -70,7 +70,7 @@ A citation says that a principle changed a choice in the work. Without an inspec
 
 - **Held:** citations or a history that no inspected evidence supports, such as a padded "Principles applied" section.
 - **Harm:** reviewers and later maintainers read an invented reason as fact.
-- **Instead:** inspect the diff and cite only the principles that changed a choice, or report that none did. For a missing reason, describe the change truthfully and say that its reason is not recorded, or record a new decision from evidence gathered now and date it as new.
+- **Instead:** inspect the diff and cite only the principles that changed a choice, or report that none did. If the diff cannot be loaded in this session, return only a provisional shortlist with no citations and name how to obtain the diff (`git diff <base>..HEAD` locally or the `gh` skill for a PR). For a missing reason, describe the change truthfully and say that its reason is not recorded, or record a new decision from evidence gathered now and date it as new.
 
 A repeated request gets one line that points back to that alternative. Who approves the wording does not change what the evidence shows.
 

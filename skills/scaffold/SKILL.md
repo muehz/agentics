@@ -85,8 +85,11 @@ Recommended action**. Add a **Wiring** column on feedback-loop rows. Order the c
    [conformance criteria](references/init.md#conformance-criteria).
 6. Release state.
 
-Audit the categories the request names. A request that names none, including bare `scaffold`, gets all six. "Does lint
-work here?" gets the feedback-loop rows for lint and nothing else.
+Audit the categories the request names. A request that names none, including bare `scaffold`, gets all six in exact
+order — even with thin evidence, never omit categories or replace the table with a narrative summary (mark unobserved
+categories `unverified` or `blocked`, never split category 1 across separate sections, include invocation source,
+selection, and observed counts on feedback-loop rows, and give each applicable consumer option in category 2 its own
+row). "Does lint work here?" gets the feedback-loop rows for lint and nothing else.
 
 Use only `pass | missing | failed | blocked | unverified | inapplicable`. Within each category, list demonstrated
 failures and missing requirements first, then blocked or unverified checks, then passing or inapplicable items. State
@@ -135,7 +138,9 @@ organization. Init does not make those decisions. When the user states them, ini
 | A file whose exact content the user dictated                                                                                                       | Nothing. Write it and show its path.                                                                                                                                                                    | —            |
 | Any other file or local configuration                                                                                                              | Show the generated files together in one preview, then ask one question: yes, edit a named file, or skip a named file.                                                                                  | Process gate |
 
-Rows are exclusive: a file falls in the first row that names it. When the user declines a process-gate preview ("skip
+Rows are exclusive: a file falls in the first row that names it. Show complete, exact file, diff, and policy text in
+previews in catalog order (`CODEOWNERS` ninth, before `.editorconfig`) — never abbreviated outlines, ellipses (`...`),
+`(full text)` markers, or placeholder values. When the user declines a process-gate preview ("skip
 the previews"), name its cost once: files are written with generated content nobody has read. On the next reply that
 still declines, write them without a preview and list them in the summary as written unpreviewed. A safety gate is held
 in the shape [gates.md](../routing/references/contracts/gates.md#safety-gate) gives, with the alternative named:

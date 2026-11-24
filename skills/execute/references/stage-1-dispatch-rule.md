@@ -28,8 +28,10 @@ A plan is **trusted** when all three hold:
 3. Its plan review was independent: the latest `review plan` row does not say `by=self`, and the `**Plan review:**` line
    does not say `self-read`. A self-read earns no skip, so every task of such a plan gets Stage 1.
 
-An inline task is the user's own already-decomposed task, given in this session. A task marked `**Packet review:** yes`
-falls to row 6 and runs. Tier still selects the models.
+An inline task is the user's own already-decomposed task, given in this session. For file-plan tasks, row 5's "stated
+**Tier**" means a `**Tier:**` field written in the plan itself—a controller-assigned tier from Step 1 sub-step 7 never
+qualifies a file-plan task for a row-5 skip (a file-plan task that omits `**Tier:**` falls to row 6 and runs Stage 1). A
+task marked `**Packet review:** yes` falls to row 6 and runs. Tier still selects the models.
 
 ## The self-containment check
 

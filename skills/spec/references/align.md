@@ -166,8 +166,9 @@ resolution wording throughout.
     write no row, report the value as malformed, and ask the user how to proceed before any approval question: a value
     such as `$(…)` would run in the shell.
 
-6. **Write and stage.** Otherwise write `spec.md`, and stage it as [draft.md](draft.md#rows-and-staging) says. When step
-   2 found a current approval, record the revocation and stage `state.tsv`:
+6. **Write and stage.** Otherwise write `spec.md`, stage it explicitly with `git add -- <work-folder>/spec.md` and
+   confirm `git diff --cached --name-only` names it (as [draft.md](draft.md#rows-and-staging) says). When step 2 found a
+   current approval, record the revocation and stage `state.tsv` with `git add -- <work-folder>/state.tsv`:
 
         agx flow log spec revoke spec.md ok "<what align changed>" none "spec approve the aligned spec" --folder <work-folder>
 

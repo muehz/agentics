@@ -37,16 +37,22 @@ customers are drafts the user sends.
 
         Yes or unsure loads [security-branch.md](security-branch.md); no loads
         [reliability-branch.md](reliability-branch.md); both runs security comms and forensics with reliability customer
-        recovery. The user's statement decides, including "it's just an outage". When evidence in the session later
-        points to security, say once what was observed and ask the question again.
+        recovery. The user's statement decides, including "it's just an outage". If the branch question remains
+        unanswered, treat the branch as unsure and run the security branch. When evidence in the session later points to
+        security, say once what was observed and ask the question again.
 
-    4. **The incident record.** Read the repository's visibility first. Then draft the tracking issue from
-       [../github-artifacts.md](../github-artifacts.md#tracking-issue-response-mode-declaration), or on the security
-       branch with a public or unreadable repository, the record
-       [security-branch.md](security-branch.md#where-the-record-lives) names instead. Post it on the user's yes, or at
-       once when they named it up front.
-    5. **Defaults in one line each:** the responder channel and the wider engineering channel; and the cadence offer,
-       "Say 'post the cadence updates' and each one goes on the tracking issue as it falls due, shown here."
+    4. **The incident record.** Read the repository's visibility first. When the branch is security or unsure, OR when
+       repository visibility is `PUBLIC` or unreadable, direct the incident record to a draft security advisory or a
+       private location ([security-branch.md](security-branch.md#where-the-record-lives))—never a public tracking issue.
+       Otherwise include the drafted tracking issue in a fenced block from
+       [../github-artifacts.md](../github-artifacts.md#tracking-issue-response-mode-declaration). Every draft named in a
+       reply (incident record, first internal update, customer status-page draft) appears in a fenced block in that same
+       reply, never promised for later. Post it on the user's yes, or at once when they named it up front.
+    5. **Defaults and initial comms:** in one line each, name the responder channel, wider engineering channel, and the
+       cadence offer ("Say 'post the cadence updates' and each one goes on the tracking issue as it falls due, shown
+       here."). For P1/P2 active outages, also include the first internal update draft and customer status-page draft
+       (with `<angle-bracket>` placeholders for unsupplied details) from
+       [../communication-templates.md](../communication-templates.md).
 
 3. **Take the reply.** A partial reply settles what it names, and the rest keeps its default. When the user declares a
    severity other than the table's row, declare theirs, say the table row once, and record both in the incident record
@@ -111,12 +117,12 @@ The mechanics differ by branch: the containment tables in [reliability-branch.md
 
 This skill decides when `diagnose` takes over the root cause. Read the rows from the top; the first match wins.
 
-| Order | State                                                                                                                           | What to do                                                                                                 |
-| ----- | ------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
-| 1     | The user asks to start root-cause work now                                                                                      | Hand off now. Record the containment state as it stands.                                                   |
-| 2     | Containment holds: the damage is stopped or bounded                                                                             | Record `containment: holding` and hand off.                                                                |
-| 3     | No untried containment option remains: every option in the selected branch's containment table has no target here or has failed | Record `containment: unavailable` and hand off now, with the impact still running. Keep the cadence going. |
-| 4     | Otherwise: an untried option from that table exists                                                                             | Try it next, under the Phase 3 rules, and read this table again.                                           |
+| Order | State                                                                                                                           | What to do                                                                                                                                                                                                                                                    |
+| ----- | ------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1     | The user asks to start root-cause work now                                                                                      | Hand off now. Record the containment state as it stands.                                                                                                                                                                                                      |
+| 2     | Containment holds: the damage is stopped or bounded                                                                             | Record `containment: holding` and hand off to `diagnose` in the same reply, naming the branch (`unsure: security branch, Q1 pending` if unanswered).                                                                                                          |
+| 3     | No untried containment option remains: every option in the selected branch's containment table has no target here or has failed | Record `containment: unavailable`, state the branch (`unsure: security branch, Q1 pending` if unanswered), enumerate each checked/unavailable containment option inside the brief (including stop-write and read-only steps), and hand off now; keep cadence. |
+| 4     | Otherwise: an untried option from that table exists                                                                             | Try it next, under the Phase 3 rules, and read this table again.                                                                                                                                                                                              |
 
 For row 3, an option has no target here when the user's report rules it out or the incident gives it nothing to act on.
 Restart, traffic shed and scale-out have a target only when the report shows a stuck process or a capacity signal. Do

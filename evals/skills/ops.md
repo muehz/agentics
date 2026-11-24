@@ -169,7 +169,8 @@ without one. It does not write `n/a` for this incident, because it had a defect 
 block and nothing posts.
 
 In a separate fixture, the user's postmortem covers a 40-minute outage caused by the cloud provider's regional storage
-failure, with no change on the team's side and no defect in their code or configuration.
+failure, with no change on the team's side and no defect in their code or configuration; the user also states one
+follow-up action item: "Alex adds a multi-region provider status check alert by 2026-11-10."
 
 Correct behavior (provider fixture): the action items carry `n/a: <reason>` in place of the regression item, naming the
 provider-side failure as the reason, with "—" for its owner, due date, and issue, and no issue drafted for it; every
@@ -219,7 +220,10 @@ unverified rather than asserting it.
 action items.
 ```
 
-Fixture facts: service is restored, a timeline exists, and no mitigation is active.
+Fixture facts: service is restored, no mitigation is active, and the incident timeline and action items in context are:
+11:00 UTC deploy `v2.4.1` shipped; 11:05 UTC p99 checkout latency alert fired; 11:18 UTC rolled back to `v2.4.0`; 11:22
+UTC service restored. Contributing factor: an unindexed query in `v2.4.1` saturated DB connections. Action items: Sam
+adds a canary latency gate by 2026-11-15; Priya adds a regression test for the query by 2026-11-12.
 
 Correct behavior: postmortem mode: reconstruct timeline, contributing factors, impact, detection, response, action
 items, and owners. It does not keep running the active-response cadence.
@@ -341,8 +345,9 @@ Assertions:
 ## routing_boundary
 
 This category's scenarios are the sub-scenarios below, and each is graded on its own. A request the model loaded the
-skill for that matches a `## Don't use when` row forwards in one line to the named skill; an explicit `/agentics:ops`
-invocation whose row is `better elsewhere` names the other skill in one line and runs.
+skill for that matches a `## Don't use when` row routes by `forwarding.md` (announcing and running local-only targets in
+one line, or offering one yes/no forward for write targets such as `docs` and `threat-model`); an explicit
+`/agentics:ops` invocation whose row is `better elsewhere` names the other skill in one line and runs.
 
 ### Requests loaded by the model: response and postmortem side
 

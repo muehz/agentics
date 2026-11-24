@@ -78,9 +78,14 @@ Read the rows from the top; the first match wins. Say the mode in one line when 
 | Two or more whole alternatives, hypotheses, or owners, and the deliverable is one pick among them  | Discern   |
 | Otherwise: one plan, design, approach, or scope, including one with a single open choice inside it | Interview |
 
-Discern follows [references/discern.md](references/discern.md). A single open choice inside a plan becomes one interview
-question with a recommended answer. When an interview ends and two or more whole alternatives remain that questioning
-cannot settle, say so in one line and continue in discern on those alternatives.
+Discern follows [references/discern.md](references/discern.md). Load [references/discern.md](references/discern.md) for
+discern, [forwarding.md](../routing/references/forwarding.md) before any route-away,
+[question-format.md](../routing/references/contracts/question-format.md) before asking any frontier round, and
+[gates.md](../routing/references/contracts/gates.md) before any safety hold. In discern mode, a "don't ask for context"
+or "skip the caveats" request skips the reasoning preflight (opening with `[Preflight skipped]`), drops explanatory
+caveats, and keeps verification labels on every unverified claim. A single open choice inside a plan becomes one
+interview question with a recommended answer. When an interview ends and two or more whole alternatives remain that
+questioning cannot settle, say so in one line and continue in discern on those alternatives.
 
 ## Workflow
 
@@ -90,8 +95,9 @@ cannot settle, say so in one line and continue in discern on those alternatives.
 overrides. A request to sign off finished work with no proposal, design, diff, or pull request in the conversation gets
 no verdict and no route. A verdict on work nobody has shown is a claim of status with no evidence, a
 [safety gate](../routing/references/contracts/gates.md#safety-gate). Say once that no verdict is given on unseen work,
-because it would read as a check that never happened, and ask for the proposal or the diff in one question. A described
-proposal then runs here. A diff or a pull request goes to `/agentics:review`.
+because it would read as a check that never happened, and ask **only** for the proposal or design in one explicit
+`❓`/`➡️` question (state in one line that a finished diff or pull request goes to `/agentics:review` instead—never
+invite a PR link as input to this skill). A described proposal then runs here.
 
 A plan, a design, or an approach in hand passes this step. So does a scope from a caller. Otherwise, read the input for
 the three scope markers:
@@ -106,11 +112,11 @@ requests a minute, leave internal callers alone" leaves open what happens on a b
 inferred decision in the first round so the user can correct it. A question that is only interesting is not a marker.
 Read the rows from the top; the first match wins.
 
-| Markers present                   | Action                                                                                                                                                                                |
-| --------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| All three                         | Go to Step 1.                                                                                                                                                                         |
-| A named target, but not all three | Ask one question that names every missing marker. The reply reopens the work here: map the tree within the scope given and ask the first round. Do not ask for the same marker again. |
-| Otherwise: no named target        | The bare-goal row above applies. Under `/agentics:challenge`, name `intent` in one line, then ask the same one question for a target, a boundary, and the open decision.              |
+| Markers present                   | Action                                                                                                                                                                                                                                                                                                                                                 |
+| --------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| All three                         | Go to Step 1.                                                                                                                                                                                                                                                                                                                                          |
+| A named target, but not all three | If the user explicitly named an interview over a named set of alternatives, start the interview and put any missing scope marker into the first round. Otherwise ask one question that names every missing marker. The reply reopens the work here: map the tree within the scope given and ask the first round. Do not ask for the same marker again. |
+| Otherwise: no named target        | The bare-goal row above applies. Under `/agentics:challenge`, name `intent` in one line, then ask the same one question for a target, a boundary, and the open decision.                                                                                                                                                                               |
 
 ### Step 1. Gather the plan
 
@@ -120,7 +126,8 @@ user for it. The decisions are the user's.
 
 ### Step 2. Map the decision tree
 
-Map the decisions in the interview's scope. Leave the [principles check](../routing/references/contracts/principles-check.md) to the phase inspecting the work.
+Map the decisions in the interview's scope. Do not open or read any principles files in challenge—leave the
+[principles check](../routing/references/contracts/principles-check.md) to the phase inspecting the work.
 
 Identify every decision point, assumption, and dependency in the plan, and sort them into five branches:
 
@@ -138,8 +145,10 @@ settled decision unless new evidence contradicts it.
 The **frontier** is every decision whose prerequisites are settled, so you can ask it now without guessing at an answer
 you have not heard.
 
-1. Compute the frontier. A question that depends on another open question belongs to a later round.
-2. Ask the whole frontier as one round, in the format and with the answer collection that
+1. Compute the frontier. Drop from the current round any question whose answer **or** whose recommended answer depends
+   on another open question in this round, and defer it to a later round.
+2. Ask the whole frontier as one round, in the exact format (`❓ **Q<n>** - **<title>**:` followed by a `➡️`
+   recommendation line grounded only in facts present in the input) and with the answer collection that
    [question-format.md](../routing/references/contracts/question-format.md) defines. Number the questions across the
    whole interview (Q1, Q2, and on), and order each round by risk. Ask only decisions whose answer changes the plan. A
    point with an obvious answer is not asked: it goes into the summary's **Assumptions** as a stated default the user can
@@ -199,10 +208,10 @@ Then the sections below, in this order. Leave out a section that has nothing in 
 
 The user can end the interview at any point, in any words.
 
-| When the user ends it                 | What happens                                                                                                                                                                                                                                        |
-| ------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Before answering any question         | Say in one sentence what was not examined, and stop. Write no summary.                                                                                                                                                                              |
-| After answering at least one question | Each unanswered question of the current round takes its recommended answer, marked as such in the summary. A question whose recommended answer would publish, post, or halt the work stays open. Unasked questions are listed as the open frontier. |
+| When the user ends it                 | What happens                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
+| ------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Before answering any question         | Say in one sentence what was not examined, and stop. Write no summary.                                                                                                                                                                                                                                                                                                                                                                                                     |
+| After answering at least one question | Immediately emit the full [Step 5](#step-5-summarize-the-shared-understanding) summary opening with the **Scope examined** line. Each unanswered question of the current round takes its recommended answer, explicitly labeled by source (distinguishing user answers from taken recommendations and unresolved open questions). A question whose recommended answer would publish, post, or halt the work stays open. Unasked questions are listed as the open frontier. |
 
 Ending the interview never approves the plan.
 

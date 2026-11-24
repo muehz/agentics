@@ -53,6 +53,10 @@ lines state that a yes also approves `spec.md` at `<spec-path>`.
 "Plan `<plan-path>` (`<hash>`) is ready. Approve it for execution (via `/agentics:execute`)? Your yes is the approval
 `execute` requires, and implementation starts on it."
 
+When the Plan Validation Checklist was waived or the plan challenge was declined, replace `is ready` with the actual
+status naming what was waived or declined (for example,
+`Plan <plan-path> (<hash>) is saved (checklist waived; plan challenge declined). Approve it for execution (via /agentics:execute)?`).
+
 **The spec question:**
 
 "Approve spec `<spec-path>` (`<hash>`)? This plan raised the tier to elevated (`<signals>`), so the spec is approved on

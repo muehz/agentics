@@ -413,8 +413,9 @@ E1, empty scope. The working tree is clean and the branch has no commits past `m
 /agentics:zealot tests
 ```
 
-E2, whole-project sweep. The Go module has eleven packages whose test counts (from `go test -list . ./<package>`) are
-40, 31, 22, 18, 12, 9, 7, 5, 3, 2, and 1:
+E2, whole-project sweep. The Go module has eleven packages whose test counts (from `go test -list . ./<package>`) are:
+`pkg/auth` (40), `pkg/billing` (31), `pkg/orders` (22), `pkg/catalog` (18), `pkg/search` (12), `pkg/notify` (9),
+`pkg/export` (7), `pkg/cache` (5), `pkg/retry` (3), `pkg/money` (2), and `pkg/clock` (1):
 
 ```
 /agentics:zealot tests all
@@ -490,7 +491,13 @@ E10, whole project in words. The E2 module. No slash command:
 Check every test in the whole project for tests that can't fail.
 ```
 
-E11, dispatch refused. The happy-category `value/` fixture, but the host refuses every subagent dispatch after the
+E11, dispatch refused. Fixture: Go package `value/` (`value/value.go` defines `Cents(d int) int { return d * 100 }` and
+`Enabled(flag bool) bool { return flag }`; `value/value_test.go` has `TestCentsSelf` asserting `Cents(5) == Cents(5)`,
+`TestCentsFormula` recomputing `5 * 100` in a helper, `TestCentsBehavior` asserting `Cents(5) == 500`, `ExampleCents`,
+and `TestEnabledSelf` asserting `Enabled(true) == Enabled(true)`; `importer set: empty`; mutating `Cents` to
+`return d * 101` fails `TestCentsBehavior` while `TestCentsSelf` and `TestCentsFormula` pass -> `remove`; mutating
+`Enabled` to `return !flag` leaves `TestEnabledSelf` passing with no other killing test and behavior change
+`Enabled(true) -> original true, mutant false` -> `replace`), and the host refuses every subagent dispatch after the
 wrapper's restatement (`subagents are disabled in this session`):
 
 ```
@@ -688,7 +695,13 @@ R5, a replacement test:
 /agentics:zealot tests Write the replacement test for TestEnabledSelf that the last run said to replace.
 ```
 
-R6, a test audit through TDD. The happy-category `value/` fixture:
+R6, a test audit through TDD. Fixture: Go package `value/` (`value/value.go` defines
+`Cents(d int) int { return d * 100 }` and `Enabled(flag bool) bool { return flag }`; `value/value_test.go` has
+`TestCentsSelf` asserting `Cents(5) == Cents(5)`, `TestCentsFormula` recomputing `5 * 100` in a helper,
+`TestCentsBehavior` asserting `Cents(5) == 500`, `ExampleCents`, and `TestEnabledSelf` asserting
+`Enabled(true) == Enabled(true)`; `importer set: empty`; mutating `Cents` to `return d * 101` fails `TestCentsBehavior`
+while `TestCentsSelf` and `TestCentsFormula` pass; mutating `Enabled` to `return !flag` leaves `TestEnabledSelf` passing
+with no other killing test and behavior change `Enabled(true) -> original true, mutant false`):
 
 ```
 /agentics:tdd Before we add more tests here, audit the existing tests in value/ for
