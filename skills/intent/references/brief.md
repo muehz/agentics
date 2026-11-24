@@ -51,14 +51,18 @@ the four the hand-off needs: **Problem**, **Behavior**, **Acceptance criteria**,
 - **Problem** says what is wrong or missing and who it affects.
 - **Behavior** says what the software does after the change, in observable terms.
 - **Acceptance criteria** lists what a reviewer checks. Each item is observable.
-- **Task** is the single task `execute` runs: one file scope, one verifiable acceptance criterion, and one verification
-  command. In a repository with no test suite, the command is the closest executable check, which must fail before the
-  change and pass after it. A requirement on how the task is done goes on the **Constraints** line, because `execute`
-  builds its packet from this section: a forwarded requirement such as `tdd`'s test-first, or the failing reproduction
-  of a diagnosed fix as the task's red test, named by its command or test. When the findings carry a reproduction, it is
-  the **Verification** command too, and the Problem cites the root cause and evidence the forward gave rather than
-  deriving them again.
-- **Decisions** records what the user settled and where, and the brief review line below.
+- **Task** is the single task `execute` runs: one file scope, one verifiable acceptance criterion, and one concrete
+  executable shell or test command (e.g., `go test ...` or `npm test ...` — never a prose description, bracketed
+  placeholder, or "to confirm" stub) that **fails before the change and passes after it** (never a pre-existing passing
+  suite that passes unchanged). In a repository with no test suite, the command is the closest executable check meeting
+  the same fail-before/pass-after rule. A requirement on how the task is done goes on the **Constraints** line, because
+  `execute` builds its packet from this section: a forwarded requirement such as `tdd`'s test-first, or the failing
+  reproduction of a diagnosed fix as the task's red test, named by its command or test. When the findings carry a
+  reproduction, it is the **Verification** command too, and the Problem cites the root cause and evidence the forward
+  gave rather than deriving them again.
+- **Decisions** records only what the user actually settled and where, and the brief review line below. Never invent,
+  assume, or silently fill in an unspecified parameter or default as a user decision; if the brief cannot be written
+  without it, keep it in **Open questions** or verify it empirically first.
 
 The [Source rule](../../decompose/references/skim-rules.md) decides what the `Source` line names. The
 [Code in artifacts rule](../../decompose/references/chain-artifacts.md#code-in-artifacts) limits the code the brief may
@@ -122,8 +126,9 @@ one-line pointer back to that alternative.
 
 Run [Step 4](../SKILL.md#step-4-route-to-spec-and-ask-for-approval)'s approval procedure with `brief.md` in place of
 `intent.md`: no question while an open question remains, the status line, the noted `hashes: brief.md text=<hash>`, the
-answer table, the approval guard, and asking again by content. Show the brief's path, its hash, a summary, and the
-review line. The question is:
+answer table, the approval guard, and asking again by content. Before asking, show the brief's full resolved path, its
+actual hash (never an ellipsis or placeholder), a concrete summary of its behavior, task, and decisions, and the review
+line. The question is:
 
 > "Brief written to `<brief-path>`. Approve this change? Your yes lets `execute` make this one change; commits, the pull
 > request, and the merge keep their own gates."
