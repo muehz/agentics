@@ -35,7 +35,7 @@ Under `/agentics:hillclimb`, row 5 runs this skill: the first deliverable is agr
 
 Each gate is stated once here, with its class from [gates.md](../routing/references/contracts/gates.md).
 
-**Safety gates.** Each is held in the fixed shape of gates.md, said once: what is held, the harm it prevents, and what the user can do instead. A repeated demand gets a one-line pointer back to that alternative.
+**Safety gates.** Load [gates.md](../routing/references/contracts/gates.md) before holding or yielding a gate. Each safety gate is held in the fixed shape of gates.md, said once: what is held, the harm it prevents, and what the user can do instead. A repeated demand gets **exactly one line** pointing back to that alternative without restating the full hold or adding extra paragraphs.
 
 | Held                                                                                                                                                       | Harm it prevents                                                                                 | What the user can do instead                                                                                                                             |
 | ---------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -49,8 +49,8 @@ Each gate is stated once here, with its class from [gates.md](../routing/referen
 
 ## Step 0: Preflight
 
-1. **Route.** Check the request against [Don't use when](#dont-use-when).
-2. **Metric.** If the request names a metric, a direction, and a target, use them. Otherwise, the first deliverable is agreement on them. During Step 1's exploration pass, propose a metric, a direction, and a target from the codebase, with evidence: a benchmark or a reproducible complaint. Ask it as one decision question in the [question format](../routing/references/contracts/question-format.md), with the proposal as the recommended answer. If the pass finds no evidence and the user names none, there is nothing to measure. Say so, and say what would start the climb: the operation, the metric, the direction, and the target, or the slow case. Never start the loop on an unmeasured goal. In an [unattended run](../routing/references/contracts/unattended.md), the dispatcher answers; when the dispatch prompt names no metric, return the proposal as an assumption to confirm and stop before Step 2.
+1. **Route.** Check the request against [Don't use when](#dont-use-when) (load [forwarding.md](../routing/references/forwarding.md) before forwarding).
+2. **Metric.** If the request names a metric, a direction, and a target, use them. Otherwise, the first deliverable is agreement on them. During Step 1's exploration pass, propose a concrete metric, direction, and target together from codebase evidence (or the closest codebase operation when no benchmark exists yet) in one decision question in the [question format](../routing/references/contracts/question-format.md), with that proposal as the recommended answer, and state that a reproducible slow case comes before any harness. If no benchmark or evidence exists and the user names none, also state what starts the climb (operation, metric, direction, target, or slow case). Never start the loop on an unmeasured goal. In an [unattended run](../routing/references/contracts/unattended.md), the dispatcher answers; when the dispatch prompt names no metric, return the proposal as an assumption to confirm and stop before Step 2.
 3. **Tree.** Run `git status --porcelain`. Untracked files the climb does not touch are fine. Any other uncommitted change is the user's work, and the clean-tree safety gate holds: ask once whether to commit it, set it aside through the [git skill](../git/SKILL.md)'s `stash` mode, or leave named paths untouched. When the user names paths, no attempt changes them, and a hypothesis that needs one waits for the user's answer. Never stash, restore, or discard it yourself.
 4. **Branch.** Say in one line which branch each accepted win is committed on. On the default branch or a detached HEAD, create a feature branch before the first commit, as [chain-phases.md](../routing/references/chain-phases.md#feature-branch-before-the-first-commit) says, and announce its name. No win is committed on the default branch.
 5. **Principles.** Apply the [principles check](../routing/references/contracts/principles-check.md) when you have a baseline artifact to inspect.
@@ -62,7 +62,7 @@ Open the decision log first, as [Step 3](#step-3-open-the-decision-log) describe
 Before any change, fix these in writing and log them as the first `contract` row:
 
 - **One metric** and the **direction** that counts as better.
-- **A checkable stop predicate**: the target, plus an attempt floor if the user wants one. The floor keeps a lucky early win from ending the run. If the user gave numbers, use them. If the user gave only a target, recommend a floor, for example "at least 10 iterations", in a decision question. The user may decline it, and then the predicate is the target alone.
+- **A checkable stop predicate**: the target, plus an optional attempt floor only if the user agrees to one. The floor keeps a lucky early win from ending the run. If the user gave numbers, use them. If the user gave only a target, ask whether they want an attempt floor (recommending one, for example "at least 10 iterations", in a decision question) without imposing it or adding it to the predicate until the user accepts; if declined, the predicate is the target alone.
 
 ## Step 2: Build the harness, prove it, freeze it
 
@@ -83,7 +83,7 @@ The harness and N are now the **measurement contract**. Numbers from different c
 
 ## Step 3: Open the decision log
 
-At the start of Step 1, before its first row, create `decision.tsv` under `.hillclimb/<run-name>/` at the repository root, and report the path. The file stays untracked so that it survives reverts. Ignore the folder through the repository's local exclude file, as [session-storage.md](../routing/references/session-storage.md#worktrees-and-ignore-rules) says; never edit `.gitignore` for it. Use these tab-separated columns:
+At the start of Step 1, before its first row, create `decision.tsv` under `.hillclimb/<run-name>/` at the repository root (deriving `<run-name>` as a short kebab-case slug from the metric or topic, such as `search-p95` or `bundle-size`), and report the path. The file stays untracked so that it survives reverts. Load [session-storage.md](../routing/references/session-storage.md#worktrees-and-ignore-rules) and ignore the folder through the repository's local exclude file; never edit `.gitignore` for it. Use these tab-separated columns:
 
 ```text
 id	hypothesis	change	before	after	delta	tests	verdict	note
@@ -151,7 +151,7 @@ Stop for one of three reasons, and say which:
 
 Never relax the predicate yourself to declare victory. Do not quit while cheap, untried hypotheses remain; if you are stuck, say so instead of spinning. Name every unmet clause on its own, the metric target and the attempt floor separately.
 
-The user may change the target at any time, and their word is enough. Append a `contract` row with the old and new values, and report both: the revised target as met or unmet, and the original target as changed. A report never calls the original target met when only a revised one is. The safety gates above hold for the report and the log.
+The user may change the target at any time, and their word is enough. When the user asks to edit an earlier target row in `decision.tsv`, refuse the in-place edit (append-only safety gate) and append a new `contract` row with the old and new values instead, reporting both: the revised target as met or unmet, and the original target as changed. A report never calls the original target met when only a revised one is. The safety gates above hold for the report and the log.
 
 ## Step 7: Deliver
 
@@ -167,7 +167,7 @@ Report:
 
 Every number comes from a log row under the current contract. Never use an estimate or a run the log does not carry.
 
-The kept commits sit on the branch in the order they landed, so the climb reads top to bottom. Offer [`gate`](../gate/SKILL.md) for the branch, by [forwarding.md](../routing/references/forwarding.md#b-offer-to-forward-one-yesno-question): one yes or no question, or none when the user named the step up front. `gate` verifies the branch and proposes one destination in plain text, such as a draft pull request, which it opens with the outbound checks its body path carries. A climb has no work folder, so `gate` runs it as a no-flow run.
+The kept commits sit on the branch in the order they landed, so the climb reads top to bottom. Offer [`gate`](../gate/SKILL.md) for the branch in one yes/no question ([forwarding.md](../routing/references/forwarding.md#b-offer-to-forward-one-yesno-question)), for example: "Run `/agentics:gate branch` on `<branch>` to verify the branch and propose a destination (such as a draft pull request)?" (skip the question only when the user named `gate` up front). `gate` verifies the branch and proposes one destination in plain text, such as a draft pull request, which it opens with the outbound checks its body path carries. A climb has no work folder, so `gate` runs it as a no-flow run.
 
 ## References
 

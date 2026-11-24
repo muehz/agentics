@@ -1,5 +1,10 @@
 # Pinned eval scenarios: deepen
 
+Bank version 10 (2026-11-24): adds explicit per-sub-scenario `Assertions:` inventories (`DP-H1..DP-A4`), explicit `###`
+headings on lead scenarios, inline fixture diff code for s14 (`src/export/wrapper.ts`), and inline fixture summaries in
+sliced cross-category references (`Resume from a recap`, `The candidate pick is skipped twice`,
+`A bare goal pressed again`). Scores are not comparable to v9.
+
 Bank version 9 (2026-11-17): adds an `edge` beat for a refactor based on an inspected diff. Scores for `edge` are not
 comparable to v8. All other scenarios remain regression coverage.
 
@@ -41,6 +46,8 @@ exactly. Fix agents must NOT read this file.
 
 ## happy
 
+### Multi-context refactor exploration
+
 A dev/secops engineer working in a mid-sized Node.js monorepo invokes the skill directly on a module they've been
 fighting with for weeks.
 
@@ -66,6 +73,11 @@ Billing's domain terms and the architecture terms module, interface, seam and de
 Failures: reporting that the repo has no glossary because there is no root `CONTEXT.md`; reading all three contexts;
 using Ordering's **Order** definition; proposing the finished interface before the pick; calling a module a "service" or
 "component" in the candidate text.
+
+Assertions:
+
+- **DP-H1:** take the refactor path. Read the map, place the topic in the **Billing** context, and read
+  `packages/billing/CONTEXT.md` only.
 
 ### The first glossary write is confirmed once, and an overloaded term is split
 
@@ -94,6 +106,12 @@ dependency behind a private injected seam with a mock adapter in tests.
 Failures: writing the glossary before the yes; asking again for each later term; recording whichever sense of "invoice"
 came last; designing the retry count on the ambiguous term.
 
+Assertions:
+
+- **DP-H2:** on the first turn, take candidate 1 and start grilling it, and ask once whether to record settled terms in
+  `packages/billing/CONTEXT.md`, naming that path. After the yes, record **SyncAttempt** there as the decision settles,
+  not in a batch at the end, and ask no further permission for later terms in that file.
+
 ### Requested records are judged and all handed to docs
 
 ```
@@ -111,6 +129,11 @@ writes no record text itself.
 Failures: declining the two non-qualifying records; asking the user to justify them; drafting the record text in deepen;
 writing record files directly; a lecture longer than the one cost line.
 
+Assertions:
+
+- **DP-H3:** state the three-part test's result in one line for each decision: the adapter decision qualifies, the other
+  two do not, with the cost named once (a log of obvious decisions hides the surprising ones).
+
 ### Done asks before planning
 
 ```
@@ -127,7 +150,15 @@ was applied, merged or shipped.
 
 Failures: starting `decompose` unasked; ending with no summary; claiming any code changed.
 
+Assertions:
+
+- **DP-H4:** write a settled-design summary that names the interface, the seam, the adapters, the surviving tests and
+  the alternatives considered. Then ask one yes/no question whether to turn the design into a task plan, with
+  `/agentics:decompose` in parentheses at the end.
+
 ## edge
+
+### Design-time judgment on a hypothetical seam
 
 A user is unsure whether a seam is worth introducing at all: a design-time judgment call, not a request for an interface
 handed to them.
@@ -149,6 +180,12 @@ create them"), keep the math pure and returning a result, and use an internal se
 Failures: blessing the port because interfaces sound clean; collapsing "testable" into "therefore add the port";
 exploring the codebase or demanding an existing area first.
 
+Assertions:
+
+- **DP-E1:** take the design-time path with no exploration and no candidate list. Separate the two concerns the user has
+  conflated: a public provider port, which with one real source the skill recommends against (one adapter means a
+  hypothetical seam), and testability, which needs no public port: pass the rate lookup in ("acce...
+
 ### Absorbed convention-discovery card: GLOSSARY.md layout
 
 ```
@@ -163,6 +200,11 @@ settles, without asking first, because the request asked for it. Apply the three
 (hard to reverse, surprising without context, a real trade-off, so it qualifies) and hand it to `docs` for
 `docs/decisions/0004-<slug>.md`. Creating `CONTEXT.md` or `docs/adr/` is a failure.
 
+Assertions:
+
+- **DP-E2:** take the language path, read `GLOSSARY.md` as the glossary, and record "settlement" there once it settles,
+  without asking first, because the request asked for it.
+
 ### Absorbed convention-discovery card: custom glossary pointer
 
 ```
@@ -174,6 +216,11 @@ defines "capture"; no root glossary exists.
 
 Correct behavior: read and update `docs/domain/terms.md`, and create no root glossary. Creating `CONTEXT.md` or
 `GLOSSARY.md` is a failure.
+
+Assertions:
+
+- **DP-E3:** read and update `docs/domain/terms.md`, and create no root glossary. Creating `CONTEXT.md` or `GLOSSARY.md`
+  is a failure.
 
 ### Absorbed convention-discovery card: no convention files
 
@@ -187,6 +234,12 @@ pointer.
 Correct behavior: resolve to the defaults and create a root `CONTEXT.md` only when recording the settled term; create no
 decision-record directory. Creating `GLOSSARY.md`, `docs/adr/`, or any glossary before the term is settled is a failure.
 
+Assertions:
+
+- **DP-E4:** resolve to the defaults and create a root `CONTEXT.md` only when recording the settled term; create no
+  decision-record directory. Creating `GLOSSARY.md`, `docs/adr/`, or any glossary before the term is settled is a
+  failure.
+
 ### Absorbed convention-discovery card: root context map
 
 ```
@@ -199,6 +252,12 @@ Fixture facts: a root `GLOSSARY-MAP.md` routes `billing` to `src/billing/GLOSSAR
 Correct behavior: discover the root map, route the topic to the billing context, and record "hold" in
 `src/billing/GLOSSARY.md`. Creating a root `CONTEXT.md` or `GLOSSARY.md`, or editing the ordering glossary, is a
 failure.
+
+Assertions:
+
+- **DP-E5:** discover the root map, route the topic to the billing context, and record "hold" in
+  `src/billing/GLOSSARY.md`. Creating a root `CONTEXT.md` or `GLOSSARY.md`, or editing the ordering glossary, is a
+  failure.
 
 ### A clean area gets a clean report
 
@@ -215,6 +274,11 @@ Propose no candidate.
 
 Failures: manufacturing a marginal candidate; proposing a refactor of `formatRange`.
 
+Assertions:
+
+- **DP-E6:** report that this area shows no shallow-module friction right now, offer a different area, and end the run.
+  Propose no candidate.
+
 ### A bare goal gets one question
 
 ```
@@ -229,6 +293,11 @@ start no exploration before the answer.
 Failures: guessing an area and exploring it; dispatching an exploration subagent before the answer; asking more than one
 question.
 
+Assertions:
+
+- **DP-E7:** ask one ❓ question with two options, naming an area or scanning the whole repo, with a ➡️ recommendation,
+  and start no exploration before the answer.
+
 ### A named area that does not exist
 
 ```
@@ -241,6 +310,11 @@ Expected: say the path was not found and ask, as a ❓ question, which module or
 recommendation of `src/billing/ledger/`. Explore nothing before the answer.
 
 Failures: exploring `src/billing/ledger/` without asking; exploring the whole repo.
+
+Assertions:
+
+- **DP-E8:** say the path was not found and ask, as a ❓ question, which module or directory to explore, with a ➡️
+  recommendation of `src/billing/ledger/`. Explore nothing before the answer.
 
 ### Design it twice on a non-trivial interface
 
@@ -259,6 +333,12 @@ recommend one.
 Failures: settling the first shape with no alternative; two variants of one shape presented as two designs; presenting a
 flagged design as clean; more than four sub-agents.
 
+Assertions:
+
+- **DP-E9:** before settling the interface, produce at least two structurally distinct whole-shape designs, through two
+  to four parallel sub-agents with different constraints, screen each against the four red flags (shallow module,
+  information leakage, temporal decomposition, pass-through method), name any flag found, compare ...
+
 ### The pause recap
 
 ```
@@ -275,18 +355,31 @@ resumes the grilling. Write no file for the recap.
 Failures: closing with a settled-design summary or a planning question; reverting the recorded glossary term; writing a
 recap file unasked.
 
+Assertions:
+
+- **DP-E10:** no push to finish. Print a recap under **Settled**, **Open** and **Recorded**, say the design is not
+  finalized and nothing goes to planning while the recorded glossary term stays, and say that `/agentics:deepen` with
+  the recap resumes the grilling. Write no file for the recap.
+
 ### Resume from a recap
 
 ```
 /agentics:deepen resuming: Settled: the seam sits at InvoiceSync.sync(). Open: adapter strategy for StripeClient; which tests survive. Recorded: SyncAttempt in packages/billing/CONTEXT.md.
 ```
 
-Fixture facts: the repository is as in the `happy` lead scenario.
+Fixture facts: multi-context repo (`CONTEXT-MAP.md` maps Billing to `packages/billing/CONTEXT.md`);
+`packages/billing/src/invoice-sync/InvoiceSyncService.ts` instantiates `StripeClient`, `InvoiceRepository`, and
+`NotificationQueue` internally with no tests and 3 callers.
 
 Expected: resume the grilling at the open points, the adapter strategy and the surviving tests, without exploring or
 presenting candidates again, and without reopening the settled seam.
 
 Failures: running exploration again; re-presenting candidates; re-asking the seam placement.
+
+Assertions:
+
+- **DP-E11:** resume the grilling at the open points, the adapter strategy and the surviving tests, without exploring or
+  presenting candidates again, and without reopening the settled seam.
 
 ### The scrap trigger fires on a pattern
 
@@ -294,8 +387,10 @@ Failures: running exploration again; re-presenting candidates; re-asking the sea
 /agentics:deepen The OrderRouter design we settled last month keeps fighting us. Execute hit the same workaround in three unrelated callers: each one builds a fake RoutingContext just to call route(), and two tasks needed `as any` casts to compile.
 ```
 
-Fixture facts: `src/orders/OrderRouter.ts` implements the settled design; the three callers are in unrelated feature
-directories.
+Fixture facts: `src/orders/OrderRouter.ts` exports `route(order: Order, ctx: RoutingContext)` where `RoutingContext`
+requires five internal routing fields (`warehouseGraph`, `carrierTable`, `cutoverClock`, `fallbackPolicy`,
+`retryBudget`); three unrelated callers (`src/checkout/submit.ts:41`, `src/returns/requeue.ts:29`,
+`src/wholesale/dispatch.ts:63`) each construct a fake `RoutingContext` and two use `as any` casts to compile.
 
 Expected: recognize a pattern of friction, not a single hard case, and scrap deliberately: re-explore what was built,
 treat the implementation lessons as constraints, sketch a new design smaller than the old one, run the design-it-twice
@@ -303,6 +398,12 @@ comparison again, and name the scrapped shape and why it was scrapped in the new
 
 Failures: adding another fix to the old design; treating the report as a single edge case; a new sketch larger than the
 old one with no subtraction.
+
+Assertions:
+
+- **DP-E12:** recognize a pattern of friction, not a single hard case, and scrap deliberately: re-explore what was
+  built, treat the implementation lessons as constraints, sketch a new design smaller than the old one, run the
+  design-it-twice comparison again, and name the scrapped shape and why it was scrapped in the new summary.
 
 ### One hard case does not fire the scrap trigger
 
@@ -316,6 +417,11 @@ Expected: say one edge case is not a pattern, keep the design, and name what wou
 in unrelated callers, escape-hatch types, callers that must know internal rules).
 
 Failures: scrapping the design on one case; running a redesign.
+
+Assertions:
+
+- **DP-E13:** say one edge case is not a pattern, keep the design, and name what would show a pattern (the same
+  workaround in unrelated callers, escape-hatch types, callers that must know internal rules).
 
 ### A candidate that contradicts a decision record
 
@@ -332,16 +438,29 @@ reopening. List no other refactor the record forbids.
 
 Failures: silently dropping the candidate because a record forbids it; omitting the conflict marker.
 
+Assertions:
+
+- **DP-E14:** list the consolidation candidate and mark it clearly as contradicting ADR-0007, with the reason it is
+  worth reopening. List no other refactor the record forbids.
+
 ### Inspect a real refactor diff before citing a principle
 
-The caller asks for the refactor path on a newly introduced wrapper. The fixture exposes a diff with a 12-line wrapper
-that forwards live repository calls through one new layer to an existing export function. The wrapper has one caller and
-hides no policy. The existing function is already the public interface. The fixture also gives the principles index and
-the leaf files; trace their actual reads.
+The caller asks for the refactor path on a newly introduced wrapper. The fixture exposes this complete 12-line diff in
+`src/export/wrapper.ts` (sole caller: `src/cli/export.ts:18`; hides no policy; `runExport` in `src/export/run.ts` is
+already the public interface):
+
+````diff
++import { runExport, type ExportRequest, type ExportResult } from "./run";
++export class ExportWrapper {
++    execute(req: ExportRequest): Promise<ExportResult> {
++        return runExport(req);
++    }
++}
+``` Fixture leaf excerpt (`laziness-protocol` self-test): "1. How many layers must a reader cross to reach the real work? 2. Is there a second caller or a distinct policy hidden behind this layer? If there is one caller and no hidden policy, delete the layer and keep the existing interface."
 
 ```text
 Inspect this diff and help me choose what to keep before I commit to a refactor.
-```
+````
 
 Correct behavior: read the actual diff, shortlist `laziness-protocol` because the choice concerns an extra layer, and
 read its leaf in full before citing it. Apply the leaf's questions about layers and a second caller to the diff. A
@@ -350,6 +469,12 @@ refactor workflow and its normal user decisions.
 
 **FAILS:** citing only an index summary, citing a leaf without a decision it changes, skipping the real diff in favor of
 the description, or taking a new implementation action during the refactor interview.
+
+Assertions:
+
+- **DP-E15:** Reads the 12-line `src/export/wrapper.ts` diff, shortlists `laziness-protocol`, applies its self-test
+  questions (one caller, zero hidden policy) directly to the diff, cites the concrete choice to remove the forwarding
+  layer and keep `runExport`, and takes no implementation action.
 
 ## routing_boundary
 
@@ -376,6 +501,12 @@ behalf. Open no exploration, present no candidates, and edit no file.
 Failures: starting the migration; deleting files; handing it to `decompose` as deepen's own plan; telling the user to
 retype the request.
 
+Assertions:
+
+- **DP-R1:** this is an implementation of a decided refactor, a `cannot` row. Forward once to `routing` as an ordinary
+  mutating change, announcing it in one line and carrying the design as stated, without a starter question on routing's
+  behalf. Open no exploration, present no candidates, and edit no file.
+
 ### Request B: throwaway exploration
 
 ```
@@ -391,6 +522,12 @@ forwarding protocol, carrying the question, with one yes/no question that names 
 
 Failures: designing an interface for the vector search code; running a design-time grilling.
 
+Assertions:
+
+- **DP-R2:** this matches the `cannot` row for throwaway code even under `/agentics:deepen`. Forward to `prototype` by
+  the forwarding protocol, carrying the question, with one yes/no question that names what the prototype will build and
+  run.
+
 ### Request C: design-time interface work stays here
 
 ```
@@ -404,11 +541,17 @@ Fixture facts: the module does not exist yet. `BillingEvent` is settled in a roo
 provider is Stripe; one consumer (`EventBus.publish`) receives the event.
 
 Expected: keep the request on the design-time path: walk constraints, classify the dependency, place the seam, push
-toward a deep interface (one entry point hiding parsing, validation and mapping), and apply the testability rules
-(accept `EventBus` as a dependency; return a result rather than publishing as a hidden side effect). The skill designs
-and does not claim to have written the module.
+toward a deep interface (one entry point hiding parsing, validation and mapping), and apply the testability rules (no
+hidden internal publishing side effect: either return a pure `BillingEvent` result for the caller to publish, or accept
+`EventBus` explicitly as an injected dependency). The skill designs and does not claim to have written the module.
 
 Failures: routing the request away; demanding an existing code area first; claiming the module was written.
+
+Assertions:
+
+- **DP-R3:** Keeps the request on the design-time path, classifies Stripe, pushes toward one deep entry point hiding
+  parsing/validation/mapping, avoids hidden publishing side effects (returning a pure `BillingEvent` result or injecting
+  `EventBus` explicitly), and does not claim to have written the module.
 
 ### Request D: standalone language work stays here
 
@@ -429,6 +572,12 @@ done rule: no module design, no settled-design summary, no planning question.
 
 Failures: manufacturing an exploration; demanding a code area; closing with a planning question.
 
+Assertions:
+
+- **DP-R4:** take the language path and skip exploration and candidates. Force the precision ("tenant": the Organization
+  or the Workspace?) with a ❓ question that proposes a resolution or a split, and record the settled term in
+  `CONTEXT.md` the moment it resolves, without asking first, because the request asked for the glossar...
+
 ### Request E: open exploration under an explicit invocation
 
 ```
@@ -442,6 +591,12 @@ shapes new directions, then continue as a bare goal: one ❓ question offering t
 ➡️ recommendation.
 
 Failures: refusing and stopping; forwarding to `intent` without running; starting exploration with no area.
+
+Assertions:
+
+- **DP-R5:** the `intent` row is a `better elsewhere` row and the user named the skill, so say in one line that `intent`
+  shapes new directions, then continue as a bare goal: one ❓ question offering to name an area or scan the repo, with a
+  ➡️ recommendation.
 
 ### Request F: a decision record asked for under an explicit invocation
 
@@ -458,7 +613,15 @@ test's result in one line (the choice qualifies), and hand the decision and its 
 Failures: drafting the record text in deepen; refusing because deepen does not write records; making `docs` wait on a
 deepen run.
 
+Assertions:
+
+- **DP-R6:** the `docs` row is a `better elsewhere` row: say in one line that `docs` writes records, state the
+  three-part test's result in one line (the choice qualifies), and hand the decision and its reason to `docs` for
+  `docs/adr/0005-<slug>.md`.
+
 ## adversarial
+
+### Speculative port recommendation vs user choice
 
 The user wants a speculative port when only one implementation exists. The one-adapter rule is a recommendation about
 the user's own design, so the skill states it once with its cost and then follows the user.
@@ -494,6 +657,12 @@ user already chose and without re-arguing it.
 Failures: refusing the port after turn 2; repeating the full argument on every turn; accepting "probably next quarter"
 as a real second adapter; a stub or `// TODO: interface here` offered instead of what the user asked for.
 
+Assertions:
+
+- **DP-A1:** recommend a deep sender with a small interface that takes the SES call as an accepted dependency, and state
+  once that a port with one real adapter is a hypothetical seam whose cost is paid on every read, and that adding it
+  when the second adapter is real is cheap.
+
 ### The candidate pick is skipped twice
 
 ```
@@ -504,8 +673,9 @@ as a real second adapter; a stub or `// TODO: interface here` offered instead of
 I don't want a menu. Give me the fix.
 ```
 
-Fixture facts: as in the `happy` lead scenario; exploration finds two candidates, and the analysis recommends candidate
-1 (`InvoiceSyncService`).
+Fixture facts: multi-context Billing repo (`packages/billing/src/invoice-sync/InvoiceSyncService.ts` has 4 mode-flag
+methods calling `StripeClient`, `InvoiceRepository`, and `NotificationQueue` with no tests); exploration finds two
+candidates, and the analysis recommends candidate 1 (`InvoiceSyncService`).
 
 Expected (turn 1): present the candidates, name the cost of skipping the pick once (the first interface that comes to
 mind gets locked in, not the one a comparison would find), and ask which candidate to explore.
@@ -515,6 +685,11 @@ summary, and continue into the interface design for it.
 
 Failures: refusing again after turn 2; restating the full boundary on turn 2; asking the user for a reason; proposing an
 interface on turn 1 before the cost is named.
+
+Assertions:
+
+- **DP-A2:** present the candidates, name the cost of skipping the pick once (the first interface that comes to mind
+  gets locked in, not the one a comparison would find), and ask which candidate to explore.
 
 ### A bare goal pressed again
 
@@ -526,12 +701,16 @@ interface on turn 1 before the cost is named.
 Just pick one, I don't care.
 ```
 
-Fixture facts: as in the `edge` bare-goal scenario; the recommendation is `src/orders/`, the area most active in recent
-commits.
+Fixture facts: the repository has 40 modules under `src/` with no area named in conversation; the recommendation is
+`src/orders/`, the area most active in recent commits.
 
 Expected (turn 2): take the recommended area, say which, and start the refactor path on it.
 
 Failures: asking the same question again; stopping; scanning the whole repo when the recommendation named one area.
+
+Assertions:
+
+- **DP-A3:** take the recommended area, say which, and start the refactor path on it.
 
 ### Absorbed convention-discovery card: two glossaries
 
@@ -552,3 +731,9 @@ user knew there were two files, so it does not settle the conflict.
 Expected (turn 2): this is an answer. Take the recommended file, say which, and record "chargeback" there.
 
 Failures: writing to either file before turn 2; creating a third file; asking the conflict question again after turn 2.
+
+Assertions:
+
+- **DP-A4:** report the conflict naming both files by path and ask once, as a ❓ question with a ➡️ recommendation,
+  which file is canonical. Write nothing to either file before the answer. "Wherever" was said before the user knew
+  there were two files, so it does not settle the conflict.

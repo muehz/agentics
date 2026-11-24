@@ -156,10 +156,12 @@ Remediation:
 3. Audit provider logs for use of the leaked credential.
 ```
 
-Always recommend rotation first. A follow-up commit that replaces the line does not invalidate a credential that has
-already been pushed. Do not prescribe a history rewrite or a force-push, and do not run one: that decision belongs to
-the repository owner. When history matters, the finding says that the value stays readable in earlier commits until the
-owner rewrites them, and that rotation is what makes it harmless.
+Always recommend rotation first and write out the full numbered `Remediation:` steps on separate lines for each secret
+finding individually (never reflow into one paragraph and never shorthand "same three steps as above"). A follow-up
+commit that replaces the line does not invalidate a credential that has already been pushed. Do not prescribe a history
+rewrite or a force-push, and do not run one: that decision belongs to the repository owner. When history matters, the
+finding says that the value stays readable in earlier commits until the owner rewrites them, and that rotation is what
+makes it harmless.
 
 ## Composition cooperation
 

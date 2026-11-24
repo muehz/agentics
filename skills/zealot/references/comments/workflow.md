@@ -79,7 +79,7 @@ finder, and one investigator for each batch of up to 20 unverified keeps, a numb
    [model-ladders.md](../../../routing/references/model-ladders.md)). It is neither the finder nor the wrapper, because
    the finder would defend its flags and the wrapper would defend its scope.
 
-    **Reviewer contract.** Give the reviewer these items:
+    **Reviewer contract.** State each of these six items explicitly in the reviewer dispatch:
     - the finder's report,
     - the per-file diff from Step 2's path-names-are-data example, only for each file in `git diff --name-only` after
       the finder that is not on the pre-finder list. A path the user had changed or deleted is on that list, so its
@@ -134,12 +134,13 @@ finder, and one investigator for each batch of up to 20 unverified keeps, a numb
     a rejected edit and report it open with the rejection reasons. Never rewrite a report yourself to salvage it.
 
     **Skipping the audit.** The audit is a [process gate](../../../routing/references/contracts/gates.md#process-gate).
-    When the user declines it, name the cost once: the finder is calibrated to over-delete, so its deletions and keeps
-    are unverified claims, and a code edit it made may be wrong. On the next reply that still declines, comply as the
-    [adversarial pair pattern](../../../forge/references/quality/adversarial-pair-pattern.md) says: hand over the
-    finder's report itself, marked unaudited, and do not apply it. Restore every file the finder changed, as for a
-    rejected item above, so the user applies what they choose from the report. Skip Steps 4 and 5. Zealot has no flow
-    phase, so its report line `Waived by the user: finder audit` is the waiver's one record, under home 4 of
+    When the user declines it, name the cost once from the actual finder report: the finder is calibrated to
+    over-delete, and name the specific risks present in this report (such as out-of-scope edits, application code
+    changes, or deletions of exception-protected comments like license headers). On the next reply that still declines,
+    comply as the [adversarial pair pattern](../../../forge/references/quality/adversarial-pair-pattern.md) says: hand
+    over the finder's report itself, marked unaudited, and do not apply it. Restore every file the finder changed, as
+    for a rejected item above, so the user applies what they choose from the report. Skip Steps 4 and 5. Zealot has no
+    flow phase, so its report line `Waived by the user: finder audit` is the waiver's one record, under home 4 of
     [gates.md](../../../routing/references/contracts/gates.md#process-gate). Write no flow row.
 
     The report says the run was unaudited and claims no verdict.
@@ -177,7 +178,8 @@ finder, and one investigator for each batch of up to 20 unverified keeps, a numb
    already in the baseline is reported, not blamed on a fix. When the command is not authorized, run nothing and report
    the fixes unverified.
 
-6. **Report.** Delete every saved copy first, of tracked and untracked files alike. Then report what this run has:
+6. **Report.** Delete every saved copy first, of tracked and untracked files alike, and state that deletion explicitly
+   before emitting the rest of the report. Then report what this run has:
     - the deletion count,
     - the comments kept, each with its verdict,
     - restored comments and the files restored after a rejection,

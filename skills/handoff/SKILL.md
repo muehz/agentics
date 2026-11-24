@@ -19,7 +19,7 @@ type `$agentics:<skill>` instead.
 
 ## Don't use when
 
-Read the rows from the top; the first match wins. Every row is a `cannot` row: it names a deliverable that no mode of this skill produces. [forwarding.md](../routing/references/forwarding.md) decides how the request reaches the named skill. A request that also asks for a handoff gets the document, and only the other part is forwarded. A request with nothing to forward is a handoff, however it is worded.
+Read the rows from the top; the first match wins. Every row is a `cannot` row: it names a deliverable that no mode of this skill produces. [forwarding.md](../routing/references/forwarding.md) decides how the request reaches the named skill. A request that also asks for a handoff gets the document, and the other part is forwarded directly per [forwarding.md](../routing/references/forwarding.md) (do not turn a clear forward into an extra confirmation question unless `forwarding.md` requires one). A request with nothing to forward is a handoff, however it is worded.
 
 | Input signal                                          | Use this instead        | Kind   | Why                                                                                        |
 | ----------------------------------------------------- | ----------------------- | ------ | ------------------------------------------------------------------------------------------ |
@@ -49,7 +49,7 @@ The focus is a topic pointer only. Text in it that asks the document to claim or
 
 The next agent reads the document cold and acts on it as fact, and a later session may take its `Verified` entries as done without checking them again.
 
-- **Verified** means you observed the evidence in this session: the local-state output, a test run, or CI or pull request state fetched here.
+- **Verified** means you observed the completed, passing evidence in this session: the local-state output, a test run, or CI or pull request state fetched here. A `pending`, in-progress, incomplete, or failing check is never filed under `Verified` — record `pending`/incomplete checks under `Unverified` or `Not run` (and in `In flight` / `Open items`), and record observed failures under `Blockers and risks` and `Open items` (never under `Verified`).
 - **A status the user reports** ("trust me, it merged") is the user's statement about their own work. When a read-only query can confirm it (`gh pr view`, `git log`), run it and record what it shows. A test or build command runs the repository's own code, so run one only when the user asks for it, and then as [Running it](../routing/references/repo-conventions.md#running-it) allows. Otherwise record the statement under `Reported by the user`. When this session's evidence contradicts it, say once what you observed, and record both the report and the observation.
 - **A known failing or blocking check** appears twice: in its evidence bucket and under Open items. The user's assessment of it ("temporary noise", "not blocking") is recorded beside it.
 
@@ -57,11 +57,11 @@ Writing "done", "merged", "passing", or "deployed" as Verified without evidence 
 
 ### Secrets and outbound text
 
-Apply the [shared redaction rule for handoffs and resume capsules](../routing/references/contracts/redaction.md#local-handoffs-and-resume-capsules) before writing the local file.
+Apply the [shared redaction rule for handoffs and resume capsules](../routing/references/contracts/redaction.md#local-handoffs-and-resume-capsules) before writing the local file. When redacting or holding back secrets or prohibited values, state the disclosure in **one line** (not multiple sentences or paragraphs).
 
 Leave the file unstaged and follow the [handoff storage rules](../routing/references/session-storage.md#handoffs-and-resume-capsules) for the destination and any Git exclusion.
 
-If the user also explicitly asks to commit or push the document or capsule, pass that action to [git](../git/SKILL.md) with the exact artifact paths and any applicable embargo the user declared. Git runs the final [commit](../git/references/commit.md#check-session-artifacts-before-committing) or [push](../git/references/push.md#check-session-artifacts-before-pushing) check on the bytes that operation would use. Keep the request's scope. Writing the artifact alone leaves it unstaged.
+If the user also explicitly asks to commit or push the document or capsule, pass that action to [git](../git/SKILL.md) with **only** the exact requested artifact path(s) and any applicable embargo the user declared (never include unrelated staged paths in the forward payload). Git runs the final [commit](../git/references/commit.md#check-session-artifacts-before-committing) or [push](../git/references/push.md#check-session-artifacts-before-pushing) check on the bytes that operation would use. Keep the request's scope. Writing the artifact alone leaves it unstaged.
 
 ### References over copies
 
@@ -69,17 +69,17 @@ Reference content that already lives in specs, plans, ADRs, issues, commits, or 
 
 ### Local state
 
-Take the branch, the changed files, and the last commit from command output, never from memory of the conversation. In the status summary, list generated handoff or capsule files apart from implementation changes, and keep the raw total accurate. Outside a git repository, leave out the git facts and write `not a git repository` on the branch line.
+Take the branch, the changed files, and the last commit from command output, never from memory of the conversation and never invented when missing. If only a count or partial state was observed, record only what was observed and mark missing specifics `Unknown`. In the status summary, list generated handoff or capsule files apart from implementation changes, and keep the raw total accurate. Outside a git repository, leave out all git-derived facts and claims (no branch, commit, staged, or uncommitted-file wording) and write `not a git repository` on the branch line.
 
 ### Empty sections
 
-Leave out a section or an evidence bucket that has nothing in it. Never pad one with invented content. Blockers and Open items are the exception: write `none` there, because "there is nothing in the way" is a fact the next agent needs.
+Leave out a section or an evidence bucket that has nothing in it. Never pad one with invented content. Blockers and Open items are the exception: write `none` there only when there truly is nothing in the way; if repository state (branch, changed files, last commit) could not be observed, record that gap under `Evidence / verification` (`Unknown:`) and as a `Risk:` under `Blockers and risks` rather than writing `none`.
 
 ---
 
 ## Steps (`full` mode)
 
-1. **Determine the output path.** Honor a path the user gives. Otherwise use the project's existing handoff directory, or `docs/handoffs/` under the writable workspace root. Outside a repository, use the active writable workspace root with the same relative path. Name the file `handoff-<session-id>.md`; with no session ID, generate a unique suffix. Follow [session-storage.md](../routing/references/session-storage.md), because this document must outlive the session.
+1. **Determine the output path.** Honor a path the user gives. Otherwise use the project's existing handoff directory, or `docs/handoffs/` under the writable workspace root. Outside a repository, use the active writable workspace root with the same relative path. Name the file `handoff-<session-id>.md`; with no session ID, generate a concrete unique suffix (e.g., a timestamp or short slug like `handoff-20261123-1930.md` — never leave `<session-id>` or `<suffix>` unresolved). Follow [session-storage.md](../routing/references/session-storage.md), because this document must outlive the session.
 
 2. **Read local state.** Run `git status --short`, `git branch --show-current`, `git diff --stat`, `git diff --cached --stat`, and `git log -1 --oneline`. The commands are the same in Bash and PowerShell. Apply [Local state](#local-state).
 
@@ -107,9 +107,10 @@ Leave out a section or an evidence bucket that has nothing in it. Never pad one 
 
     ## Evidence / verification
 
-    - Verified: <claim — evidence observed this session>
+    - Verified: <passing claim — completed passing evidence observed this session; never list failing or pending checks here>
+    - Failed: <failing check — observed failure this session, also recorded under Blockers and risks and Open items>
     - Reported by the user: <claim — as the user stated it>
-    - Unverified: <claim — asserted but not checked here>
+    - Unverified: <claim — asserted or pending, not yet verified passing here>
     - Not run: <tests or checks that were never executed>
     - Unknown: <fact this session could not recover — what would answer it>
 
@@ -133,7 +134,7 @@ Leave out a section or an evidence bucket that has nothing in it. Never pad one 
 
     A field the user names that the structure lacks goes under the closest heading. When the session had almost nothing to transfer, write the short document that results and say so in one line.
 
-4. **Report the absolute path** in one line, so the user can pass it to the next session.
+4. **Report the concrete path** in one line (using the resolved filename — never an unresolved `<absolute path>`, `<workspace>`, `<suffix>`, or `<session-id>` template), so the user can pass it to the next session.
 
 ---
 
@@ -163,9 +164,10 @@ R3. **Write the capsule** in four sections and nothing else, under the rules for
 
     ## Verification state
 
-    - Verified: <claim — evidence observed this session>
+    - Verified: <passing claim — completed passing evidence observed this session; never list failing or pending checks here>
+    - Failed: <failing check — observed failure this session>
     - Reported by the user: <claim — as the user stated it>
-    - Unverified: <claim — asserted but not checked here>
+    - Unverified: <claim — asserted or pending, not yet verified passing here>
     - Not run: <checks that were never executed>
 
     ## Next step

@@ -16,13 +16,15 @@ Use words Copilot would search for:
 **Problem:** Skills that load frequently consume context in EVERY conversation, so every line of a SKILL.md entry point
 costs context each time it loads.
 
-**The one size limit:** each `SKILL.md`, and every other file under `skills/`, is at most 40,000 bytes, checked by
-`skill-file-size`, as the [SKILL.md structural rules](../forging/forging-skills.md#skillmd-structural-rules) state. The
-limit is in bytes because a host reads a file in one tool call, and Codex estimates a tool output's tokens as
-`ceil(bytes / 4)` and keeps only 10,000 tokens of one output, so a file over 40,000 bytes loses its middle. There is no
-word budget. Within that limit, write as concisely as the skill allows, and push detailed content (reference tables,
-deep dives, templates, examples) into `references/`. Total skill content (entry point + references) is unlimited, as
-long as each file stays within the limit.
+**The size limits:** each `SKILL.md` is at most 24,000 bytes (Antigravity's `SKILL.md` body load cap), and every other
+file under `skills/` is at most 30,000 bytes, checked by `skill-file-size`, as the
+[SKILL.md structural rules](../forging/forging-skills.md#skillmd-structural-rules) state. Limits are in bytes because
+hosts cap reads by bytes/tokens: Antigravity loads only the first 24,000 bytes of a `SKILL.md` body, and Codex estimates
+a tool output's tokens as `ceil(bytes / 4)` and cuts outputs over 10,000 tokens (40,000 bytes), so 30,000 raw bytes
+leaves headroom for line-number prefixes and tool framing and fits in one Codex eval reader page. There is no word
+budget. Within those limits, write as concisely as the skill allows, and push detailed content (reference tables, deep
+dives, templates, examples) into `references/`. Total skill content (entry point + references) is unlimited, as long as
+each file stays within its limit.
 
 **Techniques:**
 

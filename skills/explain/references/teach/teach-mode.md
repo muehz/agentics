@@ -106,7 +106,8 @@ plain fact tied to the mechanism ("expiry is checked; audience is not"), never a
 verdict.
 
 **Done** means their questions are answered. They say it clicked, or they have nothing further. End with an offer to go
-deeper or stop, never with a summary of what you covered.
+deeper or stop — put nothing after that offer (no `Caveats:` block, meta-commentary, or summary of what you covered).
 
-**Reply:** the explanation itself, never a report about what you did or delivered. Lead with the main point. Follow it
-with the plain account of what it is, how it works, and why. Then add the threads to chase next.
+**Reply:** the explanation itself, never a report about what you did or delivered and no meta-commentary about the
+session or simulation. Lead with the plain definition tied directly to the target in front of you. Follow it with the
+plain account of what it is, how it works, and why. Then end on the offer to go deeper.
