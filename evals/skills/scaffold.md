@@ -313,9 +313,9 @@ chain-entry section written as a link to an Agentics file or naming a language, 
 Assertions:
 
 - **SC-H5:** Uses one Q1..Qn round with `➡️` recommendations, previews 12 ordinary files in catalog order (`CODEOWNERS`
-  ninth) under `Create these 12 files?`, regenerates README on edit, shows `AGENTS.md` (<=80 lines, concrete healthy
-  outputs, compaction, repeated corrections, chain-entry) alone with `Write AGENTS.md as shown?`, and lists
-  `docs/ARCHITECTURE.md` under Also consider.
+  in its catalog slot after `docs/CONSTITUTION.md` and before `.editorconfig`) under `Create these 12 files?`,
+  regenerates README on edit, shows `AGENTS.md` (<=80 lines, concrete healthy outputs, compaction, repeated corrections,
+  chain-entry) alone with `Write AGENTS.md as shown?`, and lists `docs/ARCHITECTURE.md` under Also consider.
 
 ### Optional code-review skill: discovery, preservation, and contextual creation
 

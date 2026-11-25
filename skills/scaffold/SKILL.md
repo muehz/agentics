@@ -22,9 +22,9 @@ verification skill.
 
 Read the rows in order; the first match wins. Each row is marked with its kind, as
 [forwarding.md](../routing/references/forwarding.md#explicit-invocation) defines it. A `cannot` row forwards by that
-protocol (include the user's request verbatim in the single yes/no offer — never write "as written" without quoting it).
-A `better elsewhere` row, under an explicit invocation of this skill, gets one line naming the better route, and then
-this skill runs.
+protocol (quote the user's exact request text verbatim inside quotation marks in the single yes/no offer — never
+paraphrase or write "as written" without quoting it). A `better elsewhere` row, under an explicit invocation of this
+skill, gets one line naming the better route, and then this skill runs.
 
 | Order | Input signal                                                                                    | Use this instead                                                                                                                          | Kind   |
 | ----- | ----------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- | ------ |
@@ -118,9 +118,10 @@ and the conformance criteria. Init runs in this order, and each step asks at mos
 1. **Scan** every catalog file, the optional additions, the [standard protections](references/protections.md) and
    [planning protection](references/planning-protection.md). An existing file is never regenerated wholesale; only its
    gaps are offered.
-2. **Select** in one menu after explicitly reporting the scan: mark every catalog gap (`❌`), present item (`✅`), or
-   unobservable item (`?`) using clean UTF-8 symbols, plus optional additions and applicable protections (exact
-   file/helper paths, keeping environments separate from writers). Preselect user-named files.
+2. **Select** in one menu after explicitly reporting the scan: mark every absent catalog file `[ ] ❌` and every existing
+   conformant file `✅` with no `[ ]` (use `?` ONLY when a file's existence is genuinely unknown, never for stated
+   present/absent files), plus optional additions and applicable protections (exact file/helper paths, keeping
+   environments separate from writers). Preselect user-named files.
 3. **Ask** only missing facts in one round (`❓ **Q<n>** - **<title>**:` and `➡️` — never `??`). Fetch published
    license text (e.g., MIT) when available to preview rather than asking the user to paste it.
 4. **Show and confirm**, as [Previews and confirmation](#previews-and-confirmation) says.

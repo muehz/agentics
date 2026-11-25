@@ -128,10 +128,12 @@ comments while we iterated.
 
 Fixture facts: the diff contains (a) step-by-step narration comments, (b) a commented-out earlier implementation, (c) an
 Apache-2.0 license header, (d) an `eslint-disable-next-line no-unused-vars` above a genuinely unused parameter, and (e)
-a comment explaining a workaround for a documented upstream library bug, with the issue link. Correct behavior: embed
-the Comment Zealot charter verbatim in a subagent, have a fresh reviewer audit its report, delete (a) and (b), keep (c)
-and (e) as exception-list keeps, and surface (d) as an actionable flag (fix the code, not the suppression). The final
-report names deletion count, keeps, and flags.
+a comment explaining a workaround for a documented upstream library bug, with the issue link. The repository's
+configured verification command is `npm run build && npm test` (both pass cleanly at baseline and after dropping the
+unused parameter). After Step 4 presents the confirmation batch and verification command, the user confirms:
+`Apply all and run the command.` Correct behavior: embed the Comment Zealot charter verbatim in a subagent, have a fresh
+reviewer audit its report, delete (a) and (b), keep (c) and (e) as exception-list keeps, and surface (d) as an
+actionable flag (fix the code, not the suppression). The final report names deletion count, keeps, and flags.
 
 The prompt carries no mode word. Its talk of narration comments resolves to comments mode by inference, with no mode
 question asked.

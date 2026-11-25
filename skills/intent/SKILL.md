@@ -55,7 +55,7 @@ A one-line change to a documented default is mutating; a thousand-line reformat 
 
         agx flow log intent waive chain ok "<the user's reason, or none given>" none "done change made with the chain entry waived" --folder <work-root>/unassigned
 
-2. Carry out the requested change in this session—showing the concrete edit/diff for the target change (never disclaiming that no change was made)—and write no `intent.md` and no other artifact.
+2. Carry out the requested change in this session—showing a concrete unified edit/diff for the target behavior change (simulated if the fixture omits the file path, never prose-only or disclaiming no change was made)—and write no `intent.md` and no other artifact.
 3. Name the waiver in the session's report, derived from that row.
 
 Commits, pushes, and pull requests for the waived change keep their own rules.
@@ -80,7 +80,7 @@ Keep this step on the direction. The [principles check](../routing/references/co
 
 **The empirical fork.** Apply the [empirical questions contract](../routing/references/contracts/empirical-questions.md) before the challenge, recording observed answers as lookups without widening scope.
 
-**The challenge.** Read and invoke [challenge](../challenge/SKILL.md) (and [chain-artifacts.md](../decompose/references/chain-artifacts.md) for the Challenge record's exact five fields — never improvise round format or record fields from memory) on why the work matters, observable success outcome, scope inclusions/exclusions, constraints, and goal-invalidating assumptions. Ask the direction questions and **stop to wait for the user's actual answers** — never invent, assume, or simulate user answers or resolutions in the same turn, and never resolve the route to `spec draft` before the user answers (including on capture-only requests: ask the direction questions first and report the route as unresolved/pending until answered). Carry forward answered questions and resume unanswered ones until direction questions resolve (no round limit); keep solution design, interfaces, slicing, and tasks downstream.
+**The challenge.** Read and invoke [challenge](../challenge/SKILL.md) (and [chain-artifacts.md](../decompose/references/chain-artifacts.md) for the Challenge record's exact five fields — never improvise round format or record fields from memory) on why the work matters, observable success outcome, scope inclusions/exclusions, constraints, and goal-invalidating assumptions. Capture-only is not a decline of questions: run the direction challenge while the user participates, save the actual disposition and open questions, and report the selected or blocked route without starting another skill. Carry forward answered questions and resume unanswered ones until direction questions resolve (no round limit); keep solution design, interfaces, slicing, and tasks downstream.
 
 **Execution safety gate.** The direction challenge must actually run with at least one round put to the user (or cite a carried-forward `prior record dated YYYY-MM-DD` per [chain-artifacts.md](../decompose/references/chain-artifacts.md)). Naming `challenge`, reading it, or weighing risks privately is not execution. Marking a challenge `ok` without running it is a status claim without evidence ([safety gate](../routing/references/contracts/gates.md#safety-gate)): hold it in that file's shape, offering the round now or a `declined` record.
 
@@ -118,9 +118,9 @@ Stage `state.tsv` separately (`git add -- <work-folder>/state.tsv`); never stage
 
     agx flow log intent waive direction-blockers ok "<the user's reason, or none given>; waived by the user, resolver: spec draft" none "intent ask for approval" --folder <work-folder>
 
-and (4) continue directly to the exact `Status:` line, concrete path/hash/summary, and approval question below (without logging approval yet).
+(copy `"none given; waived by the user, resolver: spec draft"` and `"intent ask for approval"` verbatim when no reason was given) and (4) continue directly to the exact `Status:` line, concrete path/hash/summary, and approval question below (without logging approval yet).
 
-**Status line and question.** Print one exact chat/report line before asking: `Status: <n> open questions (<d> deferred, <w> left for the spec) · approval pending` (or `Status: no open questions · approval pending`), reconciling `<n>` to equal the exact count of listed open questions (`<d> + <w>`). Re-stage `intent.md`, run `agx flow status --folder <work-folder>`, note `hashes: intent.md text=<hash>`, show the concrete resolved path (never `<work-root>/<folder>`), the exact hash (never `<from flow status>`, illustrative stubs, or `…`), and a direction summary (full text only on request), and end the message with **only** the approval question on its own (no extra trailing commentary after it):
+**Status line and question.** Only when zero blockers remain, print one exact chat/report line before asking: `Status: <n> open questions (<d> deferred, <w> left for the spec) | approval pending` (or `Status: no open questions | approval pending`), reconciling `<n> = <d> + <w>` with zero blocker count (use clean ASCII `|` rather than non-ASCII punctuation that terminals may corrupt). Re-stage `intent.md`, run `agx flow status --folder <work-folder>`, note `hashes: intent.md text=<hash>`, show the concrete resolved path (never `<work-root>/<folder>` or `<exact-intent-path>`), the concrete 12-hex-char hash (never `<from flow status>`, "no hash available", or `…`), and a direction summary (full text only on request), and end the message with **only** the approval question as the final line (zero trailing text after it):
 
 > "Intent written to `<intent-path>`. Approve this direction? Your yes lets `spec draft` define the solution; nothing
 > is implemented."
