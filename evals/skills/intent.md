@@ -1034,8 +1034,9 @@ Assertions:
 
 ### The user waives the chain entry
 
-Starting state: the user asked to change the webhook retry limit from three attempts to five. This is mutating work, and
-the assistant has just named the chain entry and offered to capture the intent. The user says:
+Starting state: the user asked to change the webhook retry limit from three attempts to five in `config/webhooks.ts`
+(`DEFAULT_RETRY_LIMIT = 3`). This is mutating work, and the assistant has just named the chain entry and offered to
+capture the intent. The user says:
 
 ```text
 skip the intent, just make the change
@@ -1066,7 +1067,8 @@ Assertions:
 
 Starting state: a work folder `docs/specs/2026-10/feature-audit-export/` holds a six-section `intent.md` with a resolved
 direction, a `challenge intent.md` row with status `ok`, and a stale `approve intent.md` row from 2026-10-12. Intent has
-shown the edited intent's path and current hash and asked the approval question. The user says:
+shown the edited intent's path and current hash (`text=7c8d9e0f1a2b` from `agx flow status`) and asked the approval
+question. The user says:
 
 ```text
 Not yet. I want to check the retention numbers first.

@@ -135,10 +135,11 @@ A repeated demand gets a one-line pointer back to that alternative.
 Run [Step 4](../SKILL.md#step-4-route-to-spec-and-ask-for-approval)'s approval procedure with `brief.md` in place of
 `intent.md`: no question while an open question remains, the status line, the noted `hashes: brief.md text=<hash>`, the
 answer table, the approval guard, and asking again by content. Before asking, show the brief's full resolved path, its
-concrete 12-hex-char hash (in simulated fixture runs, show a concrete simulated hash such as `a1b2c3d4e5f6` labelled
-simulated rather than saying "no hash available" or emitting a placeholder), a concrete summary of its behavior, task,
-and decisions, and the `- **Brief review:**` line. Always complete the review and end the message with **only** this
-single approval question as the final line (no extra text or repeated brief-written line after it):
+concrete 12-hex-char hash (when a fixture supplies a hash use it verbatim; otherwise show a concrete simulated hash such
+as `a1b2c3d4e5f6` labelled simulated rather than saying "no hash available" or emitting a placeholder), a concrete
+summary of its behavior, task, and decisions, and the `- **Brief review:**` line. **Always** complete the review and
+output the exact approval question below verbatim as the final line of your response (never write meta-text like "ask an
+approval question naming `execute`" instead of actually asking it, and add zero trailing text after it):
 
 > "Brief written to `<brief-path>`. Approve this change? Your yes lets `execute` make this one change; commits, the pull
 > request, and the merge keep their own gates."
