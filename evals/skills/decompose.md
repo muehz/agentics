@@ -1594,11 +1594,26 @@ Assertions:
 
 ### Task planning grounds a principle in the existing diff
 
-The repository contains an approved spec and a diff for an interrupted-export prototype. The approved behavior says a
-rerun after interruption must leave one export. The fixture offers read access to the real diff and the principles index
-and leaves. In the diff a worker writes the export, can stop before recording completion, and appends another export on
-retry. A fixture run twice ends with two exports. A stop immediately after the write is the only partial state in this
-fixture, and its retry also ends with two exports.
+The repository contains an approved spec (`docs/specs/2026-10/feature-export-worker/spec.md`, settled export format: RFC
+4180 CSV, tests in `tests/export/worker.test.ts` run via `npm test -- tests/export/worker.test.ts`) and the following
+prototype diff for an interrupted-export worker:
+
+```diff
+diff --git a/src/export/worker.ts b/src/export/worker.ts
+--- a/src/export/worker.ts
++++ b/src/export/worker.ts
+@@ -12,4 +12,7 @@ export async function runExport(jobId: string, rows: string[][]) {
+-  throw new Error("not implemented");
++  const csv = formatCsv(rows);
++  await fs.promises.appendFile(exportPath(jobId), csv, "utf8");
++  await stateStore.markExportComplete(jobId);
+ }
+```
+
+The approved behavior says a rerun after interruption must leave one export. The fixture offers read access to this diff
+and the principles index and leaves. In the diff a worker writes the export, can stop before recording completion, and
+appends another export on retry. A fixture run twice ends with two exports. A stop immediately after the write is the
+only partial state in this fixture, and its retry also ends with two exports.
 
 ```text
 Use the approved spec and the prototype diff to plan the work. Keep the chosen exported format.

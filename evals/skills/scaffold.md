@@ -383,7 +383,27 @@ Assertions:
 Add an MIT LICENSE to this repo, copyright Acme Corp.
 ```
 
-Fixture facts: the repository has no `LICENSE`. The MIT text is available to fetch from its published source.
+Fixture facts: the repository has no `LICENSE`. Fetching the published MIT text from `https://spdx.org/licenses/MIT.txt`
+returns:
+
+```text
+MIT License
+
+Copyright (c) <year> <copyright holders>
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit
+persons to whom the Software is furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all copies or substantial portions of the
+Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
+WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
+OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+```
 
 Expected: init runs for that one file, with no full menu. The license text is the published MIT text with "Acme Corp" as
 the holder and the current year, fetched or asked to be pasted, and shown in the shared preview with one question before
@@ -408,8 +428,11 @@ yes
 ```
 
 Fixture facts: a clean tree with `node_modules` installed (`eslint` and `node` are available locally). The audit grades
-`npm test` (a test runner) and `npm run lint` (ESLint with `no-unused-vars` enabled) as `ran`, and `npm run build` as
-`ran`.
+`npm test` (a test runner, 8 passed, 0 failed) and `npm run lint` (ESLint with `no-unused-vars` enabled, 0 problems) as
+`ran`, and `npm run build` (`0 errors`) as `ran`. On turn 2, running probes in disposable worktrees under
+`<temp>/scaffold-probes/run-1/` yields: `npm test` control exits 0 (8 passed) and planted failing test exits 1 (1
+failed); `npm run lint` control exits 0 (0 problems) and planted unused variable exits 1 (1 error); the user's tree
+`git status --porcelain` and `git diff HEAD` remain empty.
 
 Expected (turn 1): the audit report, then one preview of two probes, the test runner and the linter, each with its
 control run, its planted failing input and its own worktree path under `<temp>/scaffold-probes/<run-id>/`, and one
@@ -460,9 +483,10 @@ Expected:
   `docs/specs`) via
   `sh "<agentics-root>/skills/scaffold/scripts/planning-protection.sh" --parent "planning/agentics" --gitignore .gitignore`
   on macOS/Linux or
-  `powershell -NoProfile -ExecutionPolicy Bypass -File "<agentics-root>\skills\scaffold\scripts\planning-protection.ps1"`
+  `powershell -NoProfile -ExecutionPolicy Bypass -File "<agentics-root>\skills\scaffold\scripts\planning-protection.ps1" --parent "planning/agentics" --gitignore .gitignore`
   on Windows, preserving unrelated rules and CRLF in the shared preview. Turn 3 verifies with
-  `git check-ignore --no-index` and writes no validator or CI file.
+  `git check-ignore --no-index` (exit 1 for allowed canonical paths, exit 0 for rejected extras) and writes no validator
+  or CI file.
 - Case B: helper previews the whole file idempotently with one marked block and preserved line endings (no duplicate
   parent declaration); on duplicate markers, stops this option cleanly while other selections continue.
 
@@ -913,7 +937,10 @@ Fixture facts: the map has five feature files (`create-note.md`, `search-notes.m
 renders; source shows the button was intentionally replaced by pressing `Escape`.
 `.claude/skills/verify-notes/features/edit-note.md` currently says `Fill #legacy-edit-box with the updated text.`,
 whereas the app renders `#note-editor`; the other three features (`create-note`, `delete-note`, `export-notes`) pass
-live with evidence under `artifacts/verify-notes/`. Subagent dispatch and local verification are permitted.
+live with evidence under `artifacts/verify-notes/`. Subagent dispatch and local verification are permitted. On turn 2,
+after writing the two corrections, re-driving `search-notes` (pressing `Escape`) and `edit-note` (`#note-editor`) both
+pass live with screenshots surviving cleanup at `artifacts/verify-notes/search-notes.png` and
+`artifacts/verify-notes/edit-note.png`.
 
 Expected (turn 1): the source wave dispatches one read-only subagent per feature file within the surface's concurrency
 limit; the live pass holds the three invariants (doctor before drive, evidence survives cleanup, no residue outlives the
@@ -1039,7 +1066,7 @@ Assertions:
 
 Two independent reflection hand-offs in repos with no `AGENTS.md`, `CLAUDE.md`, or other instruction file:
 
-**Case A — accept (repo has `Makefile`):**
+**Case A — accept (Go repo `ledger-svc` with `services/ledger/` and `Makefile` targets `make check` and `make test`):**
 
 ```
 /agentics:scaffold init — reflection hand-off from forge reflect. This repository has no instruction file. Selected consumer pointer rows:
@@ -1051,7 +1078,7 @@ Two independent reflection hand-offs in repos with no `AGENTS.md`, `CLAUDE.md`, 
 yes
 ```
 
-**Case B — decline:**
+**Case B — decline (Go repo `billing-cli` with `Makefile` target `make test-pkg PKG=<path>`):**
 
 ```
 /agentics:scaffold init — reflection hand-off from forge reflect. This repository has no instruction file. Selected consumer pointer row:
