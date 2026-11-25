@@ -42,9 +42,11 @@ never stops at an unavailable dispatch with no proof attempt.
     declarations, such as `^func Test` in Go or `def test_` in Python. Approximate balance is fine. The cap is not.
     Every group gets its own Deep reviewer in Step 5.
 
-    Before any dispatch, state the exact selection to the user: the test files, the packages, and, when `all` applies,
-    the groups. State the dispatch count in the same message: one finder for the whole selection and one Deep reviewer
-    per group. The wrapper owns scope: pass it explicitly to the finder in Step 4.
+    Before any dispatch, state the exact selection concretely to the user: list every selected test file and package by
+    name, and when `all` applies, list every concrete balanced package group (<= 8 groups) with its member packages and
+    test counts by name before dispatching. State the dispatch count in the same message (one finder for the whole
+    selection and one Deep reviewer per group) and show the dispatch line. The wrapper owns scope: pass it explicitly to
+    the finder in Step 4.
 
 2. **Determine the mutant root, snapshot the caller, and prepare the mutant worktrees.**
 
@@ -117,9 +119,10 @@ never stops at an unavailable dispatch with no proof attempt.
     **Reviewer fallback.** When the reviewer cannot be dispatched, run the reviewer pass yourself only after the finder
     list is complete, whether or not the finder was dispatched. Take the candidate identities, locations, and mutants
     alone from that list. Ignore the finder's evidence and reasoning. A claim that an assertion cannot fail is not
-    proof, but the mutant run is. Run every command and emit every candidate's full proof record, verdict, and Step 7
-    handoff block (labelled `self-read (not independent)`), never stopping after the candidate list. An in-session
-    finder with a dispatchable reviewer still gets a fresh dispatched reviewer.
+    proof, but the mutant run is. Run every command (showing verbose `-run` subtest command output confirming exact
+    subtest execution) and emit every candidate's full proof record, verdict, Step 7 handoff block, and Step 8 report
+    (labelled `self-read (not independent)` in both Step 7 Assurance and Step 8), never stopping after the candidate
+    list. An in-session finder with a dispatchable reviewer still gets a fresh dispatched reviewer.
 
     Per candidate, inside that candidate's worktree. The Go commands are examples; another language uses its test
     runner's own switches for a fresh run, an exact selection, and verbose output.
@@ -195,10 +198,11 @@ never stops at an unavailable dispatch with no proof attempt.
     [safety gate](../../../routing/references/contracts/gates.md#safety-gate): it is a claim of status with no evidence
     from this session. When the user asks to skip mutation, to take the finder's candidates as findings, or to confirm
     an incomplete record, say once what is held (the `confirmed` verdict), the harm (a test reported as proving nothing,
-    on a claim no run backed, sends a working test to deletion), and what the user can do instead (the item goes to the
-    Unproven list with the reason `proof declined by caller`, and the user can act on the finder's claim themselves). A
-    repeated demand gets one line pointing back to both halves of that alternative (`proof declined by caller` under
-    Unproven, and the user may act on the finder's claim themselves) without repeating the full hold.
+    on a claim no run backed, sends a working test to deletion), and what the user can do instead: record the item under
+    `Unproven` with the exact literal reason **`proof declined by caller`** and state that **the user may act on the
+    finder's claim themselves**. A repeated demand gets one line pointing back to both halves of that alternative —
+    literal **`proof declined by caller`** under `Unproven`, and **the user may act on the finder's claim themselves** —
+    without repeating the full hold.
 
     Read the recorded absolute paths for the caller and each Step 2 worktree from the run record in the same call.
     Resolve both the mutant root and the worktree path, and verify that the worktree is a descendant of that root. Pass
@@ -209,15 +213,16 @@ never stops at an unavailable dispatch with no proof attempt.
     each output to its own file under `<mutant-root>/<run-id>/caller-snapshot-after/`, with the `<run-id>` from Step 2.
     For each pair, derive the absolute `$before_file` and `$after_file` paths from the recorded snapshot directories and
     that output's filename in the same call. Compare them with `git diff --no-index -- "$before_file" "$after_file"`.
-    Name the `caller-snapshot-after/` write, all three exact commands (`git rev-parse HEAD`,
-    `git status --porcelain=v2 --untracked-files=all`, and `git worktree list --porcelain`), and the
-    `git diff --no-index` result for all three files explicitly (unchanged, or the verbatim difference). When Step 2's
-    snapshot write was refused, compare each output against the session record instead. Say that the comparison ran from
-    memory. A check that only confirms no mutant worktree remains is not the comparison. Report any difference verbatim.
-    Never repair it silently. The caller decides what to do with a changed checkout. Finally, delete this run's
-    `<mutant-root>/<run-id>/` directory, if it was written, with the session's file-delete capability. This is a file
-    deletion, distinct from `git worktree remove`. Delete nothing else under the mutant root. Another run's worktrees or
-    snapshots may still be in use.
+    Print both the before (`caller-snapshot-before/`) and after (`caller-snapshot-after/`) writes, all three exact
+    commands (`git rev-parse HEAD`, `git status --porcelain=v2 --untracked-files=all`, and
+    `git worktree list --porcelain`) with their outputs, and the verbatim `git diff --no-index` result for all three
+    files explicitly (unchanged, or the verbatim difference). When Step 2's snapshot write was refused, compare each
+    output against the session record instead. Say that the comparison ran from memory. A check that only confirms no
+    mutant worktree remains is not the comparison. Report any difference verbatim. Never repair it silently. The caller
+    decides what to do with a changed checkout. Finally, delete this run's `<mutant-root>/<run-id>/` directory, if it
+    was written, with the session's file-delete capability. This is a file deletion, distinct from
+    `git worktree remove`. Delete nothing else under the mutant root. Another run's worktrees or snapshots may still be
+    in use.
 
 7. **Hand off.** Emit this fixed-shape block:
 

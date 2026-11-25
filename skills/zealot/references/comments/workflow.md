@@ -153,10 +153,11 @@ finder, and one investigator for each batch of up to 20 unverified keeps, a numb
       whole set.
     - for each accepted constraint comment ("do not remove", "do not change wording", "talk to X before changing"), the
       cheapest in-scope encoding: a type, a runtime assertion, a test, or a CI lint.
-    - the exact command Step 5 will run: the
-      [verification command](../../../routing/references/repo-conventions.md#verification-command), or the project's
-      build and the tests of the touched files when none is set. It runs code the repository controls, such as a package
-      `test` script, so it is shown before it runs.
+    - the exact runnable command Step 5 will run: the
+      [verification command](../../../routing/references/repo-conventions.md#verification-command), or the concrete
+      project build and touched-file test command from the repository's toolchain/scripts when none is configured
+      (always name the exact command string in this batch; never leave it as "unavailable"). It runs code the repository
+      controls, such as a package `test` script, so it is shown before it runs.
 
     Then ask one question: apply all and run the command, apply all but the ones the user names, or apply none. When the
     user's request already named fixing what the sweep flags, the fixes are authorized
@@ -169,14 +170,14 @@ finder, and one investigator for each batch of up to 20 unverified keeps, a numb
     authorizes a wider scope or a fix to instances outside it.
 
 5. **Apply what was confirmed, then build.** When the command is authorized, run it once before any fix is applied and
-   record what fails; that is the baseline. Apply only the confirmed items. A constraint comment is deleted only when
-   its encoding exists and runs. When the user declines an encoding or it cannot be built, restore the comment as it was
-   and report the constraint unenforced. When the user declines or a later revert removes the fix of a `MUST KILL` flag
-   on a suppression the finder deleted, restore the suppression as it was and report the flag open. Then run the command
-   again. A failure the baseline did not have is a regression: revert the batch's fixes one at a time, rerunning after
-   each, until the regression is gone, and report the fix whose revert cleared it open with the failure. A failure
-   already in the baseline is reported, not blamed on a fix. When the command is not authorized, run nothing and report
-   the fixes unverified.
+   record the baseline command and what fails; that is the baseline. Apply only the confirmed items. A constraint
+   comment is deleted only when its encoding exists and runs. When the user declines an encoding or it cannot be built,
+   restore the comment as it was and report the constraint unenforced. When the user declines or a later revert removes
+   the fix of a `MUST KILL` flag on a suppression the finder deleted, restore the suppression as it was and report the
+   flag open. Then rerun the exact verification command and report the completed post-fix result. A failure the baseline
+   did not have is a regression: revert the batch's fixes one at a time, rerunning after each, until the regression is
+   gone, and report the fix whose revert cleared it open with the failure. A failure already in the baseline is
+   reported, not blamed on a fix. When the command is not authorized, run nothing and report the fixes unverified.
 
 6. **Report.** Delete every saved copy first, of tracked and untracked files alike, and state that deletion explicitly
    before emitting the rest of the report. Then report what this run has:

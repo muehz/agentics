@@ -28,14 +28,17 @@ setting or unresolved manager is a blocked or unverified item with its prerequis
 
 **Optional review skill.** Discover `code-review/SKILL.md` under `.github/skills`, `.claude/skills`, and
 `.agents/skills`, in that order. Use the first existing match and report its path. Flag an unreadable match rather than
-fall through. An absent skill is `Optional — not configured`, not ❌ or a compliance failure. An existing valid skill is
-✅ whatever its headings or metadata. See [review skill authoring](community/code-review.md).
+fall through. An absent skill is `Optional — not configured` (exact em-dash `—`, never an ASCII hyphen `-`), not ❌ or a
+compliance failure. An existing valid skill is ✅ whatever its headings or metadata. See
+[review skill authoring](community/code-review.md).
 
-**Optional `REVIEW.md`.** Check the repository root for `REVIEW.md`. An absent file is `Optional — not configured`, not
-❌. An existing `REVIEW.md` is ✅ whatever its headings, and init offers no replacement for it. See the
-[REVIEW.md starter](community/review-md.md).
+**Optional `REVIEW.md`.** Check the repository root for `REVIEW.md`. An absent file is `Optional — not configured`
+(exact em-dash `—`, never an ASCII hyphen `-`), not ❌. An existing `REVIEW.md` is ✅ whatever its headings, and init
+offers no replacement for it. See the [REVIEW.md starter](community/review-md.md).
 
-**Step 2: present one menu.** The menu has four sections, and the user answers them in one reply:
+**Step 2: present one menu.** Report the scan results explicitly before the menu using clean UTF-8 symbols (`✅`, `❌`,
+`⚠️`, `—`, `?` — never replacement characters), showing existing conformant files as `✅` (kept untouched, unselectable)
+and every applicable missing file as `[ ] ❌`. The menu has four sections, and the user answers them in one reply:
 
 1. The catalog rows, with **Select All**, which selects only ❌ and ⚠️ catalog rows.
 2. The optional additions: the code-review skill and `REVIEW.md`, when absent.
@@ -108,7 +111,11 @@ The [file catalog](#file-catalog) links each file's questions, structure, and ge
 shown alone.
 
 1. **Generate** every selected file from the Step 3 answers.
-2. **Show the ordinary files together**, in catalog order, in one message. Ask one question, worded exactly:
+2. **Show the ordinary files together**, in exact catalog order (12 ordinary files with `CODEOWNERS` ninth before
+   `.editorconfig`), in one message. Print the **complete, unelided verbatim text or exact diff** of every selected file
+   and local protection config/helper (`.gitignore`, `.gitleaks.toml`, hook-manager additions, CI scan workflow,
+   user-decided `LICENSE`/`SECURITY.md`) right in this turn — never summarize, abbreviate, cross-reference another turn,
+   or emit placeholders. Ask one question, worded exactly:
 
     > ❓ **Q1** - **Create these files**: Create these <N> files? (yes / edit <file> / skip <file>)
     >
@@ -168,12 +175,12 @@ source or settings are not proof of enforcement.
 own and never chooses their content. When the user asks for one, init asks for the decision the file records, then
 writes it through step 2:
 
-| File                 | The user decides                                                    | Content                                                                           |
-| -------------------- | ------------------------------------------------------------------- | --------------------------------------------------------------------------------- |
-| `LICENSE`            | The license, by SPDX identifier, and the copyright holder           | The license's published text, fetched or pasted. Never reconstructed from memory. |
-| `SECURITY.md`        | The reporting channel, the supported versions, and the response aim | Only those facts, in a short policy. No invented contact or timeline.             |
-| `CODE_OF_CONDUCT.md` | The code, by name and version, and the enforcement contact          | The code's published text, fetched or pasted, with the contact the user gave.     |
-| `FUNDING.yml`        | The funding platforms and account names                             | GitHub's `FUNDING.yml` keys with the user's values.                               |
+| File                 | The user decides                                                    | Content                                                                                                                                                                                                                                |
+| -------------------- | ------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `LICENSE`            | The license, by SPDX identifier, and the copyright holder           | The license's complete published text (for standard SPDX licenses like `MIT`, emit the full verbatim published text with the user's year and copyright holder rather than refusing with "cannot be reconstructed"), fetched or pasted. |
+| `SECURITY.md`        | The reporting channel, the supported versions, and the response aim | Only those facts, in a short policy. No invented contact or timeline.                                                                                                                                                                  |
+| `CODE_OF_CONDUCT.md` | The code, by name and version, and the enforcement contact          | The code's published text, fetched or pasted, with the contact the user gave.                                                                                                                                                          |
+| `FUNDING.yml`        | The funding platforms and account names                             | GitHub's `FUNDING.yml` keys with the user's values.                                                                                                                                                                                    |
 
 A request that names the file without the decision gets a Step 3 question for it, with no recommendation that makes the
 decision for the user.

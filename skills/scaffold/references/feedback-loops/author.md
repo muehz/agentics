@@ -48,7 +48,9 @@ Include these six sections. Ground each in what the interview found. Leave no pl
 
 - **Launch:** the exact command that starts the app for verification, and how to tell it's ready (a log line, a port
   that answers, a prompt). Include teardown. For a short-lived CLI or TUI there is no server to keep alive. Launch
-  means: build the binary (or install deps) once. Then start each drive in its own isolated PTY or tmux session.
+  means: build the binary (or install deps) once. Then start each drive in its own isolated PTY or `tmux` session — mark
+  platform-specific drivers such as `tmux` and name a Windows-compatible alternative (e.g., PowerShell ConPTY /
+  `Start-Process` or a Node PTY helper).
 - **Doctor:** one read-only check that answers "is this instance worth driving?" It checks that the process is up, the
   version/build is correct, the port belongs to us, and auth is valid. An agent runs this first whenever anything looks
   off.
@@ -87,10 +89,11 @@ lists others.
 ## 4. Show it, then write it
 
 The generated skill tells every later agent what to run, so it is written only after the user has seen its exact text
-([approval.md](../../../routing/references/contracts/approval.md#the-two-exceptions)). Show the full text of `SKILL.md`,
-the feature map, and every helper script in one message, and ask once. The body of the shown `SKILL.md` starts with the
-line `> Draft — generated, never executed`; say that a passing proof (step 5) removes that line and changes nothing
-else, so the text the user approves covers both outcomes:
+([approval.md](../../../routing/references/contracts/approval.md#the-two-exceptions)). Print the complete verbatim text
+of `SKILL.md`, `features/README.md`, every feature file, and every helper script in one message (never summarize or omit
+files) and ask once. The body of the shown `SKILL.md` starts with the line `> Draft — generated, never executed`; say
+that a passing proof (step 5) removes that line and changes nothing else, so the text the user approves covers both
+outcomes:
 
 > ❓ **Q1** - **Write the verification skill**: Write `verify-<app>` as shown? (yes / edit <file> / skip)
 >
