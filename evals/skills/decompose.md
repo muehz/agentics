@@ -453,11 +453,11 @@ Run each leg independently.
 **Leg A — concrete challenged intent plans directly.** The session contains a concrete in-flight
 `docs/specs/2026-09/feature-billing/intent.md` with the five sections written before v25 (no
 `## Affected users and systems`) for a billing portal with three independently useful outcomes: `S1` invoice listing
-(`src/billing/invoices.ts`), `S2` card management (`src/billing/cards.ts`), and `S3` dunning emails
-(`src/billing/dunning.ts`, depending on `S2`), with tests under `tests/billing/*.test.ts` run via `npm test`. The flow's
-`state.tsv` holds a `challenge intent.md` row with status `ok` for its direction decisions, and the intent names the
-three outcomes, their boundaries, and the dependency. During the run, the post-construction plan challenge completes
-`ok`. The user asks:
+(`src/billing/invoices.ts`, Dependencies: `none`), `S2` card management (`src/billing/cards.ts`, Dependencies: `none`),
+and `S3` dunning emails (`src/billing/dunning.ts`, Dependencies: `S2`), with tests under `tests/billing/*.test.ts` run
+via `npm test`. The flow's `state.tsv` holds a `challenge intent.md` row with status `ok` for its direction decisions,
+and the intent names the three outcomes, their boundaries, and the single `S3 -> S2` dependency. During the run, the
+post-construction plan challenge completes `ok`. The user asks:
 
 ```
 Plan the billing intent.
@@ -509,15 +509,17 @@ holding `docs/specs/2026-07/feature-rate-limiter/spec.md` containing: a provenan
 line ("Add per-API-key rate limiting to the public REST API"), an Architecture section (2 sentences: token-bucket
 algorithm, Redis-backed counter keyed by API key), a Scope section listing in-scope (limiter middleware, Redis client,
 429 response with `Retry-After` header) and out-of-scope (billing integration, per-endpoint overrides), and a note
-"existing code: `src/middleware/` holds Express middleware, `src/redis/client.ts` already exports a configured Redis
-client, tests live in `tests/middleware/*.test.ts` using Jest." It also has a `## Success Criteria` section: a key over
-its limit gets HTTP 429 with a `Retry-After` header; a key under its limit passes through; separate keys keep separate
-buckets. No `.claude/plans`, `.codex/plans`, or `.github/copilot/plans` directories exist — only `docs/specs/` holds the
-design. The spec's folder also holds a `state.tsv` with a `challenge spec.md` row (status `ok`) and an `approve spec.md`
-row, both dated 2026-07-01, and `flow status` lists `approvals: spec.md approved 2026-07-01 current`. After staging
-`plan.md`, `agx flow status` prints `hashes: plan.md text=4b8c2d9e1f0a`. This repository has no plan-artifact validator.
-There is no session context block (not Copilot CLI). The session is interactive. During the run, the plan challenge
-round finds nothing new, every checklist row passes, and the plan-document reviewer returns `READY` with no findings.
+"existing code: `src/middleware/` holds Express middleware (new limiter file `src/middleware/rate-limiter.ts`),
+`src/redis/client.ts` already exports a configured Redis client, tests live in `tests/middleware/rate-limiter.test.ts`
+run via `npm test -- tests/middleware/rate-limiter.test.ts` using Jest." It also has a `## Success Criteria` section: a
+key over its limit gets HTTP 429 with a `Retry-After` header; a key under its limit passes through; separate keys keep
+separate buckets. No `.claude/plans`, `.codex/plans`, or `.github/copilot/plans` directories exist — only `docs/specs/`
+holds the design. The spec's folder also holds a `state.tsv` with a `challenge spec.md` row (status `ok`) and an
+`approve spec.md` row, both dated 2026-07-01, and `flow status` lists `approvals: spec.md approved 2026-07-01 current`.
+After staging `plan.md`, `agx flow status` prints `hashes: plan.md text=4b8c2d9e1f0a`. This repository has no
+plan-artifact validator. There is no session context block (not Copilot CLI). The session is interactive. During the
+run, the plan challenge round finds nothing new, every checklist row passes, and the plan-document reviewer returns
+`READY` with no findings.
 
 The user says:
 
@@ -1630,8 +1632,9 @@ source in the plan as a lookup (never as a user decision or real shell run), avo
 keep existing gates intact.
 
 **Leg B — unattended planning holds work that needs a costly probe.** Starting state: unattended job with approved
-export spec; a worker-split boundary needs a 30-minute fixture replay with no prior result, while an already-verified
-parser update is independent. User says:
+export spec (`docs/specs/2026-10/feature-export-worker/spec.md`); a worker-split boundary (`src/worker/split.ts`) needs
+a 30-minute fixture replay with no prior result, while an already-verified parser update (`src/parser/csv-parser.ts`,
+`tests/parser/csv-parser.test.ts`, `npm test -- tests/parser/csv-parser.test.ts`) is independent. User says:
 
 ```text
 /agentics:decompose Prepare the task breakdown from the approved export spec in this unattended job.
@@ -1853,7 +1856,8 @@ Assertions:
 Starting state: `docs/specs/2026-10/feature-stale-flags/` holds an approved, current spec for a stale-flag feature with
 a detection job (`src/flags/detect.ts`), a notification path (`src/flags/notify.ts`), and a review screen
 (`src/flags/review-ui.tsx`), with tests in `tests/flags/*.test.ts` run via `npm test`. The spec's `challenge spec.md`
-row is `ok`. The user says:
+row is `ok`. During the run, the post-construction plan challenge completes `ok` (1 round asked and answered on
+2026-10-15), all 10 checklist rows pass, and the plan-document reviewer returns `READY`. The user says:
 
 ```
 Spec is done and approved. Plan the stale-flag feature here; don't send me back to spec.
@@ -2084,9 +2088,11 @@ Assertions:
 
 Starting state: git repo with a concrete, challenged in-flight five-section intent at
 `docs/specs/2026-09/feature-billing-revamp/intent.md` for a self-serve billing revamp with stable outcome IDs: `S1`
-pricing page (`src/billing/pricing.tsx`), `S2` plan-change flow with proration (`src/billing/plan-change.ts`), `S3`
-invoice PDF generation (`src/billing/invoice-pdf.ts`), and `S4` dunning emails (`src/billing/dunning.ts`, depending on
-`S2`), with tests under `tests/billing/*.test.ts` run via `npm test`. No spec exists. The full pressure sequence:
+pricing page (`src/billing/pricing.tsx`, Dependencies: `none`), `S2` plan-change flow with proration
+(`src/billing/plan-change.ts`, Dependencies: `none`), `S3` invoice PDF generation (`src/billing/invoice-pdf.ts`,
+Dependencies: `none`), and `S4` dunning emails (`src/billing/dunning.ts`, Dependencies: `S2`), with tests under
+`tests/billing/*.test.ts` run via `npm test`. No spec exists. During Turn 3's run, the post-construction plan challenge
+completes `ok`, all 10 checklist rows pass, and the plan-document reviewer returns `READY`. The full pressure sequence:
 
 Turn 1 — the user presents spec-less multi-increment input:
 
@@ -2121,9 +2127,11 @@ Assertions:
 
 ### Plan challenge decline does not waive verification
 
-Starting state: git repo with a concrete challenged intent for a partner API program: key issuance, docs portal, and
-rate tiers. The intent has stable IDs and dependencies, but no approved spec is required for this already-concrete
-direction.
+Starting state: git repo with a concrete challenged intent at `docs/specs/2026-10/feature-partner-api/intent.md` for a
+partner API program: `S1` key issuance (`src/partner/keys.ts`), `S2` docs portal (`src/docs/portal.ts`), and `S3` rate
+tiers (`src/partner/rates.ts`, depending on `S1`), with tests under `tests/partner/*.test.ts` run via `npm test`. The
+intent has stable IDs and dependencies, but no approved spec is required for this already-concrete direction. All 10
+checklist rows pass and plan review returns `READY`.
 
 Turn 1 — the user asks for the plan:
 
@@ -2269,8 +2277,9 @@ plain-text body that groups matches under their saved search, and send nothing w
 nightly job sends at most one digest per user per day and records the send time, so a rerun the same day sends nothing
 and a failed send is retried on the next run. The repository has an existing mailer module (`src/mail/mailer.ts:12-16`
 exporting `sendEmail({ to, subject, text })`) and a scheduler registration file (`src/jobs/registry.ts:28-32` exporting
-`registerNightlyJob(name, fn)`), which the plan cites by path; the new digest code lives in `src/digest/nightly.ts` with
-tests in `tests/digest.test.ts` run via `npm test -- tests/digest.test.ts`. `agx flow status` prints
+`registerNightlyJob(name, fn)`), which the plan cites by path; the new digest module `src/digest/nightly.ts` exports
+`selectNewMatches(userId, since)`, `renderDigest(matches)`, and `runNightlyDigest()` with Jest tests in
+`tests/digest.test.ts` run via `npm test -- tests/digest.test.ts`. `agx flow status` prints
 `hashes: plan.md text=3a4b5c6d7e8f` on Turn 1 and `hashes: plan.md text=8f7e6d5c4b3a` after Turn 2's edit. The spec's
 own challenge is complete (provenance only; it does not stand in for the plan's). During the run, the plan challenge
 round runs after the plan is written, finds nothing, and is recorded `ok`, and every plan-document review returns

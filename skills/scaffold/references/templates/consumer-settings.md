@@ -232,6 +232,26 @@ These source checks were made on 2026-10-14. Recheck capabilities for the instal
 | Copilot hooks | Command pre-tool errors deny, but timeouts and HTTP failures can fail open.                                                    |
 | Copilot hooks | CLI and cloud-agent coverage differ.                                                                                           |
 
+Illustrative native Codex (`~/.codex/config.toml` + `.codex/hooks.json`) and Copilot CLI (`.github/hooks/hooks.json` +
+`--allow-tool`) fragments (never copy Claude JSON):
+
+```toml
+# ~/.codex/config.toml (beta permission profile; does not compose with legacy sandbox settings)
+[profiles.inner_loop]
+approval_policy = "on-request"
+# Restrict allowed commands to reviewed scripts only (e.g., npm run build, npm test, npm run lint).
+```
+
+```json
+// .github/hooks/hooks.json (Copilot CLI; HTTP hooks and timeouts can fail open — prefer local command hooks)
+{
+    "version": 1,
+    "hooks": {
+        "postToolUse": [{ "type": "command", "bash": "node .github/hooks/post-edit-format.cjs" }]
+    }
+}
+```
+
 This guide defines requirements for a future selected consumer implementation. It does not ship a generic dispatcher or
 path-guard library. After the consumer approves the concrete setup and checks, test any tailored helper. Run that test
 with that provider's actual payloads and refusal protocol. Record versions, commands, results and remaining gaps. Do not

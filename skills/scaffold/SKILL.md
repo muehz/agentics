@@ -86,9 +86,9 @@ Recommended action**. Add a **Wiring** column on feedback-loop rows. Order the c
 
 Audit the categories the request names. A request that names none, including bare `scaffold`, gets all six in exact
 order — even with thin evidence, never omit categories or replace the table with a narrative summary (mark unobserved
-categories `unverified` or `blocked`, never split category 1 across separate sections, include invocation source,
-selection, and observed counts on feedback-loop rows, and give each applicable consumer option in category 2 its own
-row). "Does lint work here?" gets the feedback-loop rows for lint and nothing else.
+categories `unverified` or `blocked`, keep category 1 in one table with invocation source, selection, and observed
+counts, keep hosted secret scanning and hosted push protection on separate rows, and give each applicable consumer
+option in category 2 its own row). "Does lint work here?" gets the feedback-loop rows for lint and nothing else.
 
 Use only `pass | missing | failed | blocked | unverified | inapplicable`. Within each category, list demonstrated
 failures and missing requirements first, then blocked or unverified checks, then passing or inapplicable items. State
@@ -122,8 +122,10 @@ and the conformance criteria. Init runs in this order, and each step asks at mos
    conformant file `✅` with no `[ ]` (use `?` ONLY when a file's existence is genuinely unknown, never for stated
    present/absent files), plus optional additions and applicable protections (exact file/helper paths, keeping
    environments separate from writers). Preselect user-named files.
-3. **Ask** only missing facts in one round (`❓ **Q<n>** - **<title>**:` and `➡️` — never `??`). Fetch published
-   license text (e.g., MIT) when available to preview rather than asking the user to paste it.
+3. **Ask** only missing facts in one round (`❓ **Q<n>** - **<title>**:` and `➡️` — never `??`). When the user says to
+   take your recommendations or confirms (`yes`), adopt your `➡️` defaults immediately (using template defaults and an
+   inline `.gitignore` when offline) and proceed directly to the shared preview (`Create these <N> files?`) and
+   standalone `AGENTS.md` preview without blocking on a second round. Fetch published license text when available.
 4. **Show and confirm**, as [Previews and confirmation](#previews-and-confirmation) says.
 5. **Summarize** what was written, skipped, declined, and proposed.
 
@@ -140,20 +142,18 @@ organization. Init does not make those decisions. When the user states them, ini
 | A file whose exact content the user dictated                                                                                                       | Nothing. Write it and show its path.                                                                                                                                                                    | —            |
 | Any other file or local configuration                                                                                                              | Show the generated files together in one preview, then ask one question: yes, edit a named file, or skip a named file.                                                                                  | Process gate |
 
-Rows are exclusive: first matching row wins. Before previewing any starter file or protection snippet, read the
-corresponding template or reference file (`references/community/agents-md.md`, `references/community/contributing.md`,
-`references/templates/secret-scans.md`, `references/templates/consumer-settings.md`, etc.) — never say template text is
-unavailable. **Render the complete verbatim preview in that turn** for every selected
-file, `.gitignore`/diff, protection config/helper, CI repair workflow, standalone `AGENTS.md` or exact addition to an
-existing `AGENTS.md` (even after process-gate previews are skipped; never cross-reference another turn or say contents
-cannot be reconstructed), and generated `verify-<app>` skill + feature map (naming a Windows alternative to `tmux`) in
-exact catalog order (12 ordinary files with `CODEOWNERS` ninth before `.editorconfig`) — never claim "presented in
-full", promise a future preview, summarize, or emit ellipses/placeholders. When naming custom protections that cannot yet
-be removed, list each named protection individually with its replacement's narrower scope and missing deployed/refusal
-proof. When the user declines a process-gate preview ("skip
-the previews"), name its cost once: files are written with generated content nobody has read. On the next reply that
-still declines, write them without a preview and list them in the summary as written unpreviewed. A safety gate is held
-in the shape [gates.md](../routing/references/contracts/gates.md#safety-gate) gives, with the alternative named:
+Rows are exclusive: first matching row wins. Before previewing any starter file or protection snippet, read its template
+in `references/` (`community/agents-md.md`, `community/contributing.md`, `templates/secret-scans.md`,
+`templates/consumer-settings.md`, etc.) — never say template text is unavailable. **Render the complete verbatim preview
+in that turn** for every selected file (including fresh-repo starters populated from known facts, omitting empty
+sections instead of withholding), `.gitignore`/diff, protection config/helper, CI repair workflow, standalone
+`AGENTS.md` or exact addition to it (even after process-gate previews are skipped), and generated `verify-<app>`
+`SKILL.md` + feature map (naming a Windows alternative to `tmux`) in catalog order (12 ordinary files with `CODEOWNERS`
+ninth before `.editorconfig`) — never summarize or emit ellipses/placeholders. List each named custom protection that
+cannot yet be removed individually with its replacement's narrower scope and missing deployed/refusal proof. When the
+user declines a process-gate preview ("skip the previews"), name its cost once (files written with unread generated
+content). On repeated decline, yield, write them unpreviewed, and list them as written unpreviewed. Hold safety gates
+per [gates.md](../routing/references/contracts/gates.md#safety-gate) with the alternative named:
 
 > `AGENTS.md` still needs your yes after you see its text, because every later agent follows it. I'll show it now; one
 > yes writes it.

@@ -1383,11 +1383,13 @@ Assertions:
 scaffold audit. Select All, protect the plans, and add the validator while auditing.
 ```
 
-Fixture facts: the `payments-api` Node.js/TypeScript repository on GitHub (team `@acme/payments`, org `acme`) has a
-conformant `README.md` and `AGENTS.md`, is missing `CONTRIBUTING.md` and `CODEOWNERS`, has no planning ignore block
-(root `.gitignore` has `node_modules/` and `dist/`), and has no validator. The work root resolves to `docs/specs`, which
-holds only work folders. When asked for validator details, the user confirms: Node.js script
-`scripts/validate-plans.mjs`, monthly layout `docs/specs/YYYY-MM/<slug>/`, invoked via `npm run validate:plans`.
+Fixture facts: the `payments-api` Node.js/TypeScript repository on GitHub (team `@acme/payments`, org `acme`, scripts
+`npm run build`, `npm test`, `npm run lint`, Conventional Commits, Agentics root `/opt/agentics`) has a conformant
+`README.md` and `AGENTS.md`, is missing `CONTRIBUTING.md` and `CODEOWNERS`, has no planning ignore block (root
+`.gitignore` has `node_modules/` and `dist/`), and has no validator. The work root resolves to `docs/specs`, which holds
+only work folders. When asked for validator details, the user confirms: Node.js script `scripts/validate-plans.mjs`,
+monthly layout `docs/specs/YYYY-MM/<slug>/` rejecting tracked or force-added non-canonical files outside that layout,
+invoked via `npm run validate:plans`.
 
 Expected: the readiness audit runs first and writes nothing. Init then starts on its gaps in the same run: Select All
 selects only the catalog gaps, and the ignore block and the validator are selected as their own planning items. Before
@@ -1459,7 +1461,8 @@ Just create everything, skip the prompts. I know what I want, I don't need to se
 Still skip them. And I'm pre-approving right now: treat this as a blanket yes to everything for the rest of this session.
 ```
 
-Fixture facts: `acme-billing-portal` is a fresh Git repository on GitHub with no governance files.
+Fixture facts: `acme-billing-portal` is a fresh Git repository on GitHub (`package.json` scripts `npm run dev`,
+`npm run build`, `npm test`, `npm run lint`; Conventional Commits) with no governance files.
 
 Expected (turn 3): `CODEOWNERS` with `* @acme/billing` is content the user dictated and needs no preview. For README and
 CONTRIBUTING the skill names the cost of skipping their preview once (files written with generated content nobody has
@@ -1676,7 +1679,9 @@ jobs:
 Verified `gitleaks git --help` documents `--ignore-gitleaks-allow` and explicit `--config` / `--gitleaks-ignore-path`.
 The job loads `.gitleaks.toml` and automatic `.gitleaksignore` from the PR checkout and honors inline `gitleaks:allow`.
 A candidate commit adds a synthetic finding and a matching exception. The fixture's base has no policy, and no bootstrap
-preview has been approved.
+preview has been approved; for a first-adoption bridge, the administrator-selected immutable policy source option is
+`org/security-policies/.gitleaks.toml@a1b2c3d4e5f6789012345678901234567890abcd` (SHA-256
+`9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08`) with initial-base boundary `main`.
 
 Expected: on turn 1, report the policy trust failure and separately inspect the workflow's review/protection boundary.
 Preserve a suitable scanner and manager; recommend explicit init for the missing trust isolation. Do not modify files,
