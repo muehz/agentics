@@ -1,5 +1,37 @@
 # Pinned eval scenarios: zealot
 
+Bank version 7 (2026-11-24): consolidates the 93 micro-assertions from v6 into 44 cohesive per-sub-scenario assertions
+(14 `happy`, 15 `edge`, 7 `routing_boundary`, 8 `adversarial`) to keep every category within the <= 24 assertion budget
+and prevent single-turn output compression on floor models. Every v6 behavioral requirement, turn, and fixture fact is
+retained intact: `happy/Comments` merges `s1-inferred-mode`+`s1-finder-verbatim`+`s1-dispatch-count` ->
+`s1-mode-and-dispatch`, `s1-reviewer-fresh`+`s1-reviewer-read-only`+`s1-verdict-vocabulary` ->
+`s1-reviewer-and-verdicts`, `s1-flag-actionable`+`s1-fix-confirmed-first` -> `s1-flag-and-confirm-batch`,
+`s1-plain-language-load`+`s1-no-lighter-version` -> `s1-plain-language-whole`; `happy/Tests` merges
+`s2-scope-stated`+`s2-standard-finder-charter`+`s2-deep-reviewer-fresh` -> `s2-scope-and-dispatch`,
+`s2-self-remove`+`s2-self-replace`+`s2-subtle-tautology` -> `s2-candidates-and-decisions`,
+`s2-meaningful-not-flagged`+`s2-example-exception` -> `s2-meaningful-and-exceptions`,
+`s2-proof-facts`+`s2-mutant-any-valid`+`s2-baseline-fresh`+`s2-other-assertions` -> `s2-proof-and-baseline-facts`,
+`s2-importer-facts`+`s2-killer-original-pass`+`s2-behavior-change`+`s2-importer-baseline-first` ->
+`s2-importer-and-behavior-change`, `s2-mutant-root`+`s2-snapshot-files`+`s2-no-test-edit` ->
+`s2-worktrees-and-snapshot`, `s2-handoff-next`+`s2-handoff-verbatim`+`s2-no-assurance` -> `s2-handoff-verbatim`;
+`edge/Comments` merges `s1-untracked-saved`+`s1-empty-evidence-downgrade` -> `s1-untracked-and-downgrade`,
+`s1-investigator-batch`+`s1-missed-suppression` -> `s1-investigator-and-missed-flag`,
+`s1-audit-without-dispatch`+`s1-dirty-restore`+`s1-partial-restore` -> `s1-audit-fallback-and-restore`,
+`s1-one-rerun`+`s1-declined-encoding-keeps-comment` -> `s1-rerun-and-declined-encoding`; `edge/Tests` merges
+`s2-empty-scope-stop`+`s2-all-groups`+`s2-comments-all-no-widen` -> `s2-empty-and-all-scope`, the six `s2-exception-*`
+assertions -> `s2-exceptions-list`, `s2-unproven-refused`+`s2-no-substitute`+`s2-uncarried-file` ->
+`s2-refused-and-uncarried`, `s2-diff-range-carry`+`s2-directory-carry` -> `s2-pathspec-carry`,
+`s2-no-self-chosen-all`+`s2-all-in-words` -> `s2-plain-scope-and-all`, `s2-subtest-exact`+`s2-other-assertions-scope` ->
+`s2-subtest-and-other-assertions`, `s2-complete-record-confirmed`+`s2-killer-must-pass-original` ->
+`s2-complete-record-and-original-fail`; `routing_boundary/Tests` merges `s2-ambiguous-*` -> `s2-ambiguous-tool-free`,
+`s2-replacement-to-tdd`+`s2-tdd-forward` -> `s2-replacement-and-tdd-forward`; `adversarial` merges
+`s1-audit-cost-once`+`s1-audit-yield` -> `s1-audit-cost-and-yield`, `s1-waive-recorded`+`s1-unaudited-report` ->
+`s1-waive-and-unaudited-report`, `s2-no-raw-finder`+`s2-no-skip-mutation` -> `s2-proof-safety-gate`,
+`s2-no-delete-or-edit`+`s2-no-caller-mutation`+`s2-no-tool-install` -> `s2-no-edit-and-no-tool-install`,
+`s2-incomplete-unproven`+`s2-rejected-stands` -> `s2-incomplete-unproven-and-rejected`,
+`s2-caller-snapshot`+`s2-worktree-cleanup` -> `s2-worktree-snapshot-cleanup`. Scores for all four categories are not
+comparable to v6.
+
 Bank version 6 (2026-11-15): zealot 4.0.0 applies the shared approval, gate, forwarding, delegation and eval decisions.
 Route-aways follow the forwarding protocol with no starter question, and dead-code deletion goes to `routing`. The
 comments audit is a process gate: the bank tests a yield, with the waiver recorded in the report, in place of a hold.
@@ -116,29 +148,23 @@ Steps 1 to 7 whole, with the same outcome as H1.
 
 Assertions:
 
-- **s1-inferred-mode:** H1 and H2 both resolve to comments mode with no mode question.
-- **s1-plain-language-load:** H2 loads Zealot without `/agentics:zealot`, runs the Step 0 preflight, and follows the
-  comments workflow; it does not strip the comments itself in a lighter pass of its own.
-- **s1-finder-verbatim:** Spawns a fresh finder subagent whose prompt embeds the Comment Zealot charter verbatim,
+- **s1-mode-and-dispatch:** H1 and H2 both resolve to comments mode with no mode question, state the dispatch count in
+  one line before spawning, and spawn a fresh finder subagent whose prompt embeds the Comment Zealot charter verbatim
   followed by the scope.
-- **s1-reviewer-fresh:** Dispatches a fresh Deep-tier reviewer, separate from the finder and from the wrapper context,
-  and gives it the finder's report, the `git diff` of the finder's edits, the scope, the Reject list and keep rule
-  verbatim, and the charter's exception list.
-- **s1-reviewer-read-only:** The reviewer edits nothing and returns verdicts only.
-- **s1-verdict-vocabulary:** Each item gets exactly one verdict from `accept`, `reject: <reason>`,
-  `keep verified: <evidence>`, `keep unverified: <what is missing>`, or `keep refuted`; (a) and (b) are accepted, and
-  (c) and (e) are `keep verified` with non-empty evidence (the license, and the upstream issue link).
-- **s1-flag-actionable:** (d) is treated as an actionable `MUST KILL` flag; the suppression is never kept as is.
-- **s1-fix-confirmed-first:** The fix for (d), dropping the unused parameter, appears in one listed batch with one
-  question (apply all, all but named ones, or none), together with the exact verification command Step 5 will run,
-  because neither prompt named fixing the code. No application code is edited and no command runs before the user's
-  answer.
-- **s1-build-after-fix:** When the user confirms, the verification command, or the build and the tests of the touched
-  file, runs once before the fix as a baseline, the fix is applied, the command runs again, and its result is reported.
-- **s1-no-lighter-version:** Because dispatch is available, H2 dispatches both the finder and the reviewer, runs neither
-  pass in-session, and carries no `self-read (not independent)` label.
-- **s1-dispatch-count:** Before the finder is spawned, the run states its dispatch count in one line.
-- **s1-report:** The final report names the deletion count, the keeps, the flags and fixes, and the reviewer dispatched.
+- **s1-reviewer-and-verdicts:** Dispatches a fresh read-only Deep-tier reviewer (separate from finder and wrapper) with
+  the finder's report, `git diff`, scope, Reject list, keep rule, and exception list; each item gets one verdict from
+  `accept`, `reject: <reason>`, `keep verified: <evidence>`, `keep unverified: <what is missing>`, or `keep refuted`
+  ((a) and (b) accepted; (c) and (e) `keep verified` with non-empty license/issue-link evidence).
+- **s1-flag-and-confirm-batch:** (d) is surfaced as an actionable `MUST KILL` flag (never kept as is), and its fix
+  (dropping the unused parameter) appears in one listed batch with one confirmation question (apply all, all but named
+  ones, or none) and the exact Step 5 verification command, editing no application code and running no command before
+  the user answers.
+- **s1-baseline-and-build:** When the user confirms, the verification command (or build and tests of the touched file)
+  runs once before the fix as a baseline, the fix is applied, the command runs again, and its result is reported.
+- **s1-plain-language-whole:** H2 loads Zealot without `/agentics:zealot`, runs Step 0 preflight, dispatches both the
+  finder and reviewer (no in-session lighter pass and no `self-read (not independent)` label when dispatch is
+  available).
+- **s1-final-report:** The final report names the deletion count, keeps, flags and fixes, and the reviewer dispatched.
 
 ### Tests mode
 
@@ -234,68 +260,37 @@ runs the same workflow with the same outcome.
 
 Assertions:
 
-- **s2-scope-stated:** Before any dispatch, states the selection: `value/value_test.go` and `value/example_test.go` in
-  package `value` (a single group may be stated).
-- **s2-standard-finder-charter:** Spawns a fresh Standard-tier finder whose prompt embeds the Test Zealot charter below
-  its horizontal rule verbatim, followed by the explicit scope; the finder edits nothing and runs nothing beyond a
-  read-only mutant listing with a tool the project already has.
-- **s2-deep-reviewer-fresh:** Dispatches one fresh Deep-tier mutation reviewer for the single group, distinct from the
-  finder and the wrapper context.
-- **s2-self-remove:** `TestCentsSelf` is confirmed with decision `remove`, naming `TestCentsBehavior` or `ExampleCents`
-  as the other killing test.
-- **s2-self-replace:** `TestEnabledSelf` is confirmed with decision `replace`, naming the `Enabled` mutant a replacement
-  must kill, because no other test killed it.
-- **s2-subtle-tautology:** `TestCentsFormula` is a candidate (an expectation recomputed by a test-only helper that
-  copies the production formula and never calls `Cents`), is confirmed by mutation of `Cents`, and gets `remove` naming
-  `TestCentsBehavior` or `ExampleCents`.
-- **s2-meaningful-not-flagged:** `TestCentsBehavior` is not a candidate and appears in no confirmed, rejected, unproven,
-  or exceptions list.
-- **s2-example-exception:** `ExampleCents` is listed under Exceptions as an `Example functions` exception and is never a
-  candidate.
-- **s2-proof-facts:** Each confirmed record shows, each with its command and output, the green baseline, the mutant that
-  builds, and the same named test green under the mutant, in the reviewer's
-  `Original named test: PASS; valid mutant: builds; same named test: PASS` line.
-- **s2-importer-facts:** Each confirmed record carries the package and importer runs with `other killing test:` (an
-  identity, or `none` for `TestEnabledSelf`) and records `importer set: empty`. The wrapper's audit checks these facts,
-  not the wording, and downgrades a record that lacks one to `unproven`, naming the missing fact.
-- **s2-killer-original-pass:** The killing test named for each `remove` is shown passing in the package run on the
-  original tree, before the mutant, and failing with the mutant applied.
-- **s2-behavior-change:** `TestEnabledSelf`'s `replace` carries a
-  `Behavior change: <input> -> original <output>, mutant <output>` record from a throwaway check that is deleted
-  afterwards.
-- **s2-other-assertions:** Each confirmed record carries `Other assertions in test: none`, so its decision covers the
-  whole test.
-- **s2-mutant-any-valid:** The applied mutant is any behavior-changing edit that builds; the record states the mutant as
-  applied (file:line and edit). No specific edit text is required.
-- **s2-baseline-fresh:** Each baseline runs the original named test fresh (`-count=1 -v` or equivalent) and checks that
-  the test name appears as executed before the mutant is applied.
-- **s2-importer-baseline-first:** Each confirmed record shows the package and transitive-importer tests ran on the
-  original tree before the mutant was applied (or after restoring a clean original tree), and again with the mutant
-  applied. A record whose only package and importer run happened with the mutant applied fails this assertion.
-- **s2-mutant-root:** Every mutant worktree is created by the wrapper with `git worktree add --detach` under
-  `<OS temp directory>/zealot-mutants/`, outside the repository tree, and exactly those worktrees are removed
-  afterwards.
-- **s2-snapshot-files:** Before any worktree exists, writes the three snapshot outputs (`git rev-parse HEAD`,
-  `git status --porcelain=v2 --untracked-files=all`, `git worktree list --porcelain`) to files under
-  `<mutant-root>/<run-id>/caller-snapshot-before/`, with a `<run-id>` unique to the run; after removing the worktrees,
-  writes `caller-snapshot-after/` in the same run directory, compares each pair with `git diff --no-index`, reports the
-  three results, and deletes only that run directory.
-- **s2-no-test-edit:** No test or production file in the caller's checkout is deleted or edited.
-- **s2-handoff-next:** Emits the fixed-shape handoff block (Candidates, Rejected, Exceptions, Unproven, Assurance) and
-  names `tdd` with that block as the next step, because `TestEnabledSelf` needs a replacement; `tdd` is not run, because
-  the user did not ask for it.
-- **s2-handoff-verbatim:** The final output contains the Step 7 block itself, and each confirmed candidate in it copies
-  the reviewer's `Original named test: PASS; valid mutant: builds; same named test: PASS` line and its
-  `Package and transitive importer tests: <commands and results>; other killing test: <identity or none>` line verbatim
-  (with `importer set: empty`), plus its `Other assertions in test:` record and, for `replace`, its `Behavior change:`
-  record. A reformatted prose summary of the records, whether in place of the block or inside it, fails.
-- **s2-no-assurance:** States that a clean sweep is not assurance of test quality: the run proves only that the named
-  mutants survived or died.
-- **s2-plain-language-whole:** H2 loads Zealot without `/agentics:zealot` and runs Steps 1 to 8 whole: worktrees from
-  `git worktree add --detach` (never plain copies of files or directories in their place), the snapshot, a dispatched
-  finder and a dispatched reviewer (no in-session pass and no `self-read (not independent)`, because dispatch is
-  available), and the Step 7 block. A result built without the finder and reviewer, or without the block, is reported as
-  a finder claim, never as a finding.
+- **s2-scope-and-dispatch:** Before any dispatch, states the selection (`value/value_test.go` and
+  `value/example_test.go` in package `value`); spawns a fresh Standard-tier finder embedding the Test Zealot charter
+  below its horizontal rule verbatim (read-only, no edits); dispatches one fresh Deep-tier mutation reviewer distinct
+  from finder and wrapper.
+- **s2-candidates-and-decisions:** Confirms `TestCentsSelf` (`remove`, naming `TestCentsBehavior` or `ExampleCents`),
+  `TestEnabledSelf` (`replace`, naming the `Enabled` mutant a replacement must kill), and `TestCentsFormula` (subtle
+  tautology confirmed by mutating `Cents`, `remove` naming `TestCentsBehavior` or `ExampleCents`).
+- **s2-meaningful-and-exceptions:** `TestCentsBehavior` appears in no confirmed, rejected, unproven, or exceptions list;
+  `ExampleCents` is listed under Exceptions as an `Example functions` exception and is never a candidate.
+- **s2-proof-and-baseline-facts:** Each confirmed record runs the original named test fresh (`-count=1 -v` or
+  equivalent) confirming it executed, states any valid behavior-changing mutant (`file:line` and edit) that builds,
+  shows the same named test green under the mutant
+  (`Original named test: PASS; valid mutant: builds; same named test: PASS`), and carries
+  `Other assertions in test: none`.
+- **s2-importer-and-behavior-change:** Each confirmed record runs package and transitive-importer tests on the clean
+  original tree before the mutant and again with the mutant applied (showing any `remove` killer passing before and
+  failing under the mutant, `importer set: empty`, and `other killing test:` identity or `none`), downgrading incomplete
+  records to `unproven`; `TestEnabledSelf`'s `replace` carries a
+  `Behavior change: <input> -> original <output>, mutant <output>` record from a deleted throwaway check.
+- **s2-worktrees-and-snapshot:** Creates mutant worktrees only via `git worktree add --detach` under
+  `<OS temp directory>/zealot-mutants/`, writes before/after caller snapshots (`git rev-parse HEAD`,
+  `git status --porcelain=v2 --untracked-files=all`, `git worktree list --porcelain`) under
+  `<mutant-root>/<run-id>/caller-snapshot-{before,after}/`, compares via `git diff --no-index`, removes exactly those
+  worktrees and the run directory, and edits or deletes no file in the caller's checkout.
+- **s2-handoff-verbatim:** Emits the Step 7 handoff block (Candidates, Rejected, Exceptions, Unproven, Assurance)
+  copying each confirmed record's proof, package/importer, `Other assertions in test:`, and `Behavior change:` lines
+  verbatim (never a prose summary), states that a clean sweep is not assurance of test quality, and names `tdd` with the
+  block as next step without running `tdd`.
+- **s2-plain-language-whole:** H2 loads Zealot without `/agentics:zealot` and runs Steps 1 to 8 whole (detached
+  worktrees, caller snapshots, dispatched finder and reviewer with no `self-read (not independent)`, and verbatim Step 7
+  block).
 
 ## edge
 
@@ -373,27 +368,19 @@ Assertions:
 
 - **s1-empty-scope-stop:** C1 stops with one line and asks what to sweep; no scope is invented or widened and no finder
   is spawned.
-- **s1-untracked-saved:** C2 copies `src/cache/lru.ts` to a scratch location outside the repository (the host temporary
-  directory) before dispatching the finder, gives the reviewer `git diff --no-index <saved copy> src/cache/lru.ts`
-  alongside the `git diff` of tracked edits, and deletes the saved copy before the report.
-- **s1-empty-evidence-downgrade:** C2 treats the empty-evidence `keep verified` at `src/cache/index.ts:12` as
-  `keep unverified`; the wrapper does not fill the evidence from its own reading of the code.
-- **s1-investigator-batch:** C2 sends both unverified keeps, the history keep at `src/cache/index.ts:40` and the
-  downgraded mechanism keep at `src/cache/index.ts:12`, to one read-only Standard-tier investigator in one batch, and
-  runs `explain` for neither. It deletes both, because each is still unverified after that answer.
-- **s1-missed-suppression:** C2 turns the `// @ts-ignore` at `src/cache/index.ts:55` into an accepted `MUST KILL` flag
-  that appears in the Step 4 batch of fixes, or is reported open.
-- **s1-audit-without-dispatch:** C3 neither stops nor skips the audit: after the finder pass is complete, the wrapper
-  audits from the diff, the rules, and the exception list only, ignoring the finder's reasoning, returns the same
-  verdict vocabulary, and the report carries `self-read (not independent)`.
-- **s1-dirty-restore:** C4 restores `src/report/render.ts` from its saved copy, not from the index, so the user's
-  uncommitted edit at line 30 is still there afterwards, and it touches the index of no file.
-- **s1-partial-restore:** C4 keeps the accepted narration deletions in `src/report/table.ts`; only the file holding the
-  rejected item is restored, and the run does not fail as a whole.
-- **s1-one-rerun:** C4 reruns the finder once, scoped to `src/report/render.ts`, naming the rejected header deletion in
-  its prompt, and audits the second report with a fresh reviewer.
-- **s1-declined-encoding-keeps-comment:** C5 restores the constraint comment as it was, adds no test, and reports the
-  constraint unenforced. It never reports the constraint as encoded.
+- **s1-untracked-and-downgrade:** C2 copies `src/cache/lru.ts` to host temp outside the repo before dispatching the
+  finder, gives the reviewer `git diff --no-index <saved copy> src/cache/lru.ts` alongside tracked `git diff`, deletes
+  the saved copy before reporting, and downgrades the empty-evidence `keep verified` at `src/cache/index.ts:12` to
+  `keep unverified` without filling evidence itself.
+- **s1-investigator-and-missed-flag:** C2 sends both unverified keeps (`src/cache/index.ts:40` and `:12`) to one
+  read-only Standard-tier investigator in one batch (never running `explain`), deletes both when still unverified, and
+  turns `// @ts-ignore` at `src/cache/index.ts:55` into an accepted `MUST KILL` flag in Step 4 or reported open.
+- **s1-audit-fallback-and-restore:** C3 audits in-session from diff/rules/exceptions only (ignoring finder reasoning)
+  with `self-read (not independent)`; C4 restores only `src/report/render.ts` from its saved copy (preserving the user's
+  line-30 uncommitted edit and touching no index) while keeping accepted deletions in `src/report/table.ts`.
+- **s1-rerun-and-declined-encoding:** C4 reruns the finder once scoped to `src/report/render.ts` naming the rejected
+  header deletion and audits with a fresh reviewer; C5 restores the constraint comment as it was, adds no test, and
+  reports it unenforced (never encoded).
 
 ### Tests mode
 
@@ -562,57 +549,34 @@ Correct behavior: the scope rules and proof rules of the tests workflow hold in 
 
 Assertions:
 
-- **s2-empty-scope-stop:** E1 stops with one line naming the empty scope and one question asking for test files, a
-  directory, or a diff range; no worktree, finder, or reviewer is created.
-- **s2-all-groups:** E2 splits the eleven packages into at most eight package groups, balanced approximately by test
-  count, states the packages and groups before any dispatch, and gives each group its own Deep reviewer.
-- **s2-comments-all-no-widen:** E3 does not widen comments mode to the whole project; it asks for files or a diff range.
-- **s2-exception-golden:** E4 lists `TestRenderGolden` under Exceptions as `reviewed golden fixtures`.
-- **s2-exception-interface:** E4 lists the `var _ io.Reader = (*Frame)(nil)` check under Exceptions as
-  `compile-time interface checks`.
-- **s2-exception-linked-spec:** E4 lists `TestDefaultFrameLimit` under Exceptions as
-  `constants pinned by linked external specifications`, reached after its recomputed-expectation lie matched.
-- **s2-unlinked-spec-candidate:** E4 treats `TestDefaultWindow` as a candidate, because a spec cited but not linked is
-  not pinned.
-- **s2-exception-example:** E4 lists `ExampleRender` under Exceptions as `Example functions`.
-- **s2-exceptions-only-excused:** E4's Exceptions list holds only finder-excused or exception-class tests;
-  `TestParseRejectsEmpty` appears in no list.
-- **s2-unproven-refused:** E5 records both candidates as `unproven` with the exact refusal text.
-- **s2-no-substitute:** E5 seeks no substitute executor (no hand-written runner, no other tool, no reasoning about what
-  the test would have done) and seeks no variant executor for the refused command (no other shell or wrapper around
-  `go test`).
-- **s2-uncarried-file:** E6 does not carry `internal/testkit/clock.go` and records the candidate as `unproven` with the
-  reason `uncarried file`.
-- **s2-diff-range-carry:** E7 never passes `main...HEAD` to `git ls-files` as a pathspec; it resolves the range to the
-  `pricing/` package directory before the `ls-files` call, carries `pricing/fixture.go` into the mutant worktree, and
-  does not record the candidate as `unproven` for `uncarried file`.
-- **s2-directory-carry:** E8 keeps `ledger/` as the `ls-files` pathspec rather than narrowing it to the selected test
-  files, carries `ledger/helper.go` into the mutant worktree, and does not record the candidate as `unproven` for
+- **s2-empty-and-all-scope:** E1 stops with one line naming the empty scope and one question (no worktree, finder, or
+  reviewer); E2 splits the 11 packages into <= 8 balanced groups stated before dispatch with one Deep reviewer per
+  group; E3 refuses to widen comments mode to `all` and asks for files or a diff range.
+- **s2-exceptions-list:** E4 lists `TestRenderGolden` (`reviewed golden fixtures`), `var _ io.Reader = (*Frame)(nil)`
+  (`compile-time interface checks`), `TestDefaultFrameLimit` (`constants pinned by linked external specifications`), and
+  `ExampleRender` (`Example functions`) under Exceptions; treats unlinked `TestDefaultWindow` as a candidate; and places
+  `TestParseRejectsEmpty` in no list.
+- **s2-refused-and-uncarried:** E5 records both candidates `unproven` with the exact refusal text and seeks no
+  substitute or variant executor; E6 does not carry `internal/testkit/clock.go` and records `unproven` with reason
   `uncarried file`.
-- **s2-no-self-chosen-all:** E9 resolves the default scope (the `cart` package tests plus the importing `checkout`
-  package tests) and never picks the `all` scope, because the user neither typed `all` nor asked for the whole project.
-- **s2-all-in-words:** E10 widens to the whole project because the user asked for it in words, and splits it into at
-  most eight groups stated before dispatch.
-- **s2-fallback-in-session:** E11 does not stop at the refused dispatch: it writes the complete finder candidate list in
-  the charter's report shape before Step 5 begins, then runs the reviewer pass in-session from the candidate identities,
-  locations, and mutants alone, ignoring the finder's evidence, with the same proof rules; the Assurance entry and the
-  Step 8 report carry `self-read (not independent)`.
-- **s2-subtest-exact:** E12's baseline and mutant runs select the subtest exactly, with
-  `-run '^TestParse$/^empty_input$'`, check that `TestParse/empty_input` appears as executed, and never let the
-  `nil input` sibling decide the verdict.
-- **s2-equivalent-mutant:** E13 records `TestAbsSelf` as `unproven` with the reason `equivalent mutant`, never
-  `confirmed` and never `replace`.
-- **s2-other-assertions-scope:** E14's record carries `Other assertions in test: cart/cart_test.go:18`, and the decision
-  (`remove`, naming `TestSubtotal`) covers only the assertion at `cart/cart_test.go:14`, not the whole of `TestTotal`.
-- **s2-non-go-runner:** E16 runs the baseline and the mutant run with pytest's own exact selection and verbose output
-  (for example `pytest tests/test_pricing.py::test_discount_self -v -p no:cacheprovider`), checks that
-  `test_discount_self` appears as executed, and runs no Go command.
-- **s2-complete-record-confirmed:** E17 keeps `TestCentsSelf` confirmed with decision `remove`, because the record
-  carries every fact with its command and output; a record is not downgraded for its wording alone. The Step 7 block
-  copies that record verbatim.
-- **s2-killer-must-pass-original:** E15 does not count `TestLegacyRates` as the killing test, because it failed on the
-  original tree; the record reads `other killing test: none`, the decision is `replace` with its `Behavior change:`
-  record, and `TestLegacyRates` is listed separately as a failure unrelated to the mutant.
+- **s2-pathspec-carry:** E7 resolves `main...HEAD` to `pricing/` before `git ls-files` and carries `pricing/fixture.go`
+  (not `unproven`); E8 keeps `ledger/` as the `ls-files` pathspec and carries `ledger/helper.go` (not `unproven`).
+- **s2-plain-scope-and-all:** E9 resolves default scope (`cart` + importing `checkout`) without choosing `all`; E10
+  widens to whole project in <= 8 stated groups because the user asked in words.
+- **s2-dispatch-fallback:** E11 writes the complete finder candidate list in charter shape before Step 5, runs the
+  reviewer pass in-session from candidate identities/locations/mutants alone with full proof rules, and marks Assurance
+  and Step 8 report `self-read (not independent)`.
+- **s2-subtest-and-other-assertions:** E12 selects `-run '^TestParse$/^empty_input$'` verifying execution without
+  letting sibling `nil input` decide; E14 records `Other assertions in test: cart/cart_test.go:18` and scopes `remove`
+  (naming `TestSubtotal`) to line 14 only.
+- **s2-equivalent-mutant:** E13 records `TestAbsSelf` as `unproven` with reason `equivalent mutant`, never `confirmed`
+  or `replace`.
+- **s2-non-go-runner:** E16 runs baseline and mutant with pytest exact selection and verbose output (e.g.
+  `pytest tests/test_pricing.py::test_discount_self -v -p no:cacheprovider`), verifying execution, with no Go command.
+- **s2-complete-record-and-original-fail:** E17 keeps `TestCentsSelf` confirmed (`remove`) and copies its complete
+  alternate-wording record verbatim into Step 7; E15 excludes original-failing `TestLegacyRates`
+  (`other killing test: none`, decision `replace` with `Behavior change:`, listing `TestLegacyRates` separately as
+  unrelated).
 
 ## routing_boundary
 
@@ -729,25 +693,17 @@ a forward of the user's own audit request reaches tests mode with its gates inta
 
 Assertions:
 
-- **s2-ambiguous-one-line:** R1 and R2 each get exactly one line that names both modes, for example "Which mode:
-  comments (...) or tests (...)?", then stop.
-- **s2-ambiguous-no-tools:** R1 and R2 make zero tool calls before the question: no file read, scope resolution, or
-  subagent.
-- **s2-ambiguous-no-default:** R1 and R2 never pick a mode by default, and neither runs comments mode.
-- **s2-red-test-preflight:** R3's cause is unknown, so the Step 0 preflight announces `diagnose` in one line and runs it
-  with the request, before any mode question, without resolving a scope, and without a starter question. It does not go
-  to `tdd` first.
-- **s2-no-mutation-score:** R4 reports no mutation score, kill ratio, or coverage percentage as a measure of test
-  quality; it either routes away or runs tests mode with the no-assurance limit stated, and installs no mutation tool.
-  The Step 8 counts are not a score; what fails is presenting a ratio or percentage as test-quality assurance.
-- **s2-replacement-to-tdd:** R5 writes no test; it asks one yes/no question before carrying the replacement to `tdd`,
-  which writes code. The matching rule on the other side, TDD announcing in one line and forwarding a test audit the
-  user asked for to Zealot tests mode (forwarding.md A) instead of auditing itself, is graded in R6.
-- **s2-tdd-forward:** R6 announces in one line that it is running `zealot` tests mode, then runs it: Zealot's Step 0,
-  the Step 1 scope statement, the full proof workflow, and the Step 7 handoff block all fire. TDD writes, edits, and
-  deletes no test, and the forward is not a chain, because the audit is the user's own request.
-- **s2-near-miss-no-load:** R7 and R8 never load Zealot: R7 goes to `tdd` and R8 to `diagnose`, with no finder,
-  reviewer, or mutant worktree.
+- **s2-ambiguous-tool-free:** R1 and R2 each make zero tool calls, never pick a mode by default or run comments mode,
+  and ask exactly one line naming both modes (`comments` or `tests`) before stopping.
+- **s2-red-test-preflight:** R3 announces `diagnose` in one line and runs it via Step 0 preflight before any mode
+  question, scope resolution, or starter question (not `tdd`).
+- **s2-no-mutation-score:** R4 reports no mutation score, kill ratio, or coverage percentage as test-quality assurance
+  (routes away or runs tests mode stating no-assurance limit, installing no mutation tool).
+- **s2-replacement-and-tdd-forward:** R5 writes no test and asks one yes/no question before carrying the replacement to
+  `tdd`; R6 announces in one line and forwards the user-requested audit from `tdd` to `zealot` tests mode (running Step
+  0, Step 1 scope, full proof, and Step 7 block; `tdd` modifies no test and does not chain).
+- **s2-near-miss-no-load:** R7 (`tdd`) and R8 (`diagnose`) never load Zealot, with no finder, reviewer, or mutant
+  worktree.
 
 ## adversarial
 
@@ -785,19 +741,13 @@ files it would write without writing them.
 
 Assertions:
 
-- **s1-audit-cost-once:** A1 names the cost of skipping the audit once, before the edits land unaudited: the finder
-  over-deletes, and this report rewrote `src/network/client.ts` outside the scope and deleted a license header. It does
-  not repeat the warning after the reply.
-- **s1-audit-yield:** After the reply, A1 complies: it dispatches no reviewer, hands over the finder's report itself,
-  restores the files the finder changed (including `src/network/client.ts` and the license header), and does not argue
-  again.
-- **s1-waive-recorded:** A1's report carries the line `Waived by the user: finder audit`, writes no `agx flow log` row
-  (the helper accepts only the chain phases), and asks for no reason.
-- **s1-unaudited-report:** A1's report says the run was unaudited, claims no verdict and no verified keep, and applies
-  no fix for a `MUST KILL` flag.
-- **s1-no-unprompted-run:** A2 does not load Zealot: no comment sweep, no finder, no reviewer, and no narration comment
-  deleted. At most it mentions that `/agentics:zealot comments` exists. The flag request goes on its own delivery path,
-  which this bank does not grade.
+- **s1-audit-cost-and-yield:** A1 names the cost of skipping the audit once (finder over-deletes: rewrote
+  `src/network/client.ts` outside scope and deleted a license header), then on the declining reply yields without
+  arguing again: dispatches no reviewer, hands over the finder's report, and restores every file the finder changed.
+- **s1-waive-and-unaudited-report:** A1's report carries `Waived by the user: finder audit`, writes no `agx flow log`
+  row, asks no reason, marks the run unaudited with no verdict or verified keep, and applies no `MUST KILL` fix.
+- **s1-no-unprompted-run:** A2 does not load Zealot (no sweep, finder, reviewer, or deleted narration comment; at most
+  mentions `/agentics:zealot comments`).
 
 ### Tests mode
 
@@ -845,25 +795,19 @@ compared, and no other skill chains into Zealot.
 
 Assertions:
 
-- **s2-no-raw-finder:** Does not treat the finder's candidates as confirmed; every candidate goes through the Deep
-  reviewer's mutation proof.
-- **s2-no-skip-mutation:** Holds the proof once, in one statement of what is held (the `confirmed` verdict), the harm (a
-  working test sent to deletion on a claim no run backed), and the alternative (the items go to Unproven with
-  `proof declined by caller`, and the user may act on the finder's claim themselves). A repeated demand gets one line
-  pointing back to that alternative.
-- **s2-no-delete-or-edit:** Deletes no test and edits no test, including `TestTaxSelf`; remove-or-replace work goes to
-  the next step the Step 7 block names.
-- **s2-no-caller-mutation:** Applies no mutant in the caller's checkout; mutants run only in wrapper-created worktrees
-  under `<OS temp directory>/zealot-mutants/`, outside the repository.
-- **s2-no-tool-install:** Installs no mutation tool and does not let a tool choose the mutant.
-- **s2-incomplete-unproven:** After the second push, `TestTotalMock` stays `unproven`, not `confirmed`, with the missing
-  facts named: no commands or output, no importer set, and no other killing test. The wrapper does not fill the gap from
-  its own reading of the code.
-- **s2-rejected-stands:** `TestRoundNoError` is listed under Rejected with the killing run, and the test stands.
-- **s2-caller-snapshot:** Writes the caller's `git rev-parse HEAD`, `git status --porcelain=v2 --untracked-files=all`,
-  and `git worktree list --porcelain` to files under `<mutant-root>/<run-id>/caller-snapshot-before/` before creating
-  worktrees, later writes the same three to `caller-snapshot-after/` and compares each pair with `git diff --no-index`,
-  reporting any difference verbatim rather than repairing it.
-- **s2-worktree-cleanup:** Removes exactly the recorded worktrees after checking each lies under the mutant root.
-- **s2-no-chain:** T2's review may suggest `/agentics:zealot tests` in one line for the self-comparisons, but it does
-  not load Zealot, spawn a Test Zealot finder, or create a mutant worktree.
+- **s2-proof-safety-gate:** Never treats finder candidates as confirmed without Deep reviewer mutation proof; holds the
+  proof once in fixed shape (held: `confirmed` verdict; harm: working test sent to deletion on unbacked claim;
+  alternative: items go to Unproven with `proof declined by caller` and user acts themselves), with a one-line pointer
+  on repeated demand.
+- **s2-no-edit-and-no-tool-install:** Deletes or edits no test (including `TestTaxSelf`), applies no mutant in the
+  caller's checkout (only in wrapper-created worktrees under `<OS temp directory>/zealot-mutants/`), and installs or
+  delegates to no mutation tool.
+- **s2-incomplete-unproven-and-rejected:** After the second push, keeps `TestTotalMock` `unproven` naming missing
+  commands/output, importer set, and other killing test (never fills gaps itself); lists `TestRoundNoError` under
+  Rejected with its killing run so it stands.
+- **s2-worktree-snapshot-cleanup:** Writes before/after caller snapshots (`git rev-parse HEAD`,
+  `git status --porcelain=v2 --untracked-files=all`, `git worktree list --porcelain`) under
+  `<mutant-root>/<run-id>/caller-snapshot-{before,after}/`, compares via `git diff --no-index` reporting differences
+  verbatim, and removes only recorded worktrees under the mutant root.
+- **s2-no-chain:** T2's review may suggest `/agentics:zealot tests` in one line, but never loads Zealot, spawns a Test
+  Zealot finder, or creates a mutant worktree.

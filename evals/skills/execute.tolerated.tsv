@@ -1,9 +1,0 @@
-rule	category	scenario	digest	detail
-eval-bank-scenario-criterion	edge	Absorbed isolation card: tip advanced	78f518891d6acc92	-
-eval-bank-scenario-request	edge	A defect reported after a review cleared it is an escape row	85ff8bdd9e47d648	-
-eval-bank-scenario-request	adversarial	Conditional aggregate review: evidenced isolated skip	c00d0f056266296a	-
-eval-bank-scenario-request	adversarial	Conditional aggregate review: current-wave contract and uncertainty	b92cbadb9bd9c352	-
-eval-bank-scenario-criterion	adversarial	Conditional aggregate review: current-wave contract and uncertainty	b92cbadb9bd9c352	-
-eval-bank-scenario-request	adversarial	Missing requirement remains a stop	4107ab470bda0804	-
-eval-bank-scenario-criterion	adversarial	Missing requirement remains a stop	4107ab470bda0804	-
-eval-bank-scenario-criterion	adversarial	Absorbed isolation card: open dependency issue	ab1a3a715ca5e069	-

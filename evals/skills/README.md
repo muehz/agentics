@@ -108,6 +108,29 @@ more than one sub-scenario that declares inventories therefore cannot also decla
 and is never the only evidence that a sub-scenario still passes. One score for a category can hide a regression in one
 of its many sub-scenarios.
 
+## Category sizing and consolidation
+
+In `muehz/evals`, each category (`happy`, `edge`, `routing_boundary`, `adversarial`) executes as one single-turn (or
+fixed-turn) prompt containing every sub-scenario under that `##` heading. Packing 20+ sub-scenarios or 30+
+micro-assertions into a single category triggers output-token compression on floor models (especially
+`claude-haiku-5-5`), depressing `output_quality` and `workflow_completeness` scores even when the skill itself is sound.
+
+- **Target budget per category:** aim for **at most 12 sub-scenarios** and **at most 24 assertions** per category (hard
+  consolidation threshold: **15 sub-scenarios** or **30 assertions**).
+- **Consolidate before appending:** before adding a new sub-scenario to a category near the budget, check whether an
+  existing sub-scenario already exercises the same mode, branch, or gate and can absorb the new check as a variant beat
+  or assertion, or whether overlapping single-variant cards (such as multiple interchangeable tool-reuse or guardrail
+  variants) can merge into one concise multi-case sub-scenario without dropping any behavioral check.
+- **Record consolidations in the bank header:** every version line that consolidates or merges sub-scenarios lists the
+  merged titles and names the surviving sub-scenario that retains their coverage, resetting comparability for affected
+  categories.
+- **Batching for large multi-mode skills:** when a multi-mode skill genuinely needs more distinct scenarios than fit
+  comfortably in one category prompt, balance cases across the four categories where each fits, or run dedicated
+  single-scenario `evals observe` cases rather than crowding 25+ independent prompts into one category turn.
+- **Fixture completeness:** every concrete repository/VCS/PR/hash/ID value required by `Correct behavior:` or
+  `Assertions:` must be supplied concretely in the scenario's fixture text (`eval-bank-fixture-completeness` enforces
+  this statically so subjects never have to emit unresolved placeholders).
+
 ## What a criterion may name
 
 A criterion names only evidence that the scenario's execution protocol retains. The harness retains two kinds:

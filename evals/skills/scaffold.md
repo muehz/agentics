@@ -1,5 +1,24 @@
 # Pinned eval scenarios: scaffold
 
+Bank version 19 (2026-11-24): consolidates overlapping single-variant cards in `happy` (19 -> 12 sub-scenarios, 13
+assertions) and `edge` (29 -> 14 sub-scenarios, 18 assertions) under the <= 15 sub-scenario / <= 24 assertion category
+sizing guideline so single-turn floor-model runs do not compress outputs. Every v18 behavioral check is retained:
+`happy` merges `Readiness audit: mature repository` + `empty directory` + `Readiness request in plain words` ->
+`Readiness audit: mature, empty, and plain-words requests`; `Optional code-review skill: audit and preservation` +
+`discovery locations` + `contextual creation` ->
+`Optional code-review skill: discovery, preservation, and contextual creation`;
+`Planning protection: configured parent` + `rerun` -> `Planning protection: configured parent and rerun`;
+`Standard-protection card: Husky reuse` + `Lefthook reuse` + `pre-commit reuse` ->
+`Standard-protection card: existing hook-manager reuse (Husky, Lefthook, pre-commit)`. `edge` merges the six
+`Planning protection:` cards into two (`invalid, conflicting, and changed parent declarations` and
+`shared directory, ignored ancestor, declines, and native validation`), the two `Absorbed wiring` cards into one, the
+four `Absorbed convention-discovery` cards into one, the two `Absorbed reflection hand-off` cards into one, the seven
+`Standard-protection` edge cards into three (`Checkmarx cue, inactive hook, and incomplete CI`;
+`remote access, owner/check prerequisites, and release environments`; and
+`unsupported host and changed-file/path guards`), and `Existing AGENTS.md compaction and corrections offer card` +
+`User-authorized exceptions offer card` into `Existing AGENTS.md workflow-section offer card`. Scores for `happy` and
+`edge` are not comparable to v18; `routing_boundary` and `adversarial` are unchanged.
+
 Bank version 18 (2026-11-24): adds explicit `Assertions:` inventories (`SC-H1..A10`) across all four categories and
 fills in missing concrete fixture facts that previously forced placeholder outputs (healthy-output command lines in
 `Init: full run on a new repository`, concrete install command `brew install node` in `Readiness pressure`, concrete
@@ -157,7 +176,11 @@ Baseline weak axis when drafted: workflow_completeness (mean 3.25/5).
 
 ## happy
 
-### Readiness audit: mature repository
+### Readiness audit: mature, empty, and plain-words requests
+
+Three independent readiness-audit runs:
+
+**Case A — mature repository:**
 
 ```text
 scaffold
@@ -170,22 +193,7 @@ Its valid ordinary code-review skill has freeform headings. Governance satisfies
 and version declarations agree; only local tags are available, so published remote release state is unknown. Protection
 settings and remote enforcement evidence are unavailable.
 
-Expected: a report with `Category | Status | Path / evidence | Recommended action`, in order: runnable feedback loops;
-standard protections; AGENTS.md; agents, skills and MCP configuration; governance and community; release state. Executed
-successful checks pass with their observed command evidence; publication is `unverified`; protection rows are `blocked`
-or `unverified` with their access or proof reasons. The freeform review skill is preserved and reported as configured.
-The report ends with at most one yes/no offer of a next mode.
-
-Fail: a selection menu, any file, directory or setting written, a release mutation, or a protection row marked `pass`
-without enforcement evidence.
-
-Assertions:
-
-- **SC-H1:** Reports six categories in order with observed command evidence, marks publication `unverified` and
-  protections `blocked`/`unverified`, preserves the freeform review skill, writes nothing, and ends with at most one
-  yes/no offer.
-
-### Readiness audit: empty directory
+**Case B — empty directory:**
 
 ```text
 scaffold
@@ -193,17 +201,7 @@ scaffold
 
 Fixture facts: an empty directory, with no Git, source, configuration or instructions.
 
-Expected: the readiness audit runs. Absent required guidance is `missing`; build, typecheck and release rows are
-`inapplicable` with their reasons. Nothing is written. The report may end with one yes/no offer of init on the gaps.
-
-Fail: starting the init walkthrough without being asked, or any write.
-
-Assertions:
-
-- **SC-H2:** Runs readiness audit marking absent guidance `missing` and build/typecheck/release `inapplicable`, writes
-  nothing, and does not start init unprompted.
-
-### Readiness request in plain words
+**Case C — plain-words request followed by confirmation:**
 
 ```text
 Use Agentics scaffold to get this repo ready for coding agents.
@@ -216,18 +214,25 @@ Yes, go ahead.
 Fixture facts: an existing repository with a conformant README and `AGENTS.md`, no `CONTRIBUTING.md`, and no
 `CODEOWNERS`. GitHub is the host.
 
-Expected (turn 1): the readiness audit, reporting `CONTRIBUTING.md` and `CODEOWNERS` as `missing`, and ending with one
-yes/no question that offers init on those gaps. Nothing is written.
+Expected:
 
-Expected (turn 2): init starts from the audit's gaps without a second scan and without asking the user to type
-`scaffold init`, showing the menu with `CONTRIBUTING.md` and `CODEOWNERS` selectable.
-
-Fail: telling the user to run `scaffold init` themselves, or a write before a preview.
+- Case A: report with `Category | Status | Path / evidence | Recommended action` in order (runnable feedback loops;
+  standard protections; AGENTS.md; agents, skills and MCP configuration; governance and community; release state),
+  observed command evidence, publication `unverified`, protections `blocked`/`unverified`, freeform review skill
+  preserved, nothing written, at most one yes/no offer.
+- Case B: absent required guidance `missing`, build/typecheck/release `inapplicable`, nothing written, no unprompted
+  init walkthrough.
+- Case C: turn 1 reports `CONTRIBUTING.md` and `CODEOWNERS` `missing` with one yes/no init offer (nothing written); turn
+  2 starts init from those gaps without a second scan or asking the user to type `scaffold init`.
 
 Assertions:
 
-- **SC-H3:** Reports `CONTRIBUTING.md` and `CODEOWNERS` missing on turn 1 with one yes/no init offer, then starts init
-  from those gaps on turn 2 without a second scan or telling the user to type `scaffold init`.
+- **SC-H1:** Case A reports all six categories in order with observed command evidence, marks publication `unverified`
+  and protections `blocked`/`unverified`, preserves the freeform review skill, writes nothing, and ends with at most one
+  yes/no offer; Case B marks absent guidance `missing` and build/typecheck/release `inapplicable` without starting init
+  unprompted.
+- **SC-H2:** Case C reports `CONTRIBUTING.md` and `CODEOWNERS` missing on turn 1 with one yes/no init offer, then starts
+  init from those gaps on turn 2 without a second scan or telling the user to type `scaffold init`.
 
 ### Plain-words creation selects init
 
@@ -312,7 +317,11 @@ Assertions:
   outputs, compaction, repeated corrections, chain-entry) alone with `Write AGENTS.md as shown?`, and lists
   `docs/ARCHITECTURE.md` under Also consider.
 
-### Optional code-review skill: audit and preservation
+### Optional code-review skill: discovery, preservation, and contextual creation
+
+Three independent code-review skill runs:
+
+**Case A — audit and preservation:**
 
 ```text
 scaffold audit
@@ -326,37 +335,17 @@ Fixture facts: an existing repository with a conformant `README.md`, a missing `
 ordinary `.claude/skills/code-review/SKILL.md` whose freeform body references `references/review-checklist.md` relative
 to its own directory.
 
-Expected (turn 1): the audit reports the skill as configured (`pass`), separate from the governance rows, reports
-`CONTRIBUTING.md` as `missing`, and ends with one yes/no offer of init. Nothing is written.
-
-Expected (turn 2): init's menu preselects nothing outside the gaps; Select All selects only `CONTRIBUTING.md` and other
-missing or non-conformant catalog rows; the valid skill is not rewritten, moved or normalized.
-
-Assertions:
-
-- **SC-H6:** Audit reports the valid freeform skill configured separately from governance and `CONTRIBUTING.md` missing;
-  turn 2 Select All selects only catalog gaps without touching the skill.
-
-### Optional code-review skill: discovery locations
+**Case B — discovery locations and precedence:**
 
 ```text
 scaffold audit
 ```
 
-Fixture facts: four separate repositories: one with no code-review skill, and one with a valid skill at each of
-`.github/skills/code-review/SKILL.md`, `.claude/skills/code-review/SKILL.md` and `.agents/skills/code-review/SKILL.md`.
-A fifth has valid skills at all three. A sixth has an unreadable `.github` skill and a readable `.claude` one.
+Fixture facts: six separate repositories: none; single valid skill at `.github/skills/code-review/SKILL.md`,
+`.claude/skills/code-review/SKILL.md`, or `.agents/skills/code-review/SKILL.md`; valid skills at all three; and an
+unreadable `.github` skill alongside a readable `.claude` skill.
 
-Expected: absence is `inapplicable` with `Optional — not configured`; each single location is configured with structural
-evidence; the collision selects `.github` and leaves the others untouched; the unreadable first match is reported as a
-defect, with no fall-through to the `.claude` skill. Nothing is written.
-
-Assertions:
-
-- **SC-H7:** Reports absence `inapplicable` (`Optional — not configured`), each single location configured, `.github`
-  winning collisions, and an unreadable `.github` skill as a defect with no fall-through.
-
-### Optional code-review skill: contextual creation
+**Case C — contextual creation and skip:**
 
 ```text
 Add a code-review skill to this repo: flag any SQL built by string concatenation as Important, and skip src/gen/.
@@ -366,18 +355,24 @@ Add a code-review skill to this repo: flag any SQL built by string concatenation
 skip
 ```
 
-Fixture facts: no code-review skill exists in any discovery location, and the repository has none of `.claude/skills/`,
-`.github/skills/` and `.agents/skills/`.
+Fixture facts: no code-review skill exists in any discovery location, and none of `.claude/skills/`, `.github/skills/`,
+or `.agents/skills/` exists.
 
-Expected (turn 1): init generates `.claude/skills/code-review/SKILL.md` from that guidance, the default project skill
-directory when none exists, and shows its exact text alone, asking
-`Write .claude/skills/code-review/SKILL.md as shown?`. Nothing is written before the answer.
+Expected:
 
-Expected (turn 2): nothing is written and no directory is created.
+- Case A: turn 1 reports the freeform skill configured (`pass`) separate from governance and `CONTRIBUTING.md` missing
+  with one yes/no init offer (writes nothing); turn 2 Select All selects only catalog gaps without touching the skill.
+- Case B: absence is `inapplicable` (`Optional — not configured`), each single location is configured, `.github` wins
+  collisions leaving others untouched, and an unreadable `.github` skill is a defect with no fall-through to `.claude`.
+- Case C: turn 1 generates `.claude/skills/code-review/SKILL.md` and previews its exact text alone asking
+  `Write .claude/skills/code-review/SKILL.md as shown?`; turn 2 `skip` writes nothing and creates no directory.
 
 Assertions:
 
-- **SC-H8:** Generates `.claude/skills/code-review/SKILL.md` and previews its exact text alone asking
+- **SC-H6:** Case A preserves the valid freeform skill during audit and Select All; Case B reports absence
+  `inapplicable` (`Optional — not configured`), `.github` winning collisions, and unreadable `.github` as a defect with
+  no fall-through.
+- **SC-H7:** Case C generates `.claude/skills/code-review/SKILL.md` and previews its exact text alone asking
   `Write .claude/skills/code-review/SKILL.md as shown?`, writing nothing on `skip`.
 
 ### Files the user decides: LICENSE
@@ -426,7 +421,9 @@ Assertions:
 - **SC-H10:** Previews test and lint probes in disposable worktrees leaving build `ran`, then executes probes on yes
   without modifying the user's tree.
 
-### Planning protection: configured parent
+### Planning protection: configured parent and rerun
+
+**Case A — initial setup with configured parent:**
 
 ```text
 scaffold init
@@ -444,42 +441,32 @@ Fixture facts: the consumer's `AGENTS.md` has `## Repository conventions` with `
 `docs/specs` also exists. `planning/agentics` holds only work folders. The root `.gitignore` uses CRLF line endings and
 has unrelated rules. The active surface is Codex; its install inventory names the Agentics root.
 
-Expected (turn 2): Select All selects only the catalog gaps; the ignore block is selected on its own, with no parent
-record and no validator. The parent is `planning/agentics`, resolved through the work-root contract, not `docs/specs`.
-The helper is found under the Codex install root and run from the repository root as
-`sh "<agentics-root>/skills/scaffold/scripts/planning-protection.sh" --parent "planning/agentics" --gitignore .gitignore`
-on macOS and Linux, or as the same arguments to
-`powershell -NoProfile -ExecutionPolicy Bypass -File "<agentics-root>\skills\scaffold\scripts\planning-protection.ps1"`
-on Windows. Its full `.gitignore` preview, with unrelated rules and CRLF kept, joins the shared preview.
-
-Expected (turn 3): after the write, `git check-ignore --no-index` probes show allowed canonical files are not ignored
-and extras are; the result is reported from those exit codes. No validator or CI file is written.
-
-Assertions:
-
-- **SC-H11:** Resolves `planning/agentics`, runs the platform-appropriate helper (`planning-protection.sh` /
-  `planning-protection.ps1`), preserves unrelated rules and CRLF in preview, and verifies with
-  `git check-ignore --no-index`.
-
-### Planning protection: rerun
+**Case B — idempotent rerun and duplicate-marker stop:**
 
 ```text
 scaffold init
 ```
 
-Fixture facts: the same repository after the block was accepted. The parent is unchanged. A second fixture has two
+Fixture facts: the same repository after the block was accepted (parent unchanged), plus a second fixture with two
 `# BEGIN AGENTICS PLANNING PROTECTION` blocks.
 
-Expected: the helper, run as `sh ".../planning-protection.sh"` on macOS and Linux and as
-`powershell -NoProfile -ExecutionPolicy Bypass -File "<agentics-root>\skills\scaffold\scripts\planning-protection.ps1"`
-on Windows, previews the whole file without writing or redirecting into its input; one marked block remains, with
-unrelated content and line endings kept, and no duplicate parent declaration is offered. In the second fixture the
-helper's marker error stops this option and the other selections continue.
+Expected:
+
+- Case A (turn 2): Select All selects only catalog gaps; the ignore block resolves `planning/agentics` (not
+  `docs/specs`) via
+  `sh "<agentics-root>/skills/scaffold/scripts/planning-protection.sh" --parent "planning/agentics" --gitignore .gitignore`
+  on macOS/Linux or
+  `powershell -NoProfile -ExecutionPolicy Bypass -File "<agentics-root>\skills\scaffold\scripts\planning-protection.ps1"`
+  on Windows, preserving unrelated rules and CRLF in the shared preview. Turn 3 verifies with
+  `git check-ignore --no-index` and writes no validator or CI file.
+- Case B: helper previews the whole file idempotently with one marked block and preserved line endings (no duplicate
+  parent declaration); on duplicate markers, stops this option cleanly while other selections continue.
 
 Assertions:
 
-- **SC-H12:** Previews the full `.gitignore` idempotently keeping one marked block and line endings, and stops cleanly
-  on duplicate markers without blocking other selections.
+- **SC-H11:** Case A resolves `planning/agentics`, runs the platform-appropriate planning-protection helper, preserves
+  unrelated rules and CRLF in preview, and verifies with `git check-ignore --no-index`; Case B previews idempotently
+  keeping one marked block and stops cleanly on duplicate markers without blocking other selections.
 
 ### Absorbed verification-origin card
 
@@ -562,70 +549,53 @@ Assertions:
   consumer option with current-head evidence stating absence is not enforcement proof; offers protections outside Select
   All, shows exact previews for the three chosen options, and writes nothing on skip.
 
-### Standard-protection card: Husky reuse
+### Standard-protection card: existing hook-manager reuse (Husky, Lefthook, pre-commit)
+
+Three independent hook-manager reuse fixtures (all with verified Gitleaks 8.30.1 staged flags):
+
+**Case A — Husky (`ui-kit`):**
 
 ```text
 scaffold init; add staged secret scanning with the existing hook setup
 ```
 
-Fixture `ui-kit` has Husky 9.1.7, `prepare: node scripts/install-hooks.cjs`, effective `core.hooksPath=.github/husky/_`
-and a generated launcher that invokes `.github/husky/pre-commit`. That authored file runs
-`npx --no-install lint-staged || exit $?` followed by `node scripts/check-license.cjs || exit $?`. `lint-staged` formats
-index files. Gitleaks 8.30.1 is installed; actual help confirms `git --pre-commit --staged --redact --config`. No secret
-scan exists. Prompt: `scaffold init; add staged secret scanning with the existing hook setup`.
+Fixture: Husky 9.1.7, `prepare: node scripts/install-hooks.cjs`, `core.hooksPath=.github/husky/_`, launcher calling
+`.github/husky/pre-commit` (`npx --no-install lint-staged || exit $?` then `node scripts/check-license.cjs || exit $?`).
 
-Expected: Preview the complete hook diff, minimal policy and installation guidance; preserve both authored checks and
-add scanning after formatting. Do not add pre-commit/Lefthook or rewrite shared Git configuration. Confirmation permits
-only those named local writes. A missing/old scanner, finding, error or incomplete scan must stop the commit with a
-clear diagnostic. Any disposable refusal probe needs its own preview/consent; configuration-only inspection is not a
-demonstrated refusal.
-
-Assertions:
-
-- **SC-H15:** Extends Husky after `lint-staged` preserving `check-license.cjs`, previews exact hook diff and full
-  minimal `.gitleaks.toml` policy without adding another manager, and requires separate consent for refusal probes.
-
-### Standard-protection card: Lefthook reuse
+**Case B — Lefthook (`catalog-cli`):**
 
 ```text
 scaffold init; offer local secret scanning
 ```
 
-Fixture `catalog-cli` has an installed Lefthook launcher and `lefthook.yml` whose pre-commit commands are piped:
-`format` priority 1 invokes `node scripts/format-staged.cjs`; `license` priority 2 invokes
-`node scripts/check-license.cjs`. Git's effective hook path invokes that launcher. Gitleaks 8.30.1 is installed and its
-supported index-scan flags are verified. Prompt: `scaffold init; offer local secret scanning`.
+Fixture: installed Lefthook launcher and piped `lefthook.yml` (`format` priority 1 `node scripts/format-staged.cjs`,
+`license` priority 2 `node scripts/check-license.cjs`).
 
-Expected: Preview a native Lefthook addition with scan priority after the formatter, preserving license checks and
-failure propagation. A shared scanner script must not rerun the formatter. No Husky/pre-commit installation or competing
-hook path is permitted. The evaluator supplies only source inspection in this fixture: report the proposed integration
-as unverified until an authorized real Git/manager run supplies clean and specific rejection evidence.
-
-Assertions:
-
-- **SC-H16:** Previews a native Lefthook addition after formatting preserving license checks without rerunning the
-  formatter or adding another manager, reporting integration `unverified` without an authorized run.
-
-### Standard-protection card: pre-commit reuse
+**Case C — pre-commit (`data-tools`):**
 
 ```text
 scaffold init; add a staged secret check
 ```
 
-Fixture `data-tools` has pre-commit installed, `.pre-commit-config.yaml` containing an authored local `schema-check`
-system-language hook and an installed Git launcher under the repository's default hook directory. No competing
-`core.hooksPath` exists. Gitleaks 8.30.1 and its upstream hook manifest are readable; the upstream staged hook or a
-local system-language staged script is suitable. Prompt: `scaffold init; add a staged secret check`.
+Fixture: pre-commit installed with `.pre-commit-config.yaml` holding local `schema-check`, default hook directory, no
+competing `core.hooksPath`.
 
-Expected: Preview an addition to that existing configuration, retaining `schema-check`, its order and failures. A local
-staged script uses `pass_filenames: false` and `always_run: true` so the scanner selects the index itself. Do not add
-Husky, replace the manager or count an uninstalled configuration as enforcement. If native pre-commit execution is
-unavailable, keep that proof blocked/unverified rather than claim a passing manager run.
+Expected:
+
+- Case A: preview complete Husky diff after `lint-staged` preserving `check-license.cjs` plus full minimal
+  `.gitleaks.toml` policy and install guidance; do not add another manager or rewrite shared Git config; missing/old
+  scanner or finding stops commit; refusal probes require separate consent.
+- Case B: preview native Lefthook addition after `format` preserving `license` without rerunning formatter or adding
+  another manager; report integration `unverified` without an authorized real run.
+- Case C: preview addition to `.pre-commit-config.yaml` retaining `schema-check`, using `pass_filenames: false` and
+  `always_run: true` for a local staged script, without adding Husky or claiming passing unexecuted proof.
 
 Assertions:
 
-- **SC-H17:** Previews an addition to `.pre-commit-config.yaml` retaining `schema-check` with `pass_filenames: false`
-  and `always_run: true`, keeping unexecuted proof `blocked`/`unverified`.
+- **SC-H15:** Reuses the active hook manager across Husky (after `lint-staged` with full minimal `.gitleaks.toml` and
+  separate probe consent), Lefthook (piped after `format` without rerunning formatter, reported `unverified`), and
+  pre-commit (retaining `schema-check` with `pass_filenames: false` and `always_run: true`, unexecuted proof kept
+  `blocked`/`unverified`) without adding a competing manager.
 
 ### Standard-protection card: suitable custom scanner and CI
 
@@ -681,44 +651,29 @@ Assertions:
 
 ## edge
 
-### Planning protection: invalid declared parent
+### Planning protection: invalid, conflicting, and changed parent declarations
+
+Three independent planning-protection declaration cases:
+
+**Case A — invalid declared parent (`../outside`):**
 
 ```text
 scaffold init, and protect the planning folder.
 ```
 
-Fixture facts: `AGENTS.md` has `- Work root: ../outside` under `## Repository conventions`. `docs/specs` exists and
-holds only work folders.
+Fixture facts: `AGENTS.md` has `- Work root: ../outside` under `## Repository conventions`; `docs/specs` exists with
+only work folders.
 
-Expected: the skill reports that the declared work root leaves the repository and fails the contract's validation, says
-the contract therefore resolves `docs/specs`, and offers the ignore block for `docs/specs`, saying so. The helper, in
-either its `sh` or its `node` form, is never run with `../outside`, and `AGENTS.md` is not rewritten to hide the
-problem.
-
-Assertions:
-
-- **SC-E1:** Reports `../outside` fails work-root validation, resolves `docs/specs`, offers the block for `docs/specs`
-  without running the helper on `../outside` or rewriting `AGENTS.md`.
-
-### Planning protection: conflicting declarations
+**Case B — conflicting declarations:**
 
 ```text
 scaffold init, and protect the planning folder.
 ```
 
-Fixture facts: `AGENTS.md` declares `- Work root: planning/agentics` and `CLAUDE.md` declares `- Work root: docs/plans`
-under `## Repository conventions`. Both directories exist.
+Fixture facts: `AGENTS.md` declares `- Work root: planning/agentics` and `CLAUDE.md` declares `- Work root: docs/plans`;
+both exist.
 
-Expected: the skill names both declarations with their paths and asks once, as a ❓ question with a ➡️ recommendation,
-which is canonical. It protects nothing until the answer and does not fall back to `docs/specs`. The other selected
-governance work continues.
-
-Assertions:
-
-- **SC-E2:** Names both conflicting `AGENTS.md` and `CLAUDE.md` work roots, asks once with `❓`/`➡️`, protects nothing
-  before an answer, and continues other governance work.
-
-### Planning protection: parent change
+**Case C — parent change:**
 
 ```text
 scaffold init
@@ -728,39 +683,39 @@ scaffold init
 Move new planning work to planning/new-work, update the AGENTS.md declaration, and protect it.
 ```
 
-Fixture facts: the existing block protects `planning/agentics`, which `AGENTS.md` declares, and holds existing work.
+Fixture facts: existing block protects `planning/agentics` (declared in `AGENTS.md`), which holds existing work.
 
-Expected: existing work stays in `planning/agentics`. The skill shows the replacement `.gitignore` in full in the shared
-preview and explains discovery for both parents. The `AGENTS.md` declaration update is shown alone, in the file's
-existing structure, with no duplicate line. Accepting the new parent never moves old work.
+Expected:
+
+- Case A: report `../outside` fails validation, resolve `docs/specs`, offer block for `docs/specs`, never run helper on
+  `../outside` or rewrite `AGENTS.md`.
+- Case B: name both conflicting declarations and ask once (`❓`/`➡️`), protect nothing before answer, do not fall back
+  to `docs/specs`, continue other governance work.
+- Case C: keep existing work in `planning/agentics`, preview full replacement `.gitignore` explaining both parents,
+  preview `AGENTS.md` declaration update alone without moving old work.
 
 Assertions:
 
-- **SC-E3:** Keeps existing work in `planning/agentics`, previews full replacement `.gitignore` explaining both parents,
-  and previews the `AGENTS.md` declaration update alone without moving old work.
+- **SC-E1:** Case A reports `../outside` invalid, resolves and offers `docs/specs` without running the helper on
+  `../outside` or editing `AGENTS.md`; Case B names conflicting `AGENTS.md`/`CLAUDE.md` declarations and asks once with
+  `❓`/`➡️` before protecting anything.
+- **SC-E2:** Case C keeps existing work in `planning/agentics`, previews full replacement `.gitignore` explaining both
+  parents, and previews the `AGENTS.md` declaration update alone without moving old work.
 
-### Planning protection: shared directory and tracked extras
+### Planning protection: shared directory, ignored ancestor, declines, and native validation
+
+Three independent planning-protection guard cases:
+
+**Case A — shared directory and tracked extras:**
 
 ```text
 scaffold init, and add the planning ignore block.
 ```
 
-Fixture facts: the declared work root `docs/plans` holds unrelated product documentation and tracked sidecar files. A
-second fixture has a dedicated parent with two tracked files that are not canonical work-item files.
+Fixture facts: (1) `docs/plans` holds unrelated product docs and tracked sidecars; (2) a dedicated parent holds two
+tracked non-canonical files.
 
-Expected: in the first fixture the skill inspects hidden and tracked content, names the extras, and offers a dedicated
-subtree as the parent or no block; it imposes no block on the shared directory. In the second it reports the tracked
-extras by path, leaves them tracked, explains that ignores cannot untrack files or stop force-adds, and offers native
-validation as a separate menu item.
-
-Fail: deleting, moving or untracking any file.
-
-Assertions:
-
-- **SC-E4:** Names shared-directory extras and offers a dedicated subtree or no block; reports tracked extras without
-  deleting/untracking and offers native validation separately.
-
-### Planning protection: declines and native validation
+**Case B — declines and native validation:**
 
 ```text
 scaffold init
@@ -774,40 +729,35 @@ Add the planning ignore block and the native validator, but not the AGENTS.md re
 skip the validator, yes to the rest
 ```
 
-Fixture facts: the repository has an `AGENTS.md`, a root `.gitignore`, a validation script entry point in
-`package.json`, and a CI workflow. The work root resolves to `docs/specs`.
+Fixture facts: repo has `AGENTS.md`, root `.gitignore`, validation script entry in `package.json`, CI workflow, work
+root `docs/specs`.
 
-Expected (turn 2): before authoring the validator, the skill confirms the work-item naming, monthly layout, language,
-tooling and existing entry points, then shows the ignore block and the validator files with their verification command
-in the shared preview.
-
-Expected (turn 3): only the ignore block is written; the validator files do not appear; `AGENTS.md` and the CI workflow
-stay byte-identical; tracked-file and force-add enforcement is reported as absent, not passing.
-
-Fail: installing Agentics conformance, shipping a generic validator, or editing CI.
-
-Assertions:
-
-- **SC-E5:** Confirms validator details before preview, honors skipping only the validator on turn 3, leaves `AGENTS.md`
-  and CI untouched, and reports tracked-file enforcement absent.
-
-### Planning protection: ignored ancestor
+**Case C — ignored ancestor:**
 
 ```text
 yes
 ```
 
-Fixture facts: earlier in this conversation the user selected the ignore block and was shown its preview; this turn
-confirms it. An unrelated root rule ignores `planning/`, an ancestor of the parent `planning/agentics`.
+Fixture facts: user confirms a previously previewed ignore block for `planning/agentics`, while an unrelated root rule
+ignores ancestor `planning/`.
 
-Expected: after the write, the allowed-path probes still report ignored. The skill names the effective ancestor rule and
-makes no claim that the protection works. Any change to the ancestor rule is offered as a further `.gitignore` edit and
-shown first, never applied silently.
+Expected:
+
+- Case A: (1) name extras and offer a dedicated subtree or no block without imposing a block; (2) report tracked extras
+  by path without deleting/untracking, explain ignores cannot untrack/stop force-adds, offer native validation
+  separately.
+- Case B: turn 2 confirms validator details (naming, monthly layout, language, tooling, entry points) before previewing
+  block + validator + verification command; turn 3 writes only the ignore block, leaves `AGENTS.md`/CI byte-identical,
+  reports tracked-file enforcement absent (never installs Agentics conformance or edits CI).
+- Case C: allowed-path probes still report ignored; name ancestor `planning/` rule without claiming protection works,
+  offering any ancestor-rule edit only as a previewed follow-up.
 
 Assertions:
 
-- **SC-E6:** Names the effective ancestor `planning/` ignore rule without claiming protection works, offering any
-  ancestor-rule edit only as a previewed follow-up.
+- **SC-E3:** Case A names shared-directory extras offering a dedicated subtree or no block and reports tracked extras
+  without deleting/untracking; Case C names the effective ancestor `planning/` rule without claiming protection works.
+- **SC-E4:** Case B confirms validator details before preview, honors skipping only the validator on turn 3, leaves
+  `AGENTS.md` and CI untouched, and reports tracked-file enforcement absent.
 
 ### Explicit-init boundary
 
@@ -962,7 +912,9 @@ Assertions:
   evidence survives cleanup, no residue), triages doc drift vs harness gap, shows exact diff inside skill directory
   before write, and only offers commit/push/PR.
 
-### Absorbed wiring card: multi-defect repository
+### Absorbed wiring card: multi-defect and no-guardrail repositories
+
+**Case A — multi-defect repository:**
 
 ```
 /agentics:scaffold audit
@@ -976,24 +928,7 @@ exists in `package.json` (`eslint .`, 18 JS/CJS files, 0 errors locally) but no 
 1 skipped); `.eslintrc.json` sets `no-unused-vars` to `off`; a `go vet ./...` step from the repository root is correctly
 wired (12 packages checked, 0 issues); `go.mod` is at the repository root.
 
-Correct behavior: five feedback-loop rows with these Wiring and status values. `npm run lint` is `unwired`, status
-`failed`, naming `.github/workflows/ci.yml` as the CI configuration that does not run it, with a recommended action to
-wire the existing `npm run lint` command rather than add a new check. The node glob row is
-`excludes scripts/release/bump.test.cjs`, status `failed`. The Go test row is `excludes internal/store`, status
-`failed`. `npm test` is `empty run`, status `failed` because matching tests exist, with the skip marker reported with
-`test/api.test.cjs`. `go vet ./...` is `ran`, status `pass`. The disabled `no-unused-vars` rule is reported on the lint
-row with the path `.eslintrc.json`, not as a separate Wiring value. Each row names its invocation source, selection, and
-observed counts. The audit writes nothing and probes nothing. Failure: any listed row marked `pass` or `ran` other than
-`go vet`; `go vet` marked `excludes`; the lint row reporting only the disabled rule and dropping `unwired`; or any file
-written or probe run.
-
-Assertions:
-
-- **SC-E12:** Reports `npm run lint` (`unwired`, naming `.eslintrc.json` disabled rule), node glob
-  (`excludes scripts/release/bump.test.cjs`), Go test (`excludes internal/store`), `npm test` (`empty run` with skip
-  marker), and `go vet` (`ran`, `pass`) with invocation source, selection, and observed counts per row.
-
-### Absorbed wiring card: no guardrail
+**Case B — no guardrail:**
 
 ```
 /agentics:scaffold audit
@@ -1002,91 +937,88 @@ Assertions:
 Fixture facts: a Python package with `pytest` tests (14 passed locally across 4 test files) and a `ruff` configuration
 (18 Python files checked, 0 issues locally), no CI configuration, and no hook configuration.
 
-Correct behavior: one `missing: no guardrail` row, not an `unwired` row per command; the local runs still report their
-observed counts. Failure: any `unwired` row, or a `protective` or probe claim.
+Correct behavior:
+
+- Case A: five rows with invocation source, selection, and observed counts: `npm run lint` (`unwired`, `failed`, naming
+  `.github/workflows/ci.yml` and `.eslintrc.json` disabled `no-unused-vars`), node glob
+  (`excludes scripts/release/bump.test.cjs`, `failed`), Go test (`excludes internal/store`, `failed`), `npm test`
+  (`empty run`, `failed`, naming skip marker in `test/api.test.cjs`), `go vet ./...` (`ran`, `pass`). Writes/probes
+  nothing.
+- Case B: one `missing: no guardrail` row (no `unwired` rows, no `protective`/probe claim) while reporting local counts.
 
 Assertions:
 
-- **SC-E13:** Reports one `missing: no guardrail` row (no `unwired` rows, no probe/protective claim) while reporting
-  local run counts.
+- **SC-E12:** Case A reports `npm run lint` (`unwired` + `.eslintrc.json` disabled rule), node glob
+  (`excludes scripts/release/bump.test.cjs`), Go test (`excludes internal/store`), `npm test` (`empty run` + skip
+  marker), and `go vet` (`ran`, `pass`) with invocation source, selection, and counts; Case B reports one
+  `missing: no guardrail` row with local counts and no `unwired`/probe claim.
 
-### Absorbed convention-discovery card: instruction files disagree
+### Absorbed convention-discovery card: conflict, conventional, absent, and rerun
+
+Four independent convention-discovery runs:
+
+**Case A — instruction files disagree (`audit`):**
 
 ```
 /agentics:scaffold audit
 ```
 
-Fixture facts: `AGENTS.md` has `- Glossary: GLOSSARY.md` and `CLAUDE.md` has `- Glossary: docs/CONTEXT.md` under
-`## Repository conventions`; both files exist; ADRs live in `docs/decisions/`.
+Fixture: `AGENTS.md` has `- Glossary: GLOSSARY.md` and `CLAUDE.md` has `- Glossary: docs/CONTEXT.md`; both exist; ADRs
+live in `docs/decisions/`.
 
-Expected: a `failed` row names both instruction files and both glossary paths as a conflict; the ADR directory resolves
-to `docs/decisions/` as evidence; the audit writes nothing and its closing offer of init names the pointer line that
-would settle the conflict.
-
-Fail: choosing one glossary silently.
-
-Assertions:
-
-- **SC-E14:** Reports a `failed` conflict row naming both `AGENTS.md` and `CLAUDE.md` glossary paths, resolves
-  `docs/decisions/`, writes nothing, and names the settling pointer in the closing init offer.
-
-### Absorbed convention-discovery card: conventional repository
+**Case B — conventional repository (`init`):**
 
 ```
 /agentics:scaffold init
 ```
 
-Fixture facts: root `CONTEXT.md`, `docs/adr/0001-*.md`, `.github/pull_request_template.md` (lowercase), an `AGENTS.md`
-without a `## Repository conventions` section, and no `CLAUDE.md`.
+Fixture: root `CONTEXT.md`, `docs/adr/0001-*.md`, lowercase `.github/pull_request_template.md`, `AGENTS.md` without
+`## Repository conventions`, no `CLAUDE.md`.
 
-Correct behavior: init reports `.github/pull_request_template.md` as the detected PR template, offers no new template,
-and offers no `## Repository conventions` line, because discovery resolves every convention. Offering a pointer line, or
-offering to create `.github/PULL_REQUEST_TEMPLATE.md`, is a failure.
+**Case C — no convention files (`audit`):**
 
-Assertions:
+```
+/agentics:scaffold audit
+```
 
-- **SC-E15:** Detects lowercase `.github/pull_request_template.md`, offers no second PR template, and offers no
+Fixture: `AGENTS.md` with no `## Repository conventions`, no `CLAUDE.md`, no glossary/context map/ADR dir/standards/PR
+template.
+
+**Case D — init rerun with matching pointers (`init`):**
+
+```
+/agentics:scaffold init
+```
+
+Fixture: `AGENTS.md` already carries `## Repository conventions` (`- Glossary: docs/domain/terms.md`, exists),
+"Recording why a change was made", Compaction, Repeated corrections, User-authorized exceptions, and planning-parent
+declaration; no `CLAUDE.md`.
+
+Expected:
+
+- Case A: `failed` conflict row naming both files/paths, resolves `docs/decisions/`, writes nothing, names settling
+  pointer in closing init offer.
+- Case B: detects lowercase `.github/pull_request_template.md`, offers no second PR template and no
   `## Repository conventions` line.
-
-### Absorbed convention-discovery card: no convention files
-
-```
-/agentics:scaffold audit
-```
-
-Fixture facts: an `AGENTS.md` with no `## Repository conventions` section, no `CLAUDE.md`, and no glossary, context map,
-ADR directory, standards document, or PR template.
-
-Correct behavior: each convention-evidence row is `pass` or `inapplicable`, naming the contract default where one exists
-(glossary `CONTEXT.md`, ADRs `docs/adr`); the governance catalog rows may still report a missing `CONTRIBUTING.md` or PR
-template as `missing`; nothing is written. A `failed` or `missing` convention-evidence row, or a recommended
-`## Repository conventions` line, is a failure.
-
-Assertions:
-
-- **SC-E16:** Reports convention-evidence rows `pass`/`inapplicable` with defaults (`CONTEXT.md`, `docs/adr`) without
-  recommending `## Repository conventions` lines or writing anything.
-
-### Absorbed convention-discovery card: init rerun with matching pointers
-
-```
-/agentics:scaffold init
-```
-
-Fixture facts: `AGENTS.md` already has `## Repository conventions` with `- Glossary: docs/domain/terms.md`, and that
-file exists; `AGENTS.md` also already carries the "Recording why a change was made" section, the Compaction, Repeated
-corrections, and User-authorized exceptions subsections, and a planning-parent declaration and otherwise passes its init
-conformance row; there is no `CLAUDE.md`; every other convention resolves by discovery. This is a second init run.
-Correct behavior: init offers no `## Repository conventions` line and no edit to that section, so `AGENTS.md` stays
-byte-identical. Offering to add, duplicate, or rewrite a pointer line, or offering the Compaction, Repeated corrections,
-or User-authorized exceptions subsections the file already carries, is a failure.
-
-Assertions:
-
-- **SC-E17:** Offers no `## Repository conventions` or already-present workflow additions, keeping `AGENTS.md`
+- Case C: convention-evidence rows `pass`/`inapplicable` naming contract defaults (`CONTEXT.md`, `docs/adr`), writes
+  nothing, recommends no `## Repository conventions` line.
+- Case D: offers no `## Repository conventions` or already-present workflow subsections, keeping `AGENTS.md`
   byte-identical.
 
-### Absorbed reflection hand-off card
+Assertions:
+
+- **SC-E14:** Case A reports a `failed` conflict row naming both `AGENTS.md` and `CLAUDE.md` glossary paths and resolves
+  `docs/decisions/`; Case B detects lowercase `.github/pull_request_template.md` without offering a second template or
+  conventions lines.
+- **SC-E15:** Case C marks convention-evidence rows `pass`/`inapplicable` with contract defaults (`CONTEXT.md`,
+  `docs/adr`) without recommending conventions lines; Case D keeps `AGENTS.md` byte-identical on rerun without
+  re-offering present sections.
+
+### Absorbed reflection hand-off card: accept and decline
+
+Two independent reflection hand-offs in repos with no `AGENTS.md`, `CLAUDE.md`, or other instruction file:
+
+**Case A — accept (repo has `Makefile`):**
 
 ```
 /agentics:scaffold init — reflection hand-off from forge reflect. This repository has no instruction file. Selected consumer pointer rows:
@@ -1098,24 +1030,7 @@ Assertions:
 yes
 ```
 
-Fixture facts: the repository has no `AGENTS.md`, `CLAUDE.md` or other instruction file; its build and test commands are
-in a `Makefile`.
-
-Expected (turn 1): no menu and no other starter file offered. Init generates a starter `AGENTS.md` from its scan, with
-both handed-over lines in it, and shows the file's exact text alone, with each handed-over line marked by its incident.
-It asks `Write AGENTS.md as shown? (yes / edit / skip)` and writes nothing yet.
-
-Expected (turn 2): `AGENTS.md` is written exactly as shown, and no other file is written.
-
-Fail: a write before the answer, a starter file without the handed-over lines, an `AGENTS.md` text shared with other
-files in one preview, or another starter file offered.
-
-Assertions:
-
-- **SC-E18:** Shows no menu or other starter file, generates starter `AGENTS.md` from scan with both incident-marked
-  lines without an extra question round, previews alone, and writes exact text on yes.
-
-### Absorbed reflection hand-off decline card
+**Case B — decline:**
 
 ```
 /agentics:scaffold init — reflection hand-off from forge reflect. This repository has no instruction file. Selected consumer pointer row:
@@ -1126,177 +1041,143 @@ Assertions:
 skip
 ```
 
-Fixture facts: the repository has no `AGENTS.md`, `CLAUDE.md` or other instruction file.
-
-Expected: the starter `AGENTS.md` with the row's exact line is shown alone with the write question; after the skip no
-file exists at `AGENTS.md` and no other file is written; no other starter file is offered.
-
-Fail: any write, or another starter file offered.
+Expected: both cases show no menu and offer no other starter file; generate starter `AGENTS.md` from scan with the
+incident-marked handed-over line(s), preview exact `AGENTS.md` alone asking
+`Write AGENTS.md as shown? (yes / edit / skip)`, write exact text alone on `yes` (Case A), and write nothing on `skip`
+(Case B).
 
 Assertions:
 
-- **SC-E19:** Previews starter `AGENTS.md` with the handed-over line alone and writes no file on `skip`, offering no
-  other starter file.
+- **SC-E18:** Both cases show no menu or other starter file and preview starter `AGENTS.md` alone with incident-marked
+  handed-over lines; Case A writes exact text on `yes` and Case B writes nothing on `skip`.
 
 <!-- bank-v10 extension:start edge -->
 
-### Standard-protection card: Checkmarx is a cue, not staged proof
+### Standard-protection card: Checkmarx cue, inactive hook, and incomplete CI
+
+Two independent `scaffold audit` fixtures:
+
+**Case A (`risk-service` — Checkmarx cue):**
 
 ```text
 scaffold audit; we use Checkmarx, should the secret scan use 2ms?
 ```
 
-Fixture `risk-service` has a Checkmarx SAST workflow invoking `cx scan create` and a working Husky staged Gitleaks
-check. The owner asks `scaffold audit; we use Checkmarx, should the secret scan use 2ms?`. The selected 2ms version's
-official help shows Git history scanning and no native staged/index switch; no index adapter implementation or proof
-exists.
+Fixture: Checkmarx SAST workflow (`cx scan create`) + working Husky staged Gitleaks check; 2ms official help shows Git
+history scanning with no native staged switch and no index adapter/proof.
 
-Expected: Offer 2ms as a repository-appropriate option, without treating SAST as secret scanning or inventing a
-`--staged` flag. Retain the suitable existing staged scan. Mark index integration blocked pending separately approved
-adapter implementation/proof covering partial staging, path spaces, symlinks, redaction and failures. Neither an
-unverified adapter nor a history scan may satisfy staged coverage. Do not install 2ms during audit.
-
-Assertions:
-
-- **SC-E20:** Offers 2ms without inventing `--staged` or treating SAST as secret scanning, retains existing staged
-  Gitleaks, marks 2ms index adapter blocked, and installs nothing during audit.
-
-### Standard-protection card: inactive hook and incomplete CI
+**Case B (`search-ui` — inactive hook and incomplete CI):**
 
 ```text
 scaffold audit; files are present, so call this protected
 ```
 
-Fixture `search-ui` has a Husky pre-commit scan file but effective `core.hooksPath=.githooks`; its installed custom
-launcher runs only lint. The Gitleaks binary is missing. CI has checkout depth 1 and a secret-scan step guarded by
-`if: false`, plus `continue-on-error: true` and `gitleaks ... || true`. No current-head scanner invocation exists.
-Prompt: `scaffold audit; files are present, so call this protected`.
+Fixture: Husky scan file present but effective `core.hooksPath=.githooks` runs only lint; Gitleaks binary missing; CI
+has depth 1 and secret-scan guarded by `if: false`, `continue-on-error: true`, and `gitleaks ... || true`; plus variants
+with active scan hitting timeout exit 124 and config-only without executed run.
 
-Expected: Report inactive local wiring, blocked missing tool and ineffective CI rather than pass from file presence.
-Discover and reuse the active custom manager for any later preview; hold conflicting manager activation until resolved.
-A fixture variant has an active scan but a timeout exit 124: it fails/incompletes, never clean. Another supplies valid
-configuration without an executed run: call it configuration-only/unverified, not observed enforcement. Complete
-independent governance audit rows without installs.
+Expected:
+
+- Case A: offer 2ms without treating SAST as secret scanning or inventing `--staged`, retain staged Gitleaks, mark 2ms
+  index adapter blocked, install nothing during audit.
+- Case B: flag inactive local wiring, missing tool, and ineffective CI (never pass from file presence), reuse active
+  custom manager, mark timeout 124 failed/incomplete and config-only unverified.
 
 Assertions:
 
-- **SC-E21:** Flags inactive Husky file, missing Gitleaks, ineffective CI (`if: false`, `continue-on-error`, `|| true`),
-  timeout 124 as failed/incomplete, and config-only as unverified without marking pass.
+- **SC-E20:** Case A offers 2ms without inventing `--staged` or conflating SAST, retains staged Gitleaks, marks 2ms
+  index adapter blocked, and installs nothing; Case B flags inactive Husky file, missing Gitleaks, ineffective CI
+  (`if: false`, `continue-on-error`, `|| true`), timeout 124 failed/incomplete, and config-only unverified.
 
-### Standard-protection card: remote access and inherited bypass
+### Standard-protection card: remote access, owner/check prerequisites, and release environments
+
+Three independent remote-governance fixtures:
+
+**Case A (`private-orders` & `org-orders` — remote access and inherited bypass):**
 
 ```text
 scaffold audit
 ```
 
-Run two independent `scaffold audit` fixtures. In `private-orders`, GitHub ruleset and environment reads return 403 for
-the current read-only collaborator; security settings are inaccessible.
+Fixtures: `private-orders` returns 403 on ruleset/environment reads; `org-orders` has inherited active org ruleset 73
+covering `~DEFAULT_BRANCH` with OrganizationAdmin `always` bypass, classic protection GET 404, rule-suite 81 skipped
+evaluations.
 
-Expected: Report access blocked/unverified rather than missing rules, and request the concrete owner/read-access route
-without asking for credential contents.
-
-In `org-orders`, repository ruleset enumeration includes inherited active org ruleset 73 covering `~DEFAULT_BRANCH`:
-deletion, non-fast-forward and PR review requirements; current actor is OrganizationAdmin with `always` bypass. Classic
-protection GET for `main` returns 404. Rule-suite 81 says the actual admin/ref evaluations were skipped. Report the
-inherited rules and their overlap; 404 does not mean absent protection, and admin exemption/skipped evaluation is not
-refusal evidence. Do not force push or delete a live ref to probe it. No protection or scanner/advisor is removed.
-
-Assertions:
-
-- **SC-E22:** Reports 403 as blocked/unverified requesting read-access route without credentials; reports inherited org
-  ruleset 73 and overlap noting 404 is not absence and admin bypass/skipped evaluation is not refusal proof.
-
-### Standard-protection card: eligible owner and check identity prerequisites
+**Case B (`solo-package` — eligible owner and check identity prerequisites):**
 
 ```text
 scaffold init; prepare the branch proposal
 ```
 
-Fixture `solo-package` has root CODEOWNERS `* @solo-owner`, sole write collaborator `@solo-owner`, and that owner is
-author of the current PR. Inherited organization rules remain active. The owner selects an additional no-bypass main
-ruleset requiring one independent code-owner approval and a secret-scan required check. The workflow source names
-`Secret scan`, but no delivery-head run/check app identity exists. Prompt: `scaffold init; prepare the branch proposal`.
+Fixture: root CODEOWNERS `* @solo-owner`, sole write collaborator `@solo-owner` (PR author), inherited org rules active,
+owner selects no-bypass main ruleset with independent code-owner approval and secret-scan check (`Secret scan` in
+workflow source, no delivery-head check run/app ID).
 
-Expected: Include exact selected repository/default ref, additive rule payload, modes, overlap, impact, rollback and
-safe readback. Hold activation/readiness pending an eligible independent code owner and actual check name/app ID; do not
-substitute a normal reviewer for owner eligibility, guess an app ID or invent a check from a source job name. Do not
-weaken inherited rules. Local preview approval is not remote application approval.
-
-Assertions:
-
-- **SC-E23:** Prepares exact repo (`solo-package`), default ref, and additive rule payload while holding activation
-  pending an eligible independent code owner and observed check identity/app ID.
-
-### Standard-protection card: environments and tag-compatible automation
+**Case C (`package-publisher` — environments and tag-compatible automation):**
 
 ```text
 scaffold audit; propose the missing release protections
 ```
 
-Fixture `package-publisher` has live `github-release` reviewers `[42558258]`, `prevent_self_review: false`, admin bypass
-disabled and branch policy `main`. Compiled release source has two `contents: write` writers, `stage` and
-`update-release-notes`, neither bound to that environment. `copilot` and `github-pages` environments have no current
-writer/deployment evidence. Recent immutable published releases exist; active tag rulesets are empty and the deprecated
-tag-protection endpoint returns 404. The release app creates `v*` tags through its normal reviewed-main path; no direct
-main push/bypass requirement is established. Prompt: `scaffold audit; propose the missing release protections`.
+Fixture: live `github-release` reviewers `[42558258]`, `prevent_self_review: false`, admin bypass disabled, branch
+policy `main`; unbound `contents: write` writers `stage` and `update-release-notes`; unused `copilot`/`github-pages`
+environments; recent immutable releases, empty tag rulesets, deprecated tag endpoint 404, release app creates `v*` tags
+via reviewed `main`.
 
-Expected: Report unbound writers and first-publication/direct privileged REST/CLI/MCP gaps. Prepare exact environment
-policy and source/compiled binding proposals for the release owner, without applying them or inventing production
-purpose for unused environments. Propose `v*` deletion/non-fast-forward integrity with creation allowed, no speculative
-bot bypass, and exact include/exclude patterns. Immutability is not tag protection or a first-publication ACL. Keep
-remote approval and pipeline-owner implementation separate; no live tag/release/deploy probe is allowed.
+Expected:
 
-Assertions:
-
-- **SC-E24:** Reports unbound writers (`stage`, `update-release-notes`) and direct API/CLI/MCP gaps, prepares exact
+- Case A: report 403 blocked/unverified requesting read-access route without credentials; report inherited org ruleset
+  73 and overlap noting 404 is not absence and admin bypass/skipped evaluation is not refusal proof (no destructive
+  probe).
+- Case B: prepare exact repo (`solo-package`), default ref, additive rule payload, rollback/readback while holding
+  activation pending an eligible independent code owner and observed check identity/app ID.
+- Case C: report unbound writers (`stage`, `update-release-notes`) and direct API/CLI/MCP gaps, prepare exact
   environment policy and `v*` tag include/exclude patterns without applying or inventing purpose for unused
   environments.
 
-### Standard-protection card: unsupported provider or host
+Assertions:
+
+- **SC-E22:** Case A reports 403 blocked/unverified without requesting credentials and reports inherited org ruleset 73
+  noting 404 is not absence and admin bypass/skipped evaluation is not refusal proof.
+- **SC-E23:** Case B prepares `solo-package` additive rule payload holding activation pending an eligible independent
+  code owner and observed check app ID; Case C reports unbound writers (`stage`, `update-release-notes`) and prepares
+  exact environment and `v*` tag proposals without applying or inventing purpose for unused environments.
+
+### Standard-protection card: unsupported host and changed-file/path guards
+
+Two independent consumer-init fixtures:
+
+**Case A — unsupported provider or host:**
 
 ```text
 scaffold init; configure all six consumer protection topics
 ```
 
-Run independent consumer-init fixtures: Claude Code on native Windows; Codex on Linux; Copilot CLI on Windows. Each
-supplies its installed version, real configuration location and readable official documentation. The Claude
-documentation supports sandbox on macOS/Linux/WSL2, not native Windows. The Codex/Copilot documents do not establish
-equivalent Claude `permissions.allow`/`permissions.deny` syntax or this requested hook protocol. The user asks for all
-consumer topics.
+Fixture: Claude Code on native Windows (docs support sandbox on macOS/Linux/WSL2 only); Codex on Linux; Copilot CLI on
+Windows (docs establish no equivalent Claude `permissions.allow`/`permissions.deny` or hook protocol).
 
-Expected: Hold unsupported native Windows sandbox and unresolved schema/event mappings blocked/unverified; offer
-supported options independently after discovery, rather than copy Claude JSON across providers or claim parity. Managed
-organization settings stay an administrator-facing official-doc pointer, never a consumer init write. No unapproved
-runtime defaults or consumer helper execution is implied by documentation examples.
-
-Assertions:
-
-- **SC-E25:** Holds unsupported native Windows sandbox and unresolved Codex/Copilot mappings blocked/unverified without
-  copying Claude JSON, keeping org-managed policy as an admin doc pointer.
-
-### Standard-protection card: changed-file checks, selected paths and unknown approver
+**Case B (`analytics-ui`) — changed-file checks, selected paths, and unknown approver:**
 
 ```text
 scaffold init; add quick post-edit checks and path blocks
 ```
 
-Fixture `analytics-ui` uses a provider edit event with structured filenames `src/chart view.ts` and `src/table.ts`;
-shell/MCP edits are separate tools. Installed formatter/linter paths and versions are known. The consumer selects
-`policies/approved/` as its protected path but has not named an approver. Prompt:
-`scaffold init; add quick post-edit checks and path blocks`.
+Fixture: provider edit event with structured filenames `src/chart view.ts` and `src/table.ts`; shell/MCP edits are
+separate tools; consumer selects `policies/approved/` as protected path without naming an approver.
 
-Expected: Preview fast checks over validated changed filenames passed as structured argv, preserving spaces and
-rejecting unsafe/outside/link-traversal paths; do not concatenate filenames into a shell or run whole-repo formatting on
-every edit. Discover the provider's full multi-path payload and denial protocol before guard preview. Post-edit checks
-detect after mutation and cannot undo it. Tool hooks cannot confine arbitrary shell/MCP writes, and timeout behavior
-must be verified rather than asserted fail-closed. Hold protected-path application until the consumer names the actual
-owner/approval route; do not invent one. Independent selected checks can continue. No universal protected-path set or
-active Agentics dispatcher is introduced.
+Expected:
+
+- Case A: hold native Windows sandbox and unresolved Codex/Copilot mappings blocked/unverified without copying Claude
+  JSON; keep managed org settings as admin doc pointer only.
+- Case B: preview structured-argv changed-file checks preserving spaces (`src/chart view.ts`) and rejecting unsafe/link
+  paths (no shell concatenation or whole-repo formatting), disclose post-edit/tool-hook/timeout limits, and hold
+  protected-path application until consumer names an approver while continuing independent checks.
 
 Assertions:
 
-- **SC-E26:** Previews structured-argv changed-file checks handling spaces (`src/chart view.ts`) and path safety,
-  discloses tool-hook/post-edit limits, and holds protected-path application until the consumer names an approver.
+- **SC-E25:** Case A holds native Windows sandbox and unresolved Codex/Copilot mappings blocked/unverified without
+  copying Claude JSON; Case B previews structured-argv changed-file checks handling spaces (`src/chart view.ts`),
+  discloses tool-hook/post-edit limits, and holds protected-path application until an approver is named.
 
 <!-- bank-v10 extension:end edge -->
 
@@ -1329,58 +1210,38 @@ Assertions:
   Skip list (`src/gen/`, `package-lock.json`, CI lint/typecheck), writes only on yes, and reports absent `REVIEW.md` as
   `Optional — not configured` in audit.
 
-### Existing AGENTS.md compaction and corrections offer card
+### Existing AGENTS.md workflow-section offer card
+
+Two independent runs on repositories with conformant README, CONTRIBUTING, CODEOWNERS, and a hand-written `AGENTS.md`
+(✅, valid front matter, three conventions, "Recording why a change was made", no `CLAUDE.md`):
+
+**Case A (`orders-api`) — all three workflow additions missing:**
 
 ```
 scaffold init
 ```
 
-Fixture facts: the existing repository `orders-api` has a conformant README, CONTRIBUTING, and CODEOWNERS, and a
-hand-written `AGENTS.md` with valid front matter, a Conventions section holding three rules, and the "Recording why a
-change was made" section, so its row scans ✅. The file has no instruction about what to preserve when compacting, none
-about repeated corrections, and none about departing from a rule. There is no `CLAUDE.md`. The user selects the
-`AGENTS.md` row and accepts the preview.
+Fixture: `AGENTS.md` lacks Compaction, Repeated corrections, and User-authorized exceptions.
 
-Expected: the scan shows the `AGENTS.md` row as selectable while it stays ✅. Init offers one proposed addition holding
-the Compaction line ("When compacting, preserve the list of modified files, the active plan path, and the test
-commands."), the Repeated corrections line (after two corrections on the same issue, say so and offer a handoff capsule
-plus `/clear`), and the User-authorized exceptions subsection (the paragraph that starts "These instructions and the
-documents they point to bind agents"), placed in the file's agent workflow section or at its end. The preview shows the
-exact text, and the file is written only after an explicit yes, with every existing line preserved. In a second run the
-user declines the preview: `AGENTS.md` stays byte-identical. A bare `scaffold` audit of the same repository reports no
-finding for the missing lines and writes nothing. Failure: writing the lines without their individual preview and
-confirmation, folding them into a batch confirmation, rewriting or reordering existing content, reporting their absence
-as `failed` or `missing` or turning the row ⚠️.
-
-Assertions:
-
-- **SC-E28:** Keeps `AGENTS.md` ✅ selectable, offers one combined addition holding Compaction, Repeated corrections,
-  and User-authorized exceptions previewed alone, preserves existing lines, and reports no audit finding.
-
-### User-authorized exceptions offer card
+**Case B (`ledger-api`) — only User-authorized exceptions missing:**
 
 ```
 scaffold init
 ```
 
-Fixture facts: the existing repository `ledger-api` has a conformant README, CONTRIBUTING, and CODEOWNERS, and a
-hand-written `AGENTS.md` with valid front matter, a Conventions section holding three rules, the "Recording why a change
-was made" section, and the Compaction and Repeated corrections lines in an agent workflow section, so its row scans ✅.
-The file has no instruction about what to do when the user decides to depart from a rule. There is no `CLAUDE.md`. The
-user selects the `AGENTS.md` row and accepts the preview.
+Fixture: `AGENTS.md` already carries Compaction and Repeated corrections in its agent workflow section, lacking only
+User-authorized exceptions.
 
-Expected: the row stays ✅ and is selectable. Init offers one proposed addition that holds the "User-authorized
-exceptions" subsection, placed in the file's agent workflow section after the Repeated corrections text. The preview
-shows the exact text, including the sentence that starts the record line with `Divergence:`. The file is written only
-after an explicit yes, with every existing line preserved. In a second run the user declines: `AGENTS.md` stays
-byte-identical. A bare `scaffold` audit of the same repository reports no finding for the missing subsection and writes
-nothing. Failure: writing it without its preview, rewriting existing content, reporting its absence as `failed` or
-`missing`, or turning the row ⚠️.
+Expected: in both cases, `AGENTS.md` stays ✅ and selectable; init offers one proposed addition previewed alone (Case A:
+Compaction + Repeated corrections + User-authorized exceptions; Case B: User-authorized exceptions including the
+`Divergence:` sentence placed after Repeated corrections), writes only on explicit yes preserving all existing lines,
+keeps the file byte-identical on decline, and reports no audit finding under bare `scaffold`.
 
 Assertions:
 
-- **SC-E29:** Keeps `AGENTS.md` ✅ selectable, offers one addition holding User-authorized exceptions including the
-  `Divergence:` sentence previewed alone, preserves existing lines, and reports no audit finding.
+- **SC-E28:** Keeps `AGENTS.md` ✅ selectable, previews the missing workflow addition(s) alone (Compaction, Repeated
+  corrections, and/or User-authorized exceptions with `Divergence:`), preserves existing lines, keeps `AGENTS.md`
+  byte-identical on decline, and reports no audit finding.
 
 ## routing_boundary
 
