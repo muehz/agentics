@@ -47,7 +47,7 @@ An agent may load Zealot without `/agentics:zealot`, inside four bounds:
 3. Never chain it from another skill. Other skills may only suggest it. A route or preflight forward of the user's own request (`routing`, or `tdd` for a test audit the user asked for) is not a chain.
 4. Never pick the `all` scope unless the user typed `all` or asked for the whole project in words.
 
-However Zealot was loaded, run the selected mode's workflow whole. A result built from plain copies instead of mutant worktrees, without the finder and the reviewer (or their labelled fallback), or without the mode's report is a finder claim, not a finding. Never report it as a finding.
+However Zealot was loaded, run the selected mode's workflow whole. Every fresh session (including plain-language runs) emits its own complete selection, dispatch count, embedded charter, concrete numeric `file:line` locations (never `<line>` placeholders), concrete `caller-snapshot-before/` and `caller-snapshot-after/` paths with verbatim `git diff --no-index` outputs, and complete Step 7 handoff block independently — never pointing back to an earlier run ("same as H1"). A result built from plain copies instead of mutant worktrees, without the finder and the reviewer (or their labelled fallback), or without the mode's report is a finder claim, not a finding. Never report it as a finding.
 
 ## Step 0: Preflight
 

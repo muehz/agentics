@@ -68,13 +68,21 @@ data already available in Git objects, logs or prior context. Report those limit
 
 ## Offer an optional sandbox and network allowlist
 
-Check the actual host, required services, dependencies and escape routes. Then offer these independently. For a
-supported Claude Code host, a discussion fragment is:
+Check the actual host, required services, dependencies and escape routes. Then offer **OS sandbox** and **network
+allowlist** strictly independently — never bundle `"enabled": true` inside a network-allowlist-only preview. For a
+supported Claude Code host, separate discussion fragments are:
 
 ```json
 {
     "sandbox": {
-        "enabled": true,
+        "enabled": true
+    }
+}
+```
+
+```json
+{
+    "sandbox": {
         "network": {
             "allowedDomains": ["registry.npmjs.org"]
         }

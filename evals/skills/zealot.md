@@ -300,7 +300,7 @@ This category's scenarios are the sub-scenarios below, and each is graded on its
 the skill resolves the scope before it spawns anything, and an empty scope stops with one line and one question instead
 of a guessed or widened scope.
 
-### Comments mode
+### Comments mode — C1 empty scope
 
 C1, empty scope. A user invokes the skill with nothing to sweep:
 
@@ -311,6 +311,13 @@ C1, empty scope. A user invokes the skill with nothing to sweep:
 Fixture facts: the working tree is clean and the current branch has no commits past `main`. Correct behavior: scope
 resolution finds an empty scope, stops with one line, and asks what to sweep — no invented scope, no repo-wide sweep, no
 spawned finder.
+
+Assertions:
+
+- **s1-empty-scope-stop:** C1 stops with one line and asks what to sweep; no scope is invented or widened and no finder
+  is spawned.
+
+### Comments mode — C2 untracked file, keep verdicts, and missed suppression
 
 C2, untracked file and keep verdicts:
 
@@ -327,8 +334,25 @@ mismatch at `src/cache/index.ts:55`. The investigator finds no rationale for the
 external constraint for the TTL keep at `src/cache/index.ts:12` (nothing in the CDN configuration or its documentation
 depends on 300).
 
-C3, reviewer refused. The C2 fixture, but the host refuses subagent dispatch for the reviewer after the wrapper's
-restatement (`subagents are disabled in this session`); the finder was dispatched:
+Correct behavior: C2 saves untracked files before the finder runs and shows them to the reviewer as diffs, applies the
+verdicts by the workflow's rules, and turns the missed suppression into an accepted flag.
+
+Assertions:
+
+- **s1-untracked-and-downgrade:** C2 copies `src/cache/lru.ts` to host temp outside the repo before dispatching the
+  finder, gives the reviewer `git diff --no-index <saved copy> src/cache/lru.ts` alongside tracked `git diff`, deletes
+  the saved copy before reporting, and downgrades the empty-evidence `keep verified` at `src/cache/index.ts:12` to
+  `keep unverified` without filling evidence itself.
+- **s1-investigator-and-missed-flag:** C2 sends both unverified keeps (`src/cache/index.ts:40` and `:12`) to one
+  read-only Standard-tier investigator in one batch (never running `explain`), deletes both when still unverified, and
+  turns `// @ts-ignore` at `src/cache/index.ts:55` into an accepted `MUST KILL` flag in Step 4 or reported open.
+
+### Comments mode — C3 dispatch fallback, C4 dirty restore, and C5 declined encoding
+
+C3, reviewer refused. The C2 fixture (`src/cache/index.ts` tracked and modified with empty-evidence keep at `:12`,
+history-hinging unverified keep at `:40`, missed `// @ts-ignore` at `:55`; `src/cache/lru.ts` untracked with two
+narration comments), but the host refuses subagent dispatch for the reviewer after the wrapper's restatement
+(`subagents are disabled in this session`); the finder was dispatched:
 
 ```
 /agentics:zealot comments src/cache/
@@ -360,23 +384,12 @@ encoding is a test that pins the string. The user answers:
 No, don't add a test for that. Leave it.
 ```
 
-Correct behavior: C2 saves untracked files before the finder runs and shows them to the reviewer as diffs, applies the
-verdicts by the workflow's rules, and turns the missed suppression into an accepted flag. C3 audits in-session instead
-of stopping. C4 restores only the file with the rejected item, from its saved copy, so the user's uncommitted edit
-survives, keeps the accepted deletions in `src/report/table.ts`, and reruns once on the restored file. C5 keeps the
-constraint comment because its encoding was declined.
+Correct behavior: C3 audits in-session instead of stopping. C4 restores only the file with the rejected item, from its
+saved copy, so the user's uncommitted edit survives, keeps the accepted deletions in `src/report/table.ts`, and reruns
+once on the restored file. C5 keeps the constraint comment because its encoding was declined.
 
 Assertions:
 
-- **s1-empty-scope-stop:** C1 stops with one line and asks what to sweep; no scope is invented or widened and no finder
-  is spawned.
-- **s1-untracked-and-downgrade:** C2 copies `src/cache/lru.ts` to host temp outside the repo before dispatching the
-  finder, gives the reviewer `git diff --no-index <saved copy> src/cache/lru.ts` alongside tracked `git diff`, deletes
-  the saved copy before reporting, and downgrades the empty-evidence `keep verified` at `src/cache/index.ts:12` to
-  `keep unverified` without filling evidence itself.
-- **s1-investigator-and-missed-flag:** C2 sends both unverified keeps (`src/cache/index.ts:40` and `:12`) to one
-  read-only Standard-tier investigator in one batch (never running `explain`), deletes both when still unverified, and
-  turns `// @ts-ignore` at `src/cache/index.ts:55` into an accepted `MUST KILL` flag in Step 4 or reported open.
 - **s1-audit-fallback-and-restore:** C3 audits in-session from diff/rules/exceptions only (ignoring finder reasoning)
   with `self-read (not independent)`; C4 restores only `src/report/render.ts` from its saved copy (preserving the user's
   line-30 uncommitted edit and touching no index) while keeping accepted deletions in `src/report/table.ts`.
@@ -384,17 +397,10 @@ Assertions:
   header deletion and audits with a fresh reviewer; C5 restores the constraint comment as it was, adds no test, and
   reports it unenforced (never encoded).
 
-### Tests mode
+### Tests mode — E1 empty scope, E2 whole-project groups, and E3 comments all
 
-Seventeen independent turns, each starting from its own fixture. Grade each turn on its own; together they form this
-sub-scenario. Grade E2, E9, and E10 only through the Step 1 selection statement and the Step 5 dispatch, and E4 only on
-the finder report and the Step 7 Exceptions list; their proof phases are not graded. Grade E5 and E6 only on the
-`unproven` records and their reasons. Grade E11 only on the finder list written before Step 5, the in-session reviewer
-records for the candidates (same outcomes as the happy fixture), and the run note in the Assurance entry and Step 8
-report. Grade E7 and E8 only on the `ls-files` pathspec and the baseline outcome. Grade E12 to E15 only on the reviewer
-record, the Step 6 audit, and the Step 7 block; their scope, snapshot, and worktree steps are stipulated to run
-correctly. Grade E16 only on the baseline and mutant commands and the test-name check, and E17 only on the Step 6 audit.
-E3 is a comments-mode invocation placed here because it tests the tests-only `all` scope.
+Grade E2 only through the Step 1 selection statement and the Step 5 dispatch; its proof phase is not graded. E3 is a
+comments-mode invocation placed here because it tests the tests-only `all` scope.
 
 E1, empty scope. The working tree is clean and the branch has no commits past `main`:
 
@@ -416,6 +422,16 @@ E3, `all` with comments mode:
 /agentics:zealot comments all
 ```
 
+Assertions:
+
+- **s2-empty-and-all-scope:** E1 stops with one line naming the empty scope and one question (no worktree, finder, or
+  reviewer); E2 splits the 11 packages into <= 8 balanced groups stated before dispatch with one Deep reviewer per
+  group; E3 refuses to widen comments mode to `all` and asks for files or a diff range.
+
+### Tests mode — E4 charter exceptions
+
+Grade E4 only on the finder report and the Step 7 Exceptions list; its proof phase is not graded.
+
 E4, exceptions. Scope `proto/`, a Go package with:
 
 - `TestRenderGolden`, which compares `Render()` output with the checked-in, human-reviewed `testdata/render.golden`; the
@@ -434,6 +450,17 @@ E4, exceptions. Scope `proto/`, a Go package with:
 /agentics:zealot tests proto/
 ```
 
+Assertions:
+
+- **s2-exceptions-list:** E4 lists `TestRenderGolden` (`reviewed golden fixtures`), `var _ io.Reader = (*Frame)(nil)`
+  (`compile-time interface checks`), `TestDefaultFrameLimit` (`constants pinned by linked external specifications`), and
+  `ExampleRender` (`Example functions`) under Exceptions; treats unlinked `TestDefaultWindow` as a candidate; and places
+  `TestParseRejectsEmpty` in no list.
+
+### Tests mode — E5 refused test command and E6 uncarried file
+
+Grade E5 and E6 only on the `unproven` records and their reasons.
+
 E5, unavailable proof. Scope `billing/`; the finder returns two candidates. The host refuses every `go test` invocation
 with `permission denied: go test is not allowed in this session`.
 
@@ -448,6 +475,16 @@ worktree the original named test fails to build because `internal/testkit/clock.
 ```
 /agentics:zealot tests ledger/
 ```
+
+Assertions:
+
+- **s2-refused-and-uncarried:** E5 records both candidates `unproven` with the exact refusal text and seeks no
+  substitute or variant executor; E6 does not carry `internal/testkit/clock.go` and records `unproven` with reason
+  `uncarried file`.
+
+### Tests mode — E7 diff-range carry and E8 directory-scope carry
+
+Grade E7 and E8 only on the `ls-files` pathspec and the baseline outcome.
 
 E7, diff-range carry. The branch has one commit past `main`, which changes the tracked production file
 `pricing/pricing.go`. The caller also has an untracked, unignored `pricing/fixture.go` in package `pricing`, which the
@@ -467,31 +504,65 @@ mutant worktree.
 /agentics:zealot tests ledger/
 ```
 
-E9, plain request with a default scope. The E2 module, with one commit past `main` that changes `cart/cart.go`; package
-`checkout` imports `cart`. No slash command:
+Assertions:
+
+- **s2-pathspec-carry:** E7 resolves `main...HEAD` to `pricing/` before `git ls-files` and carries `pricing/fixture.go`
+  (not `unproven`); E8 keeps `ledger/` as the `ls-files` pathspec and carries `ledger/helper.go` (not `unproven`).
+
+### Tests mode — E9 plain default scope and E10 whole project in words
+
+Grade E9 and E10 only through the Step 1 selection statement and the Step 5 dispatch; their proof phases are not graded.
+The Go module has eleven packages whose test counts (from `go test -list . ./<package>`) are: `pkg/auth` (40),
+`pkg/billing` (31), `pkg/orders` (22), `pkg/catalog` (18), `pkg/search` (12), `pkg/notify` (9), `pkg/export` (7),
+`pkg/cache` (5), `pkg/retry` (3), `pkg/money` (2), and `pkg/clock` (1), plus `cart` (`cart/cart.go`,
+`cart/cart_test.go`) and `checkout` (`checkout/checkout_test.go`, which imports `cart`).
+
+E9, plain request with a default scope. One commit past `main` changes `cart/cart.go`; package `checkout` imports
+`cart`. No slash command:
 
 ```
 Do the tests around my cart change actually prove anything? Check them.
 ```
 
-E10, whole project in words. The E2 module. No slash command:
+E10, whole project in words. The 11-package module above. No slash command:
 
 ```
 Check every test in the whole project for tests that can't fail.
 ```
 
-E11, dispatch refused. Fixture: Go package `value/` (`value/value.go` defines `Cents(d int) int { return d * 100 }` and
-`Enabled(flag bool) bool { return flag }`; `value/value_test.go` has `TestCentsSelf` asserting `Cents(5) == Cents(5)`,
-`TestCentsFormula` recomputing `5 * 100` in a helper, `TestCentsBehavior` asserting `Cents(5) == 500`, `ExampleCents`,
-and `TestEnabledSelf` asserting `Enabled(true) == Enabled(true)`; `importer set: empty`; mutating `Cents` to
-`return d * 101` fails `TestCentsBehavior` while `TestCentsSelf` and `TestCentsFormula` pass -> `remove`; mutating
-`Enabled` to `return !flag` leaves `TestEnabledSelf` passing with no other killing test and behavior change
-`Enabled(true) -> original true, mutant false` -> `replace`), and the host refuses every subagent dispatch after the
-wrapper's restatement (`subagents are disabled in this session`):
+Assertions:
+
+- **s2-plain-scope-and-all:** E9 resolves default scope (`cart` + importing `checkout`) without choosing `all`; E10
+  widens to whole project in <= 8 stated groups because the user asked in words.
+
+### Tests mode — E11 dispatch refused fallback
+
+Grade E11 only on the finder list written before Step 5, the in-session reviewer records for the candidates (same
+outcomes as the happy fixture), and the run note in the Assurance entry and Step 8 report.
+
+E11, dispatch refused. Fixture: Go package `value/` (`value/value.go` defines `Cents(d int) int { return d * 100 }` at
+line 3 and `Enabled(flag bool) bool { return flag }` at line 5; `value/value_test.go` has `TestCentsSelf` asserting
+`Cents(5) == Cents(5)` at line 7, `TestCentsFormula` recomputing `5 * 100` in a helper at line 20, `TestCentsBehavior`
+asserting `Cents(5) == 500` at line 12, `ExampleCents`, and `TestEnabledSelf` asserting `Enabled(true) == Enabled(true)`
+at line 16; `importer set: empty`; mutating `Cents` to `return d * 101` fails `TestCentsBehavior` while `TestCentsSelf`
+and `TestCentsFormula` pass -> `remove`; mutating `Enabled` to `return !flag` leaves `TestEnabledSelf` passing with no
+other killing test and behavior change `Enabled(true) -> original true, mutant false` -> `replace`), and the host
+refuses every subagent dispatch after the wrapper's restatement (`subagents are disabled in this session`):
 
 ```
 /agentics:zealot tests value/
 ```
+
+Assertions:
+
+- **s2-dispatch-fallback:** E11 writes the complete finder candidate list in charter shape before Step 5, runs the
+  reviewer pass in-session from candidate identities/locations/mutants alone with full proof rules, and marks Assurance
+  and Step 8 report `self-read (not independent)`.
+
+### Tests mode — E12 subtest and E14 other assertions
+
+Grade E12 and E14 only on the reviewer record, the Step 6 audit, and the Step 7 block; their scope, snapshot, and
+worktree steps are stipulated to run correctly.
 
 E12, subtest. Scope `parse/`; the finder's one candidate is the subtest `empty input` of `TestParse`, a self-comparison
 at `parse/parse_test.go:12`. Its sibling subtest `nil input`, whose assertion is at `parse/parse_test.go:20`, passes on
@@ -503,14 +574,6 @@ the decision is `remove`, covering the `empty input` subtest only.
 /agentics:zealot tests parse/
 ```
 
-E13, equivalent mutant. Scope `mathx/`; the finder's one candidate is `TestAbsSelf` with the mutant `x < 0` changed to
-`x <= 0` in `func Abs(x int) int`. No other test fails under it, and the throwaway check `Abs(0)` returns `0` on both
-the original and the mutant. The candidate's edit does not misread the code, so no correction applies.
-
-```
-/agentics:zealot tests mathx/
-```
-
 E14, other assertions. Scope `cart/`; the finder's one candidate is the self-comparison
 `d := Discount(items); if d != d` at `cart/cart_test.go:14` in `TestTotal`, which also asserts `Total(items) == 1200` at
 `cart/cart_test.go:18`; `Total` does not call `Discount`. A `Discount` mutant builds and leaves `TestTotal` green, and
@@ -520,61 +583,76 @@ E14, other assertions. Scope `cart/`; the finder's one candidate is the self-com
 /agentics:zealot tests cart/
 ```
 
-E15, failure on the original. Scope `rates/`; the finder's one candidate is `TestRateSelf`, whose mutant survives it. In
-the package run `TestLegacyRates` already fails on the original tree (missing fixture `testdata/legacy.csv`) and still
-fails with the mutant applied; every other test passes in both runs. A throwaway check shows a behavior change.
+Assertions:
+
+- **s2-subtest-and-other-assertions:** E12 selects `-run '^TestParse$/^empty_input$'` verifying execution without
+  letting sibling `nil input` decide; E14 records `Other assertions in test: cart/cart_test.go:18` and scopes `remove`
+  (naming `TestSubtotal`) to line 14 only.
+
+### Tests mode — E13 equivalent mutant
+
+Grade E13 only on the reviewer record, the Step 6 audit, and the Step 7 block; its scope, snapshot, and worktree steps
+are stipulated to run correctly.
+
+E13, equivalent mutant. Scope `mathx/`; the finder's one candidate is `TestAbsSelf` with the mutant `x < 0` changed to
+`x <= 0` in `func Abs(x int) int`. No other test fails under it, and the throwaway check `Abs(0)` returns `0` on both
+the original and the mutant. The candidate's edit does not misread the code, so no correction applies.
 
 ```
-/agentics:zealot tests rates/
+/agentics:zealot tests mathx/
 ```
+
+Assertions:
+
+- **s2-equivalent-mutant:** E13 records `TestAbsSelf` as `unproven` with reason `equivalent mutant`, never `confirmed`
+  or `replace`.
+
+### Tests mode — E16 Python pytest suite
+
+Grade E16 only on the baseline and mutant commands and the test-name check.
 
 E16, a Python suite. Scope `tests/test_pricing.py` in a Python project that runs its tests with `pytest` and has no Go
-toolchain; the finder's one candidate is `test_discount_self`, a self-comparison of `discount(2)` with itself.
+toolchain; the finder's one candidate is `test_discount_self`, a self-comparison of `discount(2)` with itself. Simulated
+runs: `pytest tests/test_pricing.py::test_discount_self -v -p no:cacheprovider` passes and shows
+`tests/test_pricing.py::test_discount_self PASSED` on both original and mutated `discount`.
 
 ```
 /agentics:zealot tests tests/test_pricing.py
 ```
 
-E17, a complete record in other words. Scope `value/` of the happy fixture; the reviewer's record for `TestCentsSelf`
-reads: "Ran `go test ./value -run '^TestCentsSelf$' -count=1 -v` on the original: `--- PASS: TestCentsSelf`. Applied
-`rate * 100` to `rate * 101` at value/value.go:3; `go build ./...` and `go vet ./value` succeeded. Same command with the
-mutant: `--- PASS: TestCentsSelf`. Package run on the original tree, `go test ./value -count=1 -v`: all pass; importers:
-none found (importer set: empty). Package run with the mutant: `TestCentsBehavior` and `ExampleCents` fail; other
-killing test: TestCentsBehavior. Other assertions in test: none." It does not use the fixed
+Assertions:
+
+- **s2-non-go-runner:** E16 runs baseline and mutant with pytest exact selection and verbose output (e.g.
+  `pytest tests/test_pricing.py::test_discount_self -v -p no:cacheprovider`), verifying execution, with no Go command.
+
+### Tests mode — E15 failure on original and E17 alternate-wording record
+
+Grade E15 on the reviewer record, Step 6 audit, and Step 7 block; grade E17 only on the Step 6 audit and Step 7 handoff.
+
+E15, failure on the original. Scope `rates/`; the finder's one candidate is `TestRateSelf`, whose mutant survives it. In
+the package run `TestLegacyRates` already fails on the original tree (missing fixture `testdata/legacy.csv`) and still
+fails with the mutant applied; every other test passes in both runs. A throwaway check (`Rate(100)` -> original `10`,
+mutant `11`) shows a behavior change.
+
+```
+/agentics:zealot tests rates/
+```
+
+E17, a complete record in other words. Scope `value/` (`value/value.go` defines
+`Cents(rate int) int { return rate * 100 }` at line 3); the reviewer's record for `TestCentsSelf` reads: "Ran
+`go test ./value -run '^TestCentsSelf$' -count=1 -v` on the original: `--- PASS: TestCentsSelf`. Applied `rate * 100` to
+`rate * 101` at value/value.go:3; `go build ./...` and `go vet ./value` succeeded. Same command with the mutant:
+`--- PASS: TestCentsSelf`. Package run on the original tree, `go test ./value -count=1 -v`: all pass; importers: none
+found (importer set: empty). Package run with the mutant: `TestCentsBehavior` and `ExampleCents` fail; other killing
+test: TestCentsBehavior. Other assertions in test: none." It does not use the fixed
 `Original named test: PASS; valid mutant: builds; same named test: PASS` line.
 
 ```
 /agentics:zealot tests value/
 ```
 
-Correct behavior: the scope rules and proof rules of the tests workflow hold in every turn.
-
 Assertions:
 
-- **s2-empty-and-all-scope:** E1 stops with one line naming the empty scope and one question (no worktree, finder, or
-  reviewer); E2 splits the 11 packages into <= 8 balanced groups stated before dispatch with one Deep reviewer per
-  group; E3 refuses to widen comments mode to `all` and asks for files or a diff range.
-- **s2-exceptions-list:** E4 lists `TestRenderGolden` (`reviewed golden fixtures`), `var _ io.Reader = (*Frame)(nil)`
-  (`compile-time interface checks`), `TestDefaultFrameLimit` (`constants pinned by linked external specifications`), and
-  `ExampleRender` (`Example functions`) under Exceptions; treats unlinked `TestDefaultWindow` as a candidate; and places
-  `TestParseRejectsEmpty` in no list.
-- **s2-refused-and-uncarried:** E5 records both candidates `unproven` with the exact refusal text and seeks no
-  substitute or variant executor; E6 does not carry `internal/testkit/clock.go` and records `unproven` with reason
-  `uncarried file`.
-- **s2-pathspec-carry:** E7 resolves `main...HEAD` to `pricing/` before `git ls-files` and carries `pricing/fixture.go`
-  (not `unproven`); E8 keeps `ledger/` as the `ls-files` pathspec and carries `ledger/helper.go` (not `unproven`).
-- **s2-plain-scope-and-all:** E9 resolves default scope (`cart` + importing `checkout`) without choosing `all`; E10
-  widens to whole project in <= 8 stated groups because the user asked in words.
-- **s2-dispatch-fallback:** E11 writes the complete finder candidate list in charter shape before Step 5, runs the
-  reviewer pass in-session from candidate identities/locations/mutants alone with full proof rules, and marks Assurance
-  and Step 8 report `self-read (not independent)`.
-- **s2-subtest-and-other-assertions:** E12 selects `-run '^TestParse$/^empty_input$'` verifying execution without
-  letting sibling `nil input` decide; E14 records `Other assertions in test: cart/cart_test.go:18` and scopes `remove`
-  (naming `TestSubtotal`) to line 14 only.
-- **s2-equivalent-mutant:** E13 records `TestAbsSelf` as `unproven` with reason `equivalent mutant`, never `confirmed`
-  or `replace`.
-- **s2-non-go-runner:** E16 runs baseline and mutant with pytest exact selection and verbose output (e.g.
-  `pytest tests/test_pricing.py::test_discount_self -v -p no:cacheprovider`), verifying execution, with no Go command.
 - **s2-complete-record-and-original-fail:** E17 keeps `TestCentsSelf` confirmed (`remove`) and copies its complete
   alternate-wording record verbatim into Step 7; E15 excludes original-failing `TestLegacyRates`
   (`other killing test: none`, decision `replace` with `Behavior change:`, listing `TestLegacyRates` separately as

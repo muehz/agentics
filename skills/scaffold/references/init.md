@@ -100,10 +100,11 @@ GitHub flags an unknown owner as an error); on the next reply that still asks fo
 
 **Reflection hand-off.** `forge reflect` writes approved lines to an existing instruction file itself. It hands
 `consumer pointer` rows to init only when the repository has no instruction file, so the rows need a starter
-`AGENTS.md`. Preselect `AGENTS.md` and put each row's proposed line in the generated starter, marked in the preview with
-the row's incident. The user's selection in reflect is not approval of the write. A run that carries only hand-off rows
-shows no menu and selects no other starter file; it asks only the Step 3 questions `AGENTS.md` needs that the scan does
-not answer.
+`AGENTS.md`. Preselect `AGENTS.md` and put each row's proposed line in the generated starter, explicitly marked inline
+with the row's incident ID/source (e.g., `- <rule> <!-- incident: <incident-id> -->` — never as an unmarked plain
+bullet). The user's selection in reflect is not approval of the write. A run that carries only hand-off rows shows no
+menu and selects no other starter file; it asks only the Step 3 questions `AGENTS.md` needs that the scan does not
+answer.
 
 ## Phase 2: generate, show, and confirm
 
