@@ -963,8 +963,9 @@ from an earlier session. Its Provenance reads `**Result:** pass`,
 `**Plan review:** READY — 0 critical, 0 important, 1 minor, 0 informational, rev 1, run 1`, and one
 `**Plan review finding (presented):**` line. `state.tsv` holds `create plan.md`, one `review plan` row with
 `rev=1 by=independent`, an `ok` `challenge plan.md` row, and a `pause plan.md` row; there is no `approve plan.md` row.
-The plan has a `## Standing orders` section with one item. The session is interactive, on the feature branch
-`feat/export-csv`. This is the approve-an-existing-plan job.
+The plan has a `## Standing orders` section with one item.
+`agx flow status --folder docs/specs/2026-10/feature-export-csv` prints `hashes: plan.md text=9f8e7d6a5b4c`. The session
+is interactive, on the feature branch `feat/export-csv`. This is the approve-an-existing-plan job.
 
 The user says:
 

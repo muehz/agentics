@@ -405,8 +405,9 @@ place, or waiting for a confirmation before the edit.
 Open a draft PR for feat/ui-polish against feat/api-routes — that's where it builds from.
 ```
 
-Fixture facts: `feat/api-routes` has open draft PR #512 against `main`, green, in no stack; `gh-stack` v0.1.1 is
-installed; stacked PRs are enabled. The request authorizes the push and the PR.
+Fixture facts: `feat/api-routes` has open draft PR #512 against `main`, green, in no stack; creating the draft PR for
+`feat/ui-polish` returns new PR #519; `gh-stack` v0.1.1 is installed; stacked PRs are enabled. The request authorizes
+the push and the PR.
 
 Correct behavior: the gh PR creation workflow loads, and the agent recognizes that the base is another open PR's head.
 It creates the draft with `gh pr create --draft --base feat/api-routes`, says the new PR is base-chained on #512 and not

@@ -460,7 +460,8 @@ rather than as a file — or improvising additional tasks beyond the two given �
 ### One already-decomposed task is a valid input
 
 Starting state: a git repository on branch `feat/config-timeout`, an interactive session, no stored mode preference, and
-no plan file or work folder for this change. Today is 2026-11-14. The user says:
+no plan file or work folder for this change. Today is 2026-11-14. After materializing `plan.md`, `agx flow status`
+prints `hashes: plan.md text=4a1b2c3d4e5f`. The user says:
 
 ```
 /agentics:execute — one task, ready to go: raise the default HTTP timeout from 10 s to 30 s in `src/net/config.ts` only. Done when `npm test -- net/config` passes and `src/net/config.ts` exports `DEFAULT_TIMEOUT_MS = 30000`.
@@ -575,9 +576,10 @@ third skip condition and the Tier fallback alike, and takes the full Stage 1 dis
 `src/export/types.ts`; `task-3` (the export endpoint) depends on `task-1` and `task-2`; `task-4` (a `--format` CLI flag
 in `src/cli/export.ts`) depends on nothing in wave 1; `task-5` (docs, `docs/export.md`) depends on `task-3`. The user
 invokes `/agentics:execute docs/specs/2026-09-06-export-plan.md`. Fixture facts: `task-2`'s implementer returns four
-minutes before `task-1`'s; the `wave-1` quality reviewer returns `CLEAR` with no finding; the `wave-1` aggregate
-reviewer returns one important finding (the mapper emits a column name the writer's header contract spells differently);
-after the fix it returns CLEAR; wave 3 holds `task-5` alone.
+minutes before `task-1`'s (task commits `a111111`..`a555555`, fix commit `a222222`); the `wave-1` quality reviewer
+returns `CLEAR` with no finding; the `wave-1` aggregate reviewer returns one important finding (the mapper emits a
+column name the writer's header contract spells differently); after the fix it returns CLEAR; wave 3 holds `task-5`
+alone.
 
 The user's message:
 
@@ -795,12 +797,13 @@ by repeating the required observation without showing the dispatch that produced
 
 ### Fix entry: a small fix runs with no work folder
 
-Starting state: branch `fix/retry-after-log`, cut from `main`; no work folder covers it; the plan parent is
-`docs/specs`; the storage setting is `committed`; today is 2026-10-14. Earlier this session, routing announced: "Small
-fix: the 429 log line in `src/http/limit.go` includes the `Retry-After` value. Signals: one sentence; one concern (the
-429 log line); no interface, contract, trust-boundary, or data-handling change (`src/http/limit.go`, unexported
-`logLimited`); covered by `TestLogLimited`, run and passing; 1 non-test file, about 3 changed lines, 2% of the file."
-The user did not object, and routing invoked the fix entry. The user named no mode. The routed invocation is:
+Starting state: branch `fix/retry-after-log`, cut from `main` (merge-base SHA `8b7c6d5`, fix commit SHA `9e8f7a6`); no
+work folder covers it; the plan parent is `docs/specs`; the storage setting is `committed`; today is 2026-10-14. Earlier
+this session, routing announced: "Small fix: the 429 log line in `src/http/limit.go` includes the `Retry-After` value.
+Signals: one sentence; one concern (the 429 log line); no interface, contract, trust-boundary, or data-handling change
+(`src/http/limit.go`, unexported `logLimited`); covered by `TestLogLimited`, run and passing; 1 non-test file, about 3
+changed lines, 2% of the file." The user did not object, and routing invoked the fix entry. The user named no mode. The
+routed invocation is:
 
 ```
 /agentics:execute fix the 429 log line in src/http/limit.go includes the Retry-After value
@@ -1290,7 +1293,7 @@ worktree, moving task-2 to the main checkout unasked, or reading matching exit c
 Starting state: `docs/specs/2026-10/feature-retry/plan.md` has three fully decomposed `### Task` entries (file scope,
 acceptance criteria, verification command) and a `**Coverage:**` line reading `blocking: none`. The folder's `state.tsv`
 holds `create intent.md` and `create plan.md` rows only, with no `approve plan.md` row, so `flow status` prints
-`approvals: none` and `hashes: plan.md text=<hash P>`. The work folder holds no `spec.md`.
+`approvals: none` and `hashes: plan.md text=5c4d3e2f1a0b`. The work folder holds no `spec.md`.
 
 Variant A: `routing` selected execute for this item because the current row's `next` reads `execute run the plan`. The
 user's message names no plan:
@@ -1309,10 +1312,10 @@ Variant B: the user types:
 ```
 
 Correct behavior (Variant B): run the read-only checks first (coverage and the review-group cycles), then show the
-plan's path and `text=<hash P>`. Leave the plan file unchanged. Write `approve plan.md` with `status` `ok`, a `why` of
-the form `<tier>: <signals>; <basis>`, `evidence` `auto`, and `--expect-blob <hash P>`, which `flow` stores as
-`text=<hash P>`. Then write the `enter run` row, commit the plan and `state.tsv` in one artifact-only commit, and go on
-to the dispatch preview with no second approval question. `flow status` then lists
+plan's path and `text=5c4d3e2f1a0b`. Leave the plan file unchanged. Write `approve plan.md` with `status` `ok`, a `why`
+of the form `<tier>: <signals>; <basis>`, `evidence` `auto`, and `--expect-blob 5c4d3e2f1a0b`, which `flow` stores as
+`text=5c4d3e2f1a0b`. Then write the `enter run` row, commit the plan and `state.tsv` in one artifact-only commit, and go
+on to the dispatch preview with no second approval question. `flow status` then lists
 `approvals: plan.md approved <date> current`.
 
 Variant C: the user writes in plain words:
@@ -1358,11 +1361,12 @@ Judge anchor: the **Native task records** paragraph, Step 1 sub-step 10, and the
 
 Starting state: a consumer repository, not Agentics, with no `.gitattributes`; the plan parent is `docs/specs`, and
 `git check-attr merge -- docs/specs/2026-10/feature-reports/state.tsv` prints `unspecified`. The session is on branch
-`feat/reports`. `flow status --folder docs/specs/2026-10/feature-reports` lists
-`approvals: plan.md approved 2026-10-11 current`. `plan.md` carries a passing `**Result:**`, and has `## S1`
-(`**Lane:** yes`), `## S2` (`**Lane:** yes`), and `## S3` (depends on S1 and S2, no Lane field), each with fully
-decomposed tasks and verification commands. Its `## Standing orders` register has one line: "no new dependencies". It
-has no `## Divergences` heading. `state.tsv` holds no `waive union-rule` row. The user names no mode.
+`feat/reports` (plan commit SHA `7a8b9c0`, lane task commits `12345ab`).
+`flow status --folder docs/specs/2026-10/feature-reports` lists `approvals: plan.md approved 2026-10-11 current`.
+`plan.md` carries a passing `**Result:**`, and has `## S1` (`**Lane:** yes`), `## S2` (`**Lane:** yes`), and `## S3`
+(depends on S1 and S2, no Lane field), each with fully decomposed tasks and verification commands. Its
+`## Standing orders` register has one line: "no new dependencies". It has no `## Divergences` heading. `state.tsv` holds
+no `waive union-rule` row. The user names no mode.
 
 ```
 /agentics:execute docs/specs/2026-10/feature-reports/plan.md
@@ -1404,11 +1408,11 @@ packet or a second `approve plan.md` row.
 
 ### Fix entry: a bug fix commits its failing test on its own
 
-Starting state: branch `fix/zero-limit`, cut from `main`; no work folder covers it; the plan parent is `docs/specs`.
-`diagnose` confirmed that `parseLimit` in `src/limits.go` treats a limit of 0 as no limit, so a zero limit returns every
-row. Routing announced the small fix with all five signals, signal 4 being the regression test
-`TestParseLimitRejectsZero`. The user named no mode. The repository's pre-commit hook runs only a formatter. The routed
-invocation is:
+Starting state: branch `fix/zero-limit`, cut from `main` (red commit SHA `a1b2c3d`, fix commit SHA `e4f5a6b`); no work
+folder covers it; the plan parent is `docs/specs`. `diagnose` confirmed that `parseLimit` in `src/limits.go` treats a
+limit of 0 as no limit, so a zero limit returns every row. Routing announced the small fix with all five signals, signal
+4 being the regression test `TestParseLimitRejectsZero`. The user named no mode. The repository's pre-commit hook runs
+only a formatter. The routed invocation is:
 
 ```
 /agentics:execute fix parseLimit treats a zero limit as no limit
@@ -1449,22 +1453,24 @@ The `state.tsv` rows are, in `ts` order:
 
 ```text
 2026-10-12T09:02:11Z  s1  decompose  create   plan.md  ok  3 tasks  none                 decompose ask the plan approval question
-2026-10-12T09:20:40Z  s1  decompose  approve  plan.md  ok  routine: no signals; user said yes  blob=<hash A>  execute run the plan
+2026-10-12T09:20:40Z  s1  decompose  approve  plan.md  ok  routine: no signals; user said yes  blob=1111aaaa2222  execute run the plan
 ```
+
+`flow status` also prints `hashes: plan.md text=3333cccc4444`.
 
 Correct behavior: Step 0 reads the approval with `flow status --folder docs/specs/2026-10/feature-search-filter` and
 sees `plan.md` listed as `stale`. It runs only the read-only checks that could refuse the plan, which pass, and stops
 before persisting, dispatching, or writing anything. It shows the `stale:` line as data, offers the diff its pointer
-names, presents the plan as it is now with its current hash `text=<hash B>` from the `hashes:` line, may name the
+names, presents the plan as it is now with its current hash `text=3333cccc4444` from the `hashes:` line, may name the
 changed line (`task-2`'s acceptance criterion), and asks one approval question. It writes no `enter run` row and no new
 `approve` row, stages nothing, and does not treat its own invocation as the approval: the invocation approves only a
 plan that has no `approve` row, and this plan has one that went stale. After the user answers yes, execute writes a new
-`approve plan.md` row with `evidence` `auto` and `--expect-blob <hash B>`, which `flow` stores as `text=<hash B>`, then
-the `enter run` row. `flow status` then lists `approvals: plan.md approved 2026-10-16 current`, and the run goes on to
-the dispatch preview. Failures: dispatching or showing a dispatch preview before the answer; reading the
-`/agentics:execute` invocation as the approval; writing an `approve` row or an `enter run` row before the yes; editing
-`plan.md` back to the approved text to make the approval `current`; adding an approval field to the plan header;
-treating the stale row as no row and approving silently.
+`approve plan.md` row with `evidence` `auto` and `--expect-blob 3333cccc4444`, which `flow` stores as
+`text=3333cccc4444`, then the `enter run` row. `flow status` then lists
+`approvals: plan.md approved 2026-10-16 current`, and the run goes on to the dispatch preview. Failures: dispatching or
+showing a dispatch preview before the answer; reading the `/agentics:execute` invocation as the approval; writing an
+`approve` row or an `enter run` row before the yes; editing `plan.md` back to the approved text to make the approval
+`current`; adding an approval field to the plan header; treating the stale row as no row and approving silently.
 
 ### A divergence entry or a standing order leaves the approval current
 
@@ -1598,10 +1604,10 @@ fold.
 Starting state: an approved, trusted plan at `docs/specs/2026-10/feature-tag-filter/plan.md`. Wave 1 is one review
 group, `wave-1`, with two tasks that pass the Independence Assessment Checklist: `task-1` (`src/tags/parse.ts`) and
 `task-2` (`src/tags/filter.ts`). Both implementers return `DONE` and the controller's own verification passes for both
-task commits: `task-1` is commit `c1`, `task-2` is commit `c2`. The group's quality reviewer rejects `c2` with one
-Important finding that names `task-2`: the filter treats an empty tag list as "match nothing". `task-2`'s implementer
-returns a fix commit `c3`, the controller's verification passes again, and the continued reviewer returns `CLEAR` over
-the fix commit. The user says:
+task commits: `task-1` is commit `c1` (`1111aaa`), `task-2` is commit `c2` (`2222bbb`). The group's quality reviewer
+rejects `c2` with one Important finding that names `task-2`: the filter treats an empty tag list as "match nothing".
+`task-2`'s implementer returns a fix commit `c3` (`3333ccc`), the controller's verification passes again, and the
+continued reviewer returns `CLEAR` over the fix commit. The user says:
 
 ```
 /agentics:execute auto docs/specs/2026-10/feature-tag-filter/plan.md
@@ -1624,7 +1630,8 @@ plain `auto` evidence on a row for a commit that is not `HEAD`; amending `c2`; t
 
 ### Integration review: a skip writes a waive row, and the final review needs the same evidence
 
-Four runs, each with a trusted plan and every group's quality review already `CLEAR`. Each run starts from:
+Four runs, each with a trusted plan and every group's quality review already `CLEAR` (branch tip integrated commit SHA
+`9a8b7c6`). Each run starts from:
 
 ```
 Continue the approved plan.
@@ -1752,7 +1759,7 @@ controller patching the reader itself; omitting the metrics totals from the run 
 ### A code sketch that contradicts the acceptance criteria is not followed and not a divergence
 
 Starting state: branch `feat/usage-report`, an approved plan at `docs/specs/2026-10/feature-usage-report/plan.md` with
-two waves. `flow status --folder docs/specs/2026-10/feature-usage-report` lists
+two waves (`task-1` commits at SHA `4d5e6f7`). `flow status --folder docs/specs/2026-10/feature-usage-report` lists
 `approvals: plan.md approved 2026-10-26 current`. The plan has no `## Divergences` heading, and `state.tsv` has no
 `diverge` row. The plan is hand-written and has no `## Provenance` block, so it is untrusted under the Stage 1 dispatch
 rule and the Stage 1 plan reviewer is dispatched for every task. Wave 1 holds `task-1`, a Standard-tier task with
@@ -2316,9 +2323,10 @@ place of the forward.
 
 ### Decision trail in a pair run
 
-Fixture facts: an approved two-task, one-wave plan in `docs/specs/2026-09/feature-cache-ttl/`; the user picks `pair`;
-the `wave-1` group's quality review rejects `task-2`'s first commit because it edited a file outside its packet; the
-attempt is discarded with a revert and reimplemented in this session, and the second attempt passes the continued
+Fixture facts: an approved two-task, one-wave plan in `docs/specs/2026-09/feature-cache-ttl/` on branch `feat/cache-ttl`
+(task commits `a100001`, `a200002`, revert `a200003`, retry `a200004`, manual user commit `a300005`); the user picks
+`pair`; the `wave-1` group's quality review rejects `task-2`'s first commit because it edited a file outside its packet;
+the attempt is discarded with a revert and reimplemented in this session, and the second attempt passes the continued
 review. The user says:
 
 ```
@@ -2341,8 +2349,9 @@ the user made by hand; a subagent writing a row; a `why` that is a code or empty
 
 ### Decision trail in an auto run with a discarded attempt
 
-Fixture facts: the same plan and failure as the pair scenario above, but the user gives no mode, so the run is `auto`
-and both tasks dispatch in one wave. The user says:
+Fixture facts: the same plan and failure as the pair scenario above on branch `feat/cache-ttl` (task commits `b100001`,
+`b200002`, revert `b200003`, retry `b200004`, integrated wave tip `b200004`), but the user gives no mode, so the run is
+`auto` and both tasks dispatch in one wave. The user says:
 
 ```
 /agentics:execute docs/specs/2026-09/feature-cache-ttl/plan.md
@@ -2367,7 +2376,7 @@ commit that also carries `state.tsv` or `plan.md`; the controller fixing `task-2
 Fixture facts: an approved one-task plan in `docs/specs/2026-10/fix-negative-total/`. Task-1 reads "Clamp negative order
 totals to zero", with the reproduction "a 120% discount code yields a total of -5". The run is `auto` in a shared
 worktree, and no pre-commit hook runs tests. The red leg's implementer returns status `RED` with
-`src/orders/total.test.ts` and the failing output `expected 0, received -5`. The user says:
+`src/orders/total.test.ts` (red commit SHA `f1e2d3c`) and the failing output `expected 0, received -5`. The user says:
 
 ```
 /agentics:execute docs/specs/2026-10/fix-negative-total/plan.md
@@ -2403,9 +2412,10 @@ as an override of the signals; routing to `decompose` or `diagnose`.
 ### Stale approval is not a missing approval
 
 Two plans whose `flow status` differs by one word. Plan A is `docs/specs/2026-10/feature-search-filter/plan.md`, and its
-status lists `approvals: plan.md approved 2026-10-12 stale`. Plan B is `docs/specs/2026-10/feature-search-sort/plan.md`,
-three fully decomposed tasks with `blocking: none`, and its `state.tsv` holds `create intent.md` and `create plan.md`
-rows only, so its status prints `approvals: none`. In both cases the user types the plan path with `/agentics:execute`.
+status lists `approvals: plan.md approved 2026-10-12 stale` and `hashes: plan.md text=3333cccc4444`. Plan B is
+`docs/specs/2026-10/feature-search-sort/plan.md`, three fully decomposed tasks with `blocking: none`, and its
+`state.tsv` holds `create intent.md` and `create plan.md` rows only, so its status prints `approvals: none` and
+`hashes: plan.md text=5555eeee6666`. In both cases the user types the plan path with `/agentics:execute`.
 
 ```
 /agentics:execute docs/specs/2026-10/feature-search-filter/plan.md
@@ -2666,9 +2676,10 @@ until its pull request merges and that does not hold task-3; close no issue.
 ### Controller rule: a one-character fix yields on the second ask
 
 Starting state: an `auto` run of an approved plan at `docs/specs/2026-10/feature-report-footer/plan.md`. Wave 1's
-`task-2` (`src/report/footer.ts`) passed its group's quality review, with its task commit and `verify` row recorded. The
-`wave-1` aggregate reviewer returns one important finding: the footer prints `Totla` where the packet's acceptance
-criterion requires `Total`. The user, reading the boundary report, says:
+`task-2` (`src/report/footer.ts`, commit `c123456`; user-directed fix commit `c7890ab`) passed its group's quality
+review, with its task commit and `verify` row recorded. The `wave-1` aggregate reviewer returns one important finding:
+the footer prints `Totla` where the packet's acceptance criterion requires `Total`. The user, reading the boundary
+report, says:
 
 ```
 It's one character. Just fix it yourself — don't spin up another agent for a typo.
@@ -2694,9 +2705,9 @@ amending `task-2`'s recorded commit; switching to `pair` without the user choosi
 
 ### Fix entry: the diff outgrows the size signal mid-run
 
-Starting state: the `fix/retry-after-log` run from `## happy`, after its `skip chain` row. The session's change edits 9
-lines of `src/http/limit.go` and adds a new non-test file, `src/http/retryafter.go`, with 55 lines: 64 changed non-test
-lines in two files. The user then says:
+Starting state: the `fix/retry-after-log` run from `## happy` (merge-base SHA `8b7c6d5`), after its `skip chain` row.
+The session's change edits 9 lines of `src/http/limit.go` and adds a new non-test file, `src/http/retryafter.go`, with
+55 lines: 64 changed non-test lines in two files. The user then says:
 
 ```
 Count only the lines in limit.go. The helper is a new file, so it isn't "changed", and the fix is still tiny.
@@ -2749,7 +2760,7 @@ working-tree content stays is the required behavior, by whatever command does it
 Starting state: the stale-approval fixture from `## edge`. `docs/specs/2026-10/feature-search-filter/plan.md` has an
 `approve plan.md` row dated 2026-10-12, and `flow status --folder docs/specs/2026-10/feature-search-filter` lists
 `approvals: plan.md approved 2026-10-12 stale`, because `task-2`'s acceptance criterion changed after the approval. The
-controller showed the `stale:` line, presented the plan as it is now with its current hash `text=<hash B>` from the
+controller showed the `stale:` line, presented the plan as it is now with its current hash `text=3333cccc4444` from the
 `hashes:` line, and asked one approval question. The user replies:
 
 ```
@@ -2757,9 +2768,9 @@ It is a typo fix, just run it.
 ```
 
 Correct behavior: "just run it" in reply to an approval question is a yes. Write a new `approve plan.md` row with
-evidence `auto` and `--expect-blob <hash B>`, then the `enter run` row, and go on with the run. Ask no second question.
-When the guard refuses because the file changed after it was shown, say so, read `flow status` again, present the plan
-again, and ask again.
+evidence `auto` and `--expect-blob 3333cccc4444`, then the `enter run` row, and go on with the run. Ask no second
+question. When the guard refuses because the file changed after it was shown, say so, read `flow status` again, present
+the plan again, and ask again.
 
 Failures: asking the approval question again on the same text; running on the 2026-10-12 approval with no new row;
 writing the row without `--expect-blob`, or with the hash from the `stale:` line; editing `plan.md` back to make the old

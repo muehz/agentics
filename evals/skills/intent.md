@@ -160,6 +160,9 @@ Required publication approvals aren't rescues. An interrupted attempt must remai
 We haven't decided how to collect or store that evidence.
 ```
 
+Fixture facts: `agx flow status` after staging `docs/specs/2026-11/feature-execute-success-metrics/intent.md` reports
+`hashes: intent.md text=4b7c8d9e0f1a`.
+
 The user then answers the approval question:
 
 ```text
@@ -923,7 +926,8 @@ Assertions:
 Starting state: a live chat on `main`. No flow covers it. `diagnose` reported a flaky cache test and the user declined
 the root-cause investigation, saying they will monitor it instead. The user's change adds one log line around the cache
 lookup and a dashboard counter. It needs no runtime-change yes, because it is a monitoring change. It fails only the
-size signal, and the middle-path conditions hold, so the outcome is `brief`. The user's request:
+size signal, and the middle-path conditions hold, so the outcome is `brief` (created on feature branch
+`fix/cache-monitoring`). The user's request:
 
 ```text
 I don't want to dig into the flaky cache test. Just add the log line and the counter so we can watch it.

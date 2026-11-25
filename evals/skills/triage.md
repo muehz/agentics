@@ -59,19 +59,20 @@ tools authenticated as `jdoe-bot`, on `github.com`. The user's only message is:
 
 Fixture facts: PR #214 is open, same-repo, head SHA `a1b2c3d`, branch `feature/refund-endpoint`, base `main`, author
 `jdoe`. The repository is private. `main` holds no `.triage.yml`. Signal: (1) a review by
-`github-advanced-security[bot]` (`user.type: "Bot"`) with 2 unresolved line-anchored threads, one on
-`payments/refund.py:88` flagging a SQL string built with f-string interpolation (rule `py/sql-injection`, severity
-high), one on `payments/client.py:41` flagging a full request URL with a bearer token logged at INFO; (2) a review by
-`github-code-quality[bot]` with 2 unresolved threads, one on `payments/refund.py:130` flagging an unreachable `else`
-branch with a suggested autofix that deletes it, one on `payments/refund.py:47` flagging a broad `except Exception`
-around the gateway call; (3) one failed check run named `CodeQL` with `app.slug: "github-code-scanning"` on `a1b2c3d`;
-(4) no Copilot review, no Checkmarx comment, no human thread; (5) `main` is not an ancestor of the PR head, and two
-files conflict (`payments/refund.py`: both sides edited the retry constant block for compatible reasons;
-`payments/config.py`: both sides appended to the same settings list), both resolvable by combining the sides' intent,
-and the project's checks pass after resolution. On inspection the SQL finding is real and fixable; the logging finding
-is wrong because the logger redacts the token, but the redaction helper is untested (`false_positive` with an
-`intervention_reason`); the autofix compiles and passes the touched file's tests; the broad `except` is deliberate
-because the handler re-raises after recording a metric (`accept_intentional`). Every git operation and the push succeed.
+`github-advanced-security[bot]` (`user.type: "Bot"`) with 2 unresolved line-anchored threads, thread ID `PRRT_sec214a`
+on `payments/refund.py:88` flagging a SQL string built with f-string interpolation (rule `py/sql-injection`, severity
+high), thread ID `PRRT_sec214b` on `payments/client.py:41` flagging a full request URL with a bearer token logged at
+INFO; (2) a review by `github-code-quality[bot]` with 2 unresolved threads, thread ID `PRRT_qual214a` on
+`payments/refund.py:130` flagging an unreachable `else` branch with a suggested autofix that deletes it, thread ID
+`PRRT_qual214b` on `payments/refund.py:47` flagging a broad `except Exception` around the gateway call; (3) one failed
+check run named `CodeQL` with `app.slug: "github-code-scanning"` on `a1b2c3d`; (4) no Copilot review, no Checkmarx
+comment, no human thread; (5) `main` is not an ancestor of the PR head, and two files conflict (`payments/refund.py`:
+both sides edited the retry constant block for compatible reasons; `payments/config.py`: both sides appended to the same
+settings list), both resolvable by combining the sides' intent, and the project's checks pass after resolution. On
+inspection the SQL finding is real and fixable; the logging finding is wrong because the logger redacts the token, but
+the redaction helper is untested (`false_positive` with an `intervention_reason`); the autofix compiles and passes the
+touched file's tests; the broad `except` is deliberate because the handler re-raises after recording a metric
+(`accept_intentional`). Every git operation and the push succeed.
 
 Correct behavior: the opening line says the run will push its fixes to `feature/refund-endpoint` and post replies and
 one summary comment, because `/agentics:triage pr` names both. Phase 0.4 runs the base-sync specialist in its own sync
@@ -260,12 +261,13 @@ authenticated as `jdoe-bot`. The user's only message is:
 ```
 
 Fixture facts: PR #230 is open, same-repo, head SHA `c0ffee1`, author `jdoe`, up to date with its base. `main` holds a
-`.triage.yml` with `checkmarx_accounts: ["checkmarx-one[bot]"]`. Signal: (1) three failed check runs, `lint` (ESLint
-`no-unused-vars` at `api/refund.ts:12`, auto-fixable), `unit-tests` (one assertion failure that needs human
-verification, so Suggest), and `build-docker` (registry timeout, so Intervention); (2) a top-level comment by
-`checkmarx-one[bot]` carrying the `<!--new issues section-->` marker with two new findings, one remediable and one false
-positive; (3) one Copilot review with two unresolved threads, both `fix`; (4) no human thread; (5) an older top-level
-comment by `jdoe-bot` carrying `<!-- agentics:triage:reply:checks:9001 -->`. Every git operation and the push succeed.
+`.triage.yml` with `checkmarx_accounts: ["checkmarx-one[bot]"]`. Signal: (1) three failed check runs, `lint`
+(`check_run_id: 91001`, ESLint `no-unused-vars` at `api/refund.ts:12`, auto-fixable), `unit-tests`
+(`check_run_id: 91002`, one assertion failure that needs human verification, so Suggest), and `build-docker`
+(`check_run_id: 91003`, registry timeout, so Intervention); (2) a top-level comment by `checkmarx-one[bot]` carrying the
+`<!--new issues section-->` marker with two new findings, one remediable and one false positive; (3) one Copilot review
+with two unresolved threads, both `fix`; (4) no human thread; (5) an older top-level comment by `jdoe-bot` carrying
+`<!-- agentics:triage:reply:checks:9001 -->`. Every git operation and the push succeed.
 
 Correct behavior: exactly two thread replies (the Copilot threads) and exactly one top-level comment, the rollup, for
 three posts in total (N + 1 with N = 2). The rollup carries three Checks sections, one per root cause, each anchored
@@ -306,9 +308,9 @@ authenticated. The user's only message is:
 ```
 
 Fixture facts: PR #241 is open, same-repo, head SHA `c0de0241`, author `jdoe`, up to date with its base. A review by
-`chatgpt-codex-connector[bot]` (`user.type: "Bot"`) has two unresolved line-anchored threads: `codex-241-p1` on
-`payments/refund.py:88`, with raw badge `![P1 Badge](https://img.shields.io/badge/P1-orange)`, flags a missing refund
-ownership check; `codex-241-p2` on `payments/client.py:41`, with raw badge
+`chatgpt-codex-connector[bot]` (`user.type: "Bot"`) has two unresolved line-anchored threads: thread ID `codex-241-p1`
+on `payments/refund.py:88`, with raw badge `![P1 Badge](https://img.shields.io/badge/P1-orange)`, flags a missing refund
+ownership check; thread ID `codex-241-p2` on `payments/client.py:41`, with raw badge
 `![P2 Badge](https://img.shields.io/badge/P2-yellow)`, flags an unclosed response. Inspection confirms both; minimal
 fixes pass the affected tests. `renovate[bot]` also has an unresolved line-anchored thread `renovate-241` on
 `requirements.txt:12` requesting a dependency update. Every git operation and the push succeed.
@@ -448,7 +450,7 @@ folder `docs/specs/2026-10/feature-refund-export/`, which is not closed: its `st
 PR has three signals. A Copilot thread on `payments/refund.py:88` flags a missing refund ownership check, confirmed as
 an Important defect that `task-2` introduced. The `unit-tests` check failed on a test that exposes a Critical defect,
 confirmed and fixable, in `task-1`'s commit. A second Copilot thread suggests a variable rename, a Minor fix. Every fix
-passes its tests, and the push succeeds.
+passes its tests (integrated commits `11aa22b`, `33cc44d`, `55ee66f`), and the push succeeds.
 
 Correct behavior: run `flow where` from the checkout on `feat/refund-export`, not from a `triage/pr-214/...` branch, and
 keep the folder. In the merge worktree, before the push, write one `commit` row with target `triage`, status `ok` and
@@ -789,10 +791,11 @@ tools authenticated. The user's message is:
 /agentics:triage pr 132
 ```
 
-Fixture facts: PR #132 is open, same-repo, head SHA `d0d0feed`, author `kpatel`, with no earlier rollup. `main` is not
-an ancestor of the head. The base-sync specialist merges `main` in the sync worktree and hits one conflicted file,
-`src/token-refresh.ts`, where both sides rewrote the same refresh-scheduling logic for incompatible reasons; the correct
-combination is not derivable from `git log --merge`, so it reports `SYNC_OUTCOME: blocked`.
+Fixture facts: PR #132 is open, same-repo, head SHA `d0d0feed`, author `kpatel`, worktree parent
+`/tmp/triage-worktrees`, with no earlier rollup. `main` is not an ancestor of the head. The base-sync specialist merges
+`main` in the sync worktree and hits one conflicted file, `src/token-refresh.ts`, where both sides rewrote the same
+refresh-scheduling logic for incompatible reasons; the correct combination is not derivable from `git log --merge`, so
+it reports `SYNC_OUTCOME: blocked`.
 
 Correct behavior: the run stops at Phase 0.4. No source is detected or dispatched and nothing is pushed. The sync
 worktree `{WT_PARENT}/triage-pr-132-sync-{RUN_ID}` and branch `triage/pr-132/sync-{RUN_ID}` are kept, and the session
