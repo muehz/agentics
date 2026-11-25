@@ -841,8 +841,8 @@ Assertions:
 Starting state: the session is Copilot CLI with a `<session_context>` block whose `Plan file:` line reads
 `/tmp/copilot-session-9120/plan.md`. The session exposes the `sql` tool and the `ask_user` tool and no plan-approval
 tool. The work folder `docs/specs/2026-10/feature-export-csv/` holds an approved `spec.md` and an approved routine-tier
-`intent.md`. During the run, the plan challenge finds nothing and every checklist row passes. The session is
-interactive.
+`intent.md`. After staging `plan.md`, `agx flow status` prints `hashes: plan.md text=d4e5f6a7b8c9`. During the run, the
+plan challenge finds nothing and every checklist row passes. The session is interactive.
 
 The user says:
 
@@ -1898,7 +1898,8 @@ Assertions:
 Starting state: `docs/specs/2026-10/feature-export-throttle/` holds a six-section `intent.md` whose `state.tsv` holds a
 `challenge intent.md` row (status `ok`, 2026-10-12) and a current `approve intent.md` row whose `next` reads `spec`,
 with concrete decisions: throttle exports to 2 per user per minute and return 429 with `Retry-After`. No `spec.md`
-exists. The user is present.
+exists. The drafted spec stays routine tier; after staging, `agx flow status` prints `hashes: spec.md text=5a6b7c8d9e0f`
+and `hashes: plan.md text=1f2e3d4c5b6a`. The user is present.
 
 The user says:
 
@@ -1925,7 +1926,8 @@ Assertions:
 ### One action under an explicit /agentics:decompose
 
 Starting state: a git repo whose `src/http/client.ts` defines the constant `MAX_RETRIES` and uses it in two places in
-the same file, with `tests/http/client.test.ts` covering the client. Nothing else references the constant.
+the same file, with `tests/http/client.test.ts` covering the client (run via `npm test -- tests/http/client.test.ts`).
+Nothing else references the constant.
 
 The user says:
 

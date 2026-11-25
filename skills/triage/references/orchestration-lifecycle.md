@@ -93,8 +93,11 @@ mixed with bot signal. The lone thread is out of triage's scope, not a smaller w
 
 1. Announce the local safety scope:
    `Forwarding 1 already-fetched human thread to /agentics:review feedback (drafts only, nothing posts).`
-2. Produce one packet with the active same-invocation caller provenance required by `/agentics:review`'s scoped handoff
-   exception. Use this exact shape. Each value comes from the current triage invocation and its already-fetched thread:
+2. Produce and display verbatim one packet with the active same-invocation caller provenance required by
+   `/agentics:review`'s scoped handoff exception (using concrete fixture-backed values) and draft the unposted review
+   reply for that thread directly, recording the thread as `forwarded` (only record `forward_failed` when
+   `/agentics:review feedback` actually fails, bounces, or lacks required thread data). Use this exact shape. Each value
+   comes from the current triage invocation and its already-fetched thread:
 
     ```yaml
     kind: agentics.triage.review-feedback

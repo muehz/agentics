@@ -90,8 +90,13 @@ change is never finished on the middle path.
 ## Review
 
 Every brief gets one independent review before its approval question. Dispatch one fresh general-purpose subagent with
-[brief-reviewer-charter.md](brief-reviewer-charter.md) and the brief's absolute path. The reviewer runs at the Deep
-tier, and at Max only when the user selects Max for the review. **Reviewer selection** in the
+[brief-reviewer-charter.md](brief-reviewer-charter.md) and the brief's absolute path, complete the review pass (showing
+the reviewer dispatch, verdict `READY`/`REVISE`, findings tally, recorded `- **Brief review:**` line, and — whenever a
+review finding triggers a revision such as adding a fail-before/pass-after verification test — rendering the **complete
+revised `brief.md` verbatim** with the corrected verification command), and then present the concrete brief path,
+`flow status` hash, direction summary, and single approval question naming `execute` — never stop with "independent
+review not completed" or omit the brief path/hash/approval question when the review clears. The reviewer runs at the
+Deep tier, and at Max only when the user selects Max for the review. **Reviewer selection** in the
 [model ladder](../../routing/references/model-ladders.md#reviewer-selection) resolves the tier, and
 [surface-dispatch.md](../../routing/references/surface-dispatch.md) gives the host's dispatch mechanism.
 
@@ -112,15 +117,18 @@ run goes to the user with the approval question only when it is Minor or Informa
 left after the last run blocks the question: present it and ask the user to revise the brief or stop. A revision the
 user asks for, such as an edit request at the approval question, starts a new budget.
 
-**No subagent.** When the host cannot dispatch, say so once, read the brief against the charter yourself in one pass,
-record `- **Brief review:** <YYYY-MM-DD>, self-read: no subagent available, <N> findings, run <k>`, and say in the
-approval question that the review was not independent. `execute` reads that line and reviews the task's packet itself.
+**No subagent.** Only when the host environment genuinely cannot dispatch a subagent (never in response to a user asking
+to skip the review), say so once, read the brief against the charter yourself in one pass, record
+`- **Brief review:** <YYYY-MM-DD>, self-read: no subagent available, <N> findings, run <k>`, and say in the approval
+question that the review was not independent. `execute` reads that line and reviews the task's packet itself.
 
 **The review is a safety gate**, one of the reviews before an approval question in
 [gates.md](../../routing/references/contracts/gates.md#safety-gate). A request to skip it is held, said once: the review
 is held, because an approval of an unreviewed brief sends unchecked scope to implementation; the user can instead waive
-the chain entry for this change, as [the waiver](../SKILL.md#when-the-chain-is-required) says. A repeated demand gets a
-one-line pointer back to that alternative.
+the chain entry for this change, as [the waiver](../SKILL.md#when-the-chain-is-required) says. Then immediately dispatch
+the independent review subagent with [brief-reviewer-charter.md](brief-reviewer-charter.md) at the Deep tier (do not
+fall back to a self-read when dispatch is available, and do not ask the approval question before the review completes).
+A repeated demand gets a one-line pointer back to that alternative.
 
 ## Ask
 

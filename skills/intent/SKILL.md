@@ -41,11 +41,11 @@ Track Steps 0 to 4 under [workflow steps](../routing/references/contracts/workfl
 
 Mutating work enters the chain when the change could alter what the software does, an interface it exposes, or a contract someone depends on (anything where a reviewer would ask "why this way?"). The **exempt class** needs no chain: changes that cannot alter behavior (formatting, typos, comments, dead links, or semantic-neutral renames). Outside the exempt class, size decides only the path, via [small-fix classification](../routing/references/chain-phases.md#small-fix-classification):
 
-| Classification outcome | Path                                                                                            |
-| ---------------------- | ----------------------------------------------------------------------------------------------- |
-| small fix              | `execute fix`, after the [announcement](../routing/references/chain-phases.md#the-announcement) |
-| `brief`                | the middle path: this skill writes `brief.md`, as [brief.md](references/brief.md) says          |
-| full chain             | this skill writes `intent.md`, Steps 0 to 4 below                                               |
+| Classification outcome | Path                                                                                                                                                                             |
+| ---------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| small fix              | announce per [the announcement](../routing/references/chain-phases.md#the-announcement) and invoke `execute fix` directly in the same turn (do not stop at describing a handoff) |
+| `brief`                | the middle path: this skill writes `brief.md`, as [brief.md](references/brief.md) says                                                                                           |
+| full chain             | this skill writes `intent.md`, Steps 0 to 4 below                                                                                                                                |
 
 A one-line change to a documented default is mutating; a thousand-line reformat is not. The user can move work onto a heavier path at any point. An approved plan or brief already in the work folder satisfies the rule; work that turns mutating mid-session enters here.
 
@@ -55,20 +55,20 @@ A one-line change to a documented default is mutating; a thousand-line reformat 
 
         agx flow log intent waive chain ok "<the user's reason, or none given>" none "done change made with the chain entry waived" --folder <work-root>/unassigned
 
-2. Make the change in this session. Write no `intent.md` and no other artifact.
+2. Carry out the requested change in this session—showing the concrete edit/diff for the target change (never disclaiming that no change was made)—and write no `intent.md` and no other artifact.
 3. Name the waiver in the session's report, derived from that row.
 
 Commits, pushes, and pull requests for the waived change keep their own rules.
 
 ### Step 0. Preflight
 
-Check the input against **Don't use when**. Forward matching rows via [forwarding.md](../routing/references/forwarding.md#target-classification) (carry input, forward once, ask no starter question for the target). Under an explicit invocation, a `better elsewhere` row gets one line naming the other route and continues at Step 1. On the exempt-class row when model-loaded, make the edit directly, name the exempt class in one short line, and write no intent.
+Check the input against **Don't use when**. Forward matching rows directly in this turn via [forwarding.md](../routing/references/forwarding.md#target-classification) (carry the full original input/design verbatim and directly run the target's opening step—e.g. start `challenge` immediately on the fixed design—rather than labeling it a `Proposed action` or stopping before forwarding; forward once, ask no starter question for the target). Under an explicit invocation, a `better elsewhere` row gets one line naming the other route and continues at Step 1. On the exempt-class row when model-loaded, make the edit directly, name the exempt class in one short line, and write no intent.
 
 ### Step 1. Gather the direction
 
 Read current project state, any open issue, PR, or repository file the user names, and any existing intent before asking a question. Extract problem, beneficiary, outcome, scope, constraints, and decisions from conversation and evidence; separate user decisions from recommendations, and look up repository facts yourself (never ask the user to paste an issue or file you can read). An existing intent with unresolved direction stays here.
 
-**How the run arrived** decides which pre-interview checks run (continuation check, phase selection, small-fix classification): read the arrival table in [references/capture-procedures.md](references/capture-procedures.md#step-1-arrival-and-binding) and run every required check before asking any direction question. Reuse any classification or findings a handoff or forward carries rather than re-deriving them.
+**How the run arrived** decides which pre-interview checks run (continuation check, phase selection, small-fix classification): read the arrival table in [references/capture-procedures.md](references/capture-procedures.md#step-1-arrival-and-binding) and explicitly run and report every required check (including reporting the continuation check result on model-selected runs before small-fix classification or `execute fix`) before asking any direction question. Reuse any classification or findings a handoff or forward carries rather than re-deriving them.
 
 **A user's change.** When the input carries a [user's change](../execute/references/fix-entry.md#a-users-change) that alters runtime behavior and lacks the user's yes, ask one yes/no question under [question-format.md](../routing/references/contracts/question-format.md) before the interview, any edit, or any row. On no or no answer, write nothing, report it was not captured, and never send it back to `diagnose`. Unattended runs ask nothing and record the missing yes as a `blocker`.
 
@@ -80,7 +80,7 @@ Keep this step on the direction. The [principles check](../routing/references/co
 
 **The empirical fork.** Apply the [empirical questions contract](../routing/references/contracts/empirical-questions.md) before the challenge, recording observed answers as lookups without widening scope.
 
-**The challenge.** Read and invoke [challenge](../challenge/SKILL.md) (and [chain-artifacts.md](../decompose/references/chain-artifacts.md) for the Challenge record's exact five fields — never improvise round format or record fields from memory) on why the work matters, observable success outcome, scope inclusions/exclusions, constraints, and goal-invalidating assumptions. Ask the direction questions and wait for the user's actual answers — never invent, assume, or simulate user answers or resolutions in the same turn, and never record a resolution the user did not give. Carry forward answered questions and resume unanswered ones until direction questions resolve (no round limit); keep solution design, interfaces, slicing, and tasks downstream.
+**The challenge.** Read and invoke [challenge](../challenge/SKILL.md) (and [chain-artifacts.md](../decompose/references/chain-artifacts.md) for the Challenge record's exact five fields — never improvise round format or record fields from memory) on why the work matters, observable success outcome, scope inclusions/exclusions, constraints, and goal-invalidating assumptions. Ask the direction questions and **stop to wait for the user's actual answers** — never invent, assume, or simulate user answers or resolutions in the same turn, and never resolve the route to `spec draft` before the user answers (including on capture-only requests: ask the direction questions first and report the route as unresolved/pending until answered). Carry forward answered questions and resume unanswered ones until direction questions resolve (no round limit); keep solution design, interfaces, slicing, and tasks downstream.
 
 **Execution safety gate.** The direction challenge must actually run with at least one round put to the user (or cite a carried-forward `prior record dated YYYY-MM-DD` per [chain-artifacts.md](../decompose/references/chain-artifacts.md)). Naming `challenge`, reading it, or weighing risks privately is not execution. Marking a challenge `ok` without running it is a status claim without evidence ([safety gate](../routing/references/contracts/gates.md#safety-gate)): hold it in that file's shape, offering the round now or a `declined` record.
 
@@ -90,11 +90,11 @@ Keep this step on the direction. The [principles check](../routing/references/co
 - `deferred`: user-deferred (or waived under Step 4) with reason and resolver; silence is not deferral.
 - `downstream`: solution behavior/design for `spec draft` or implementation detail for `decompose`, naming the owner (never disguise an unsettled problem, outcome, or scope).
 
-**Declines, ended rounds, and unattended runs.** Honor a user decline immediately, save what is known, record `declined`, and leave unanswered questions as `blocker`. Read [references/capture-procedures.md](references/capture-procedures.md#step-2-challenge-edge-cases) for rounds the user ends mid-way (recommendations are never user answers) and [unattended runs](../routing/references/contracts/unattended.md#when-a-run-is-unattended).
+**Declines, ended rounds, and unattended runs.** Honor a user decline immediately, save what is known, record `declined`, leave unanswered questions as `blocker` (naming the cost once—`spec` would have to invent the answers—while omitting `Next owner` and the approval question), and render the full five-field numbered `**Challenge record:**`. Read [references/capture-procedures.md](references/capture-procedures.md#step-2-challenge-edge-cases) for rounds the user ends mid-way (keep answered items under `## Decisions` with user as source, keep unanswered items as `blocker` naming their recommendations, log `declined`, name the cost once, and render the five-field Challenge record) and [unattended runs](../routing/references/contracts/unattended.md#when-a-run-is-unattended).
 
 ### Step 3. Write the intent
 
-Write or update `intent.md` per [chain-artifacts.md](../decompose/references/chain-artifacts.md#intentmd) with the six sections in order: **Problem**, **Outcome**, **Affected users and systems**, **Constraints**, **Decisions**, **Open questions**. Open a new intent with `# Intent: <topic>` (no front matter) and the five-line card from [skim-rules.md](../decompose/references/skim-rules.md#the-card) (`Change`, `Why now`, `Out of scope`, `Risk`, `Source` — no `Ask` line). Preserve existing intents' existing layout unless conversion is requested. When delivering or drafting a new `intent.md`, present the actual `# Intent:` title, five-line card, six sections, and `**Challenge record:**` rather than only describing them.
+Write or update `intent.md` per [chain-artifacts.md](../decompose/references/chain-artifacts.md#intentmd) with the six sections in order: **Problem**, **Outcome**, **Affected users and systems**, **Constraints**, **Decisions**, **Open questions**. Open a new intent with `# Intent: <topic>` (no front matter) and the five-line card from [skim-rules.md](../decompose/references/skim-rules.md#the-card) (`Change`, `Why now`, `Out of scope`, `Risk`, `Source` — no `Ask` line). Preserve existing intents' existing layout unless conversion is requested. When delivering, drafting, updating, or previewing `intent.md` (including issue-driven intents, initial direction questions, holding with open questions, unattended runs, declined/pending challenges, or forwarded full-chain runs), ALWAYS render verbatim the `# Intent:` title, five complete one-sentence card bullets, all six sections populated with every known fact (recording every settled user decision under `## Decisions` with `user` as source without reopening it, concrete entries under `## Affected users and systems`, forwarded constraints under `## Constraints`, and `- **Next owner (assistant routing judgment):** spec — ...` once direction resolves), the **exact five-field numbered `**Challenge record:**`** with a real `YYYY-MM-DD` session date (never `<session-date>` or prose summaries), and print the literal chat `Status:` line right in the reply (`Status: <n> open questions (<d> deferred, <w> left for the spec) · approval pending` using clean UTF-8 `·` or `|`, never replacement characters and never deferring the line to later), using one identical resolved `<work-folder>` path consistently across staging, display, and `agx flow log`.
 
 Read [references/capture-procedures.md](references/capture-procedures.md#step-3-writing-and-logging) for section-by-section content rules (allowed code under [Code in artifacts](../decompose/references/chain-artifacts.md#code-in-artifacts), forwarded constraints, user's change recording, Decisions, and the five-field `**Challenge record:**`), plus the `diagnose` waiver row and staging hygiene.
 
@@ -102,7 +102,7 @@ Read [references/capture-procedures.md](references/capture-procedures.md#step-3-
 
     agx flow log intent create intent.md ok "<one line: why the work exists>" intent.md "intent record the challenge result" --folder <work-folder>
 
-After the interview ends, log the `challenge` row (`ok`, `declined`, or `pending` with `next` = `intent resume the challenge`):
+After the interview ends, ALWAYS execute or print the exact `challenge` row command (`agx flow log intent challenge intent.md <ok|declined|pending> ...`, with `next` = `intent ask for approval` for `ok` or `intent resume the challenge` for `pending`) before moving to Step 4:
 
     agx flow log intent challenge intent.md <ok|declined|pending> "<one line: what the challenge settled>" intent.md "intent ask for approval" --folder <work-folder>
 
@@ -114,11 +114,13 @@ Stage `state.tsv` separately (`git add -- <work-folder>/state.tsv`); never stage
 
 **Route.** Every resolved intent goes to `spec draft`. Record the route in **Decisions** on one labelled line (e.g., `- **Next owner (assistant routing judgment):** spec — <what the solution must define>`).
 
-**Open blockers (process gate).** While any `blocker` remains, write no `Next owner` line and ask no approval question. If the user asks to proceed anyway, name the cost once (`spec` would have to invent the answer). On the next reply still asking to proceed, relabel each blocker `deferred` (`waived by the user`, resolver `spec draft`), write the `Next owner` line, log one waiver row, and continue:
+**Open blockers (process gate).** While any `blocker` remains, write no `Next owner` line and ask no approval question. If the user asks to proceed anyway, name the cost once (`spec` would have to invent the answer). On the next reply still asking to proceed, complete every step in order: (1) relabel each blocker `deferred` with the literal reason `waived by the user` and resolver `spec draft` (write both `waived by the user` and `spec draft` explicitly), (2) write `- **Next owner (assistant routing judgment):** spec — <what the solution must define>` in **Decisions**, (3) log one waiver row:
 
-    agx flow log intent waive direction-blockers ok "<the user's reason, or none given>" none "intent ask for approval" --folder <work-folder>
+    agx flow log intent waive direction-blockers ok "<the user's reason, or none given>; waived by the user, resolver: spec draft" none "intent ask for approval" --folder <work-folder>
 
-**Status line and question.** Print one chat/report line before asking: `Status: <n> open questions (<d> deferred, <w> left for the spec) · approval pending` (or `Status: no open questions · approval pending`). Re-stage `intent.md`, run `agx flow status --folder <work-folder>`, note `hashes: intent.md text=<hash>`, show the concrete resolved path (never `<work-root>/<folder>`), the hash (never `<from flow status>` or `…`), and a direction summary (full text only on request), and ask:
+and (4) continue directly to the exact `Status:` line, concrete path/hash/summary, and approval question below (without logging approval yet).
+
+**Status line and question.** Print one exact chat/report line before asking: `Status: <n> open questions (<d> deferred, <w> left for the spec) · approval pending` (or `Status: no open questions · approval pending`), reconciling `<n>` to equal the exact count of listed open questions (`<d> + <w>`). Re-stage `intent.md`, run `agx flow status --folder <work-folder>`, note `hashes: intent.md text=<hash>`, show the concrete resolved path (never `<work-root>/<folder>`), the exact hash (never `<from flow status>`, illustrative stubs, or `…`), and a direction summary (full text only on request), and end the message with **only** the approval question on its own (no extra trailing commentary after it):
 
 > "Intent written to `<intent-path>`. Approve this direction? Your yes lets `spec draft` define the solution; nothing
 > is implemented."
@@ -131,7 +133,7 @@ Ask in every attended run (including capture-only); unattended runs ask nothing 
 
 If the [approval guard](../execute/references/flow-approval-and-audit.md#the-approval-guard) refuses, `intent.md` changed after display: re-run `flow status`, re-show, and re-ask (never bypass the guard).
 
-**After a yes.** Explain the next step in plain language and name `spec draft` once. If the user authorized continuing past intent (up front or in the approving reply), invoke `spec` (`spec draft`) in this turn without asking again or stopping at a description of what it would do; otherwise save and report the route without starting `spec draft`. No hand-off authorizes implementation, publication, or scope expansion.
+**After a yes.** Explain the next step in plain language and name `spec draft` once. If the user authorized continuing past intent (up front or in the approving reply), execute the guarded `approve intent.md ok` row using the exact same `<work-folder>` path that was staged and displayed, and **begin `spec` (`spec draft`) directly in this same turn** by outputting the opening `spec draft` work (e.g., `# Spec: <topic>` scaffold / solution-definition questions grounded in the approved intent — never stopping after announcing `spec draft` or disclaiming that spec work was not started); otherwise save and report the route without starting `spec draft`. No hand-off authorizes implementation, publication, or scope expansion.
 
 ## References
 

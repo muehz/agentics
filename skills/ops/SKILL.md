@@ -29,7 +29,7 @@ metadata:
 This skill responds to incidents, learns from them, rehearses for them, and keeps the runbooks current. Reliability incidents (outages, performance regressions, data integrity) and security incidents (suspected breach, exploited vulnerability, leaked credential) branch at declaration time.
 
 Skill commands here use the `/agentics:<skill>` form that Claude Code, Copilot CLI, and VS Code Chat accept. On Codex,
-type `$agentics:<skill>` instead.
+use `$agentics:<skill>` instead—including in any simulated or printed local handoff commands.
 
 ## Don't use when
 
@@ -50,7 +50,7 @@ A request that states current user impact, full or partial, is an incident: it s
 
 Load [references/shared-principles.md](references/shared-principles.md) once the mode is known. It holds the severity table, the branch decision, the roles, the blameless rule, evidence preservation, and the runbook rules every mode assumes. Then load the mode's workflow file and follow it. Announce the mode in one line, once.
 
-Ask every decision question in the exact format and with the answer collection that [question-format.md](../routing/references/contracts/question-format.md) defines: `❓ **Q<n>** - **<title>**:` followed by a line starting with `➡️` giving the recommendation. One question holds one decision.
+Ask every decision question at column 0 (with **no `>` Markdown blockquote prefix**) in the exact format and with the answer collection that [question-format.md](../routing/references/contracts/question-format.md) defines: `❓ **Q<n>** - **<title>**:` followed by a line starting with `➡️` giving the recommendation. One question holds one decision.
 
 ### Which mode?
 
@@ -78,9 +78,9 @@ Anything a draft needs that the request does not give becomes a question or an `
 
 ### /agentics:ops response
 
-Coordinate an active incident: declare, assemble, contain, resolve, and hand off. Follow [references/response/response-workflow.md](references/response/response-workflow.md). Its first reply gives containment guidance before any question, completes the declaration checklist (severity, branch, incident record draft in a fenced block, channels, and first internal update), and asks only the decisions whose answer changes what it produces. On an early-resolution override (after naming the recovery-window cost once), record the early resolve in the incident record and output the resolved update in a fenced block labeled as a draft (never posted unless `gh` ran).
+Coordinate an active incident: declare, assemble, contain, resolve, and hand off. Follow [references/response/response-workflow.md](references/response/response-workflow.md). Every `response` first reply (at any severity P1–P4, including public-repo security advisories, refusal of public posting, early-resolution pressure, P4 explicit response, containment-unavailable handoffs, and active-incident routing cases) gives concrete containment guidance before any question (for a deploy correlating with onset, direct rolling it back explicitly with verification guidance rather than stopping at preparing a rollback) and renders all five Phase 1 declaration items **verbatim** in that same reply (never merely describing record handling in prose): (1) severity + table row + IC, (2) immediate containment (labeled proposed/not yet run until executed), (3) branch or Q1 when unsettled, (4) a **fenced incident-record draft** (fenced draft security advisory or private record whenever branch is security, pending Q1, or repo is public; fenced tracking issue draft for private reliability), and (5) one-line responder channel, wider engineering channel, cadence offer, fenced first internal update draft, and (for every P1/P2 active reliability incident once the branch is settled non-security) a fenced customer status-page draft labeled `Draft (not posted)` (keep customer-facing status-page drafts out while the branch is security or pending Q1), using `<angle-bracket>` placeholders for unsupplied details. On an early-resolution override (after naming the recovery-window cost once), record the early resolve in the incident record and output the resolved update in a fenced block explicitly labeled `Draft (not posted)` unless `gh` ran.
 
-**Branch.** The declare phase asks whether the incident involves unauthorized access, credential compromise, malicious activity, or unexpected data exposure, unless the request already says. Yes or unsure loads [security-branch.md](references/response/security-branch.md); no loads [reliability-branch.md](references/response/reliability-branch.md); both runs security comms and forensics with reliability customer recovery. The user's own answer decides, including "it's just an outage". When evidence in the session later points the other way, say once what was observed and ask the question again.
+**Branch.** The declare phase asks Q1 (whether the incident involves unauthorized access, credential compromise, malicious activity, or unexpected data exposure) unless the user's request **explicitly settles** the branch (e.g., "not security", "it's just an outage", or an explicit breach/leaked-key signal). Never skip Q1 on a bare outage ("production payments are down right now"), and never declare `reliability branch` in the same reply as asking Q1: when Q1 is asked, label the branch `Branch: pending Q1`, give containment for the stated symptoms first, and ask Q1 once. Yes or unsure after Q1 loads [security-branch.md](references/response/security-branch.md); no loads [reliability-branch.md](references/response/reliability-branch.md); both runs security comms and forensics with reliability customer recovery. When evidence in the session later points the other way, say once what was observed and ask the question again.
 
 **One responder is a valid incident.** At any severity, when nobody else is available, the user holds every role, the security lead's decisions included. Do not stall until a role is filled. Record `Single operator: one person holding every role` in the incident record.
 
@@ -88,7 +88,7 @@ Coordinate an active incident: declare, assemble, contain, resolve, and hand off
 
 ### /agentics:ops postmortem
 
-Run a blameless retrospective on a resolved incident. Follow [references/postmortem/postmortem-workflow.md](references/postmortem/postmortem-workflow.md); the artifact follows [postmortem-template.md](references/postmortem/postmortem-template.md). The argument is an optional incident reference, such as the tracking issue number. Without one, ask for the reference and any timeline notes. When the user describes the incident, draft from whatever they give, even when they mention notes they did not paste, with `<angle-bracket>` placeholders for the rest (including `Branch` unless the user explicitly supplies it), and ask for the reference and the notes after the draft. Action items always include a regression test or eval, or `n/a: <reason>`. Any promised action-item issue previews appear in fenced blocks in the same reply.
+Run a blameless retrospective on a resolved incident. Follow [references/postmortem/postmortem-workflow.md](references/postmortem/postmortem-workflow.md); the artifact follows [postmortem-template.md](references/postmortem/postmortem-template.md). The argument is an optional incident reference, such as the tracking issue number. Without one, ask for the reference and any timeline notes. When the user describes the incident, draft the full applicable template structure from whatever they give (keeping all required sections — metadata header, Summary, Customer impact, Timeline (UTC), Root cause, Contributing factors, What went well, What didn't go well, Action items — using `<angle-bracket>` or `unknown` placeholders for unsupplied fields including `Branch` rather than omitting sections), even when they mention notes they did not paste, and ask for the reference and the notes after the draft. Action items always explicitly include a regression test or eval **that fails on this incident's defect** (naming what defect it catches), or `n/a: <reason>`. Any promised action-item issue previews appear in fenced blocks in the same reply.
 
 ### /agentics:ops drill
 
@@ -100,7 +100,7 @@ Rehearse the response process with a scenario, or exercise one runbook. Follow [
 | 2     | A scenario name or a free-text scenario     | scenario drill: the deliverable is a debrief with action items                        |
 | 3     | Otherwise (no argument)                     | ask one question: a scenario, or a runbook (recommend runbook when one is in context) |
 
-Both types run as a tabletop (narrated) or a game day (real execution in a non-production environment). The starter scenarios are in [drill-scenarios.md](references/drill/drill-scenarios.md). For a security drill on a public repository, keep drill comms and the debrief record in a private drill channel, draft security advisory, or private location—never a public issue.
+Both types run as a tabletop (narrated) or a game day (real execution in a non-production environment). The starter scenarios are in [drill-scenarios.md](references/drill/drill-scenarios.md). For a security drill on a public repository, keep drill comms and the debrief record in a private drill channel, draft security advisory, or private location—never a public issue. Every scenario drill debrief structure includes explicit action-item fields for **owner** and **due date** (using `<owner>` / `<YYYY-MM-DD>` placeholders when not yet assigned).
 
 ### /agentics:ops author
 

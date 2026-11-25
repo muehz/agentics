@@ -29,9 +29,10 @@ A section the user asks for that the template lacks, such as detection, goes in 
 5. **Create the file with the template stub.** Pre-populate:
     - Title (from name)
     - Version 1.0
-    - Last tested: `YYYY-MM-DD (not yet tested; run /agentics:ops drill before relying on this in production)` until a
-      drill happens. When the user gives the date of their team's own drill of this procedure, write that date, recorded
-      as given by them. `/agentics:ops audit` reads the "not yet tested" text as one HIGH freshness finding.
+    - Last tested: `not yet tested; run /agentics:ops drill before relying on this in production` (do not emit a literal
+      `YYYY-MM-DD` placeholder in the header) until a drill happens. When the user gives the date of their team's own
+      drill of this procedure, write that date, recorded as given by them. `/agentics:ops audit` reads the "not yet
+      tested" text as one HIGH freshness finding.
 
     Ask the owner and severity grade that the request leaves open as one ❓ round. Give each a ➡️ recommendation drawn
     from the request and the repo. For example, use `CODEOWNERS` for the owner and a seeding postmortem's severity for
@@ -133,9 +134,11 @@ For each step:
 
     One action per step: split "Drain traffic and update the DNS." into two steps.
 
-2. **Exact commands.** Write a command once when it is the same in Bash and PowerShell, and once per shell where the
-   syntax differs, per the cross-platform rule in `shared-principles.md`. Put placeholders in `<angle-brackets>` inside
-   code blocks, never in prose. Operators copy from code blocks, so they paste a prose placeholder as literal text.
+2. **Exact commands.** Write concrete executable commands (e.g., `kubectl`, `redis-cli`, `curl`, `gh`—never
+   whole-command placeholders like `<check-command>`), using `<angle-brackets>` inside code blocks only for values the
+   operator must discover (such as `<namespace>`, `<pod>`, `<region>`). Write a command once when it is the same in Bash
+   and PowerShell, and once per shell where the syntax differs, per the cross-platform rule in `shared-principles.md`.
+   Operators copy from code blocks, so never leave placeholders in prose.
 3. **Verify clause.** A specific observable signal that the command had the intended effect, never just "Verify it
    worked."
     - "Command output contains the new revision number."

@@ -53,9 +53,9 @@ However Zealot was loaded, run the selected mode's workflow whole. A result buil
 
 **Read nothing else first.** Before Step 0 preflight and mode selection finish, read no mode workflow or charter file
 (neither `comments/` nor `tests/`), resolve no scope, and make zero tool calls on an ambiguous or non-matching request.
-Check the request against [Don't use when](#dont-use-when) before loading any mode reference, on every invocation. A
-matching row forwards by [forwarding.md](../routing/references/forwarding.md) before any scope is resolved. Otherwise
-select the mode below.
+Check the request against [Don't use when](#dont-use-when) before loading any mode reference, on every invocation
+(including plain-language invocations — state explicitly that Step 0 preflight ran). A matching row forwards by
+[forwarding.md](../routing/references/forwarding.md) before any scope is resolved. Otherwise select the mode below.
 
 ## Which mode?
 
@@ -73,11 +73,11 @@ Announce an inferred mode in one line. The `all` scope applies to tests mode onl
 
 ## /agentics:zealot comments
 
-Read [references/comments/workflow.md](references/comments/workflow.md) before acting, and follow its steps in order. It resolves the scope, spawns the Comment Zealot finder from [references/comments/comment-zealot.md](references/comments/comment-zealot.md), has a fresh reviewer audit the finder's report, shows the code fixes and constraint encodings the accepted flags call for and applies the ones the user confirms, and reports.
+Read [references/comments/workflow.md](references/comments/workflow.md) before acting, and follow its steps in order. It resolves the scope, spawns the Comment Zealot finder from [references/comments/comment-zealot.md](references/comments/comment-zealot.md) (embedding the finder charter verbatim), has a fresh read-only Deep reviewer audit the finder's report (explicitly passing both the Reject list and keep rule; deleting any saved untracked-file copy before reporting), shows the code fixes and constraint encodings the accepted flags call for together with the **exact Step 5 verification command** (never a generic phrase like "the project's configured verification command") in the confirmation batch, applies confirmed deletions/fixes, runs baseline/fix/rerun verification, and reports completed results.
 
 ## /agentics:zealot tests
 
-Read [references/tests/workflow.md](references/tests/workflow.md) before acting, and follow its steps in order. It resolves the scope, prepares disposable mutant worktrees outside the repository, spawns the Test Zealot finder from [references/tests/test-zealot.md](references/tests/test-zealot.md), has a fresh reviewer prove each candidate by mutation, audits the records, restores the caller, and names the next step for the confirmed remove-or-replace work. It never deletes or edits a test, and it never reports a mutation score, kill ratio, or coverage percentage.
+Read [references/tests/workflow.md](references/tests/workflow.md) before acting, and follow its steps in order. It resolves the scope (for multi-package / `all` runs, state every concrete balanced package group by name **before** dispatch), prepares disposable mutant worktrees outside the repository (capturing pre-run snapshot and completed post-cleanup `caller-snapshot-after/`, reporting verbatim `git diff --no-index` comparison outputs and recorded-worktree cleanup), spawns the Test Zealot finder from [references/tests/test-zealot.md](references/tests/test-zealot.md), has a fresh **Deep** reviewer prove **every** candidate individually by mutation across the project's actual runner (Go, pytest, etc., recording the exact `file:line` mutant location and baseline + mutant command outputs on every record; never confirm a finder candidate without Deep reviewer mutation proof — on a proof safety-gate hold or repeated demand, point explicitly to **`proof declined by caller` under `Unproven`** and the user's option to act on the finder claim, using a concise one-line pointer on repeat demand), audits the records, restores the caller, and emits the complete Step 7 handoff naming the next step for confirmed remove-or-replace work (including on plain-language runs). It never deletes or edits a test, and it never reports a mutation score, kill ratio, or coverage percentage.
 
 ## References
 

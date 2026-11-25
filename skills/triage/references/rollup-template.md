@@ -354,7 +354,8 @@ them over the examples in [rollup-details-and-examples.md](rollup-details-and-ex
    `blocked`). Every Details block opens with its `####` heading.
 5. No `<!-- agentics:triage:drafts -->` marker or Drafted Responses section is present, and a `Pending Review` row's
    bullet and block are the fixed text and name no reviewer.
-6. The table is present, except in a `blocked` rollup.
+6. The table is present, except in a `blocked` rollup—whose open `<!-- agentics:triage:section:base-sync -->` block
+   names the concrete kept sync worktree path and sync branch inside the rollup itself (not only in the session report).
 7. The body has exactly one execution key line, `<!-- agentics:triage:execution:{RUN_ID} -->`, directly after the rollup
    marker.
 8. The body has at most one link line, directly under the header verdict (see "Earlier pass link").

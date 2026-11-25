@@ -45,12 +45,16 @@ names work gate can do, which another skill does better.
 | Merge a pull request or mark it ready                                     | `/agentics:gh`         | cannot           | That is repository policy, which gh states.                                                  |
 | A code review of a diff, with no completion decision                      | `/agentics:review`     | better elsewhere | Gate runs the same review, but adds the tests, the audit and a disposition.                  |
 
-**Cannot.** Load [forwarding.md](../routing/references/forwarding.md) and carry the input to the owner: announce and
-run a local-only target, ask one yes/no question before a target that writes, pushes or posts (including a merge via
-`gh` or a plain push via `git`), and forward once. After a forwarded fix, offer one re-run of gate on the fixed work.
+**Cannot.** Load [forwarding.md](../routing/references/forwarding.md) and carry the input directly to the owner: announce and
+invoke any local-only target directly in the same turn **with no yes/no permission question** (including forwarding
+plan execution or fixes to `/agentics:execute` — never asking permission for local `execute` work or stopping at a
+"proposed action" disclaimer); ask one yes/no question ONLY before a target that writes, pushes, or posts externally
+(including a merge via `gh` or a plain push via `git`), and forward once. After a forwarded fix, offer one re-run of
+gate on the fixed work.
 
 **Better elsewhere.** Under an explicit invocation, say in one line that the other skill fits better, name it, and run
-gate: `/agentics:gate branch` for a review request on a diff, branch, or pull request. Under `/agentics:gate check`, a
+gate directly through its review/workflow (never stopping early over unprovided branch/worktree metadata):
+`/agentics:gate branch` for a review request on a diff, branch, or pull request. Under `/agentics:gate check`, a
 review request first gets that one line naming `/agentics:review`; with no artifact or pass criteria, check mode's own
 preflight line then ends the run. When the model loaded gate on its own, forward it like a cannot row.
 
@@ -76,7 +80,8 @@ not a decision question.
 
 **`check` mode.** Load [references/check/check-workflow.md](references/check/check-workflow.md) and follow it. It
 produces a pass or fail note, not a completion artifact, and writes no row. With no artifact in hand yet, it says so and
-runs no checkpoint.
+runs no checkpoint. On a repeated decline after naming the cost once, record a `NOT RUN` note with literal
+`reason: none given` (not quoting the user's pushback) and write no state row.
 
 ## Step 0: Preflight
 
@@ -117,12 +122,14 @@ says how findings, the status lines and the proposal work.
 
 ## `/agentics:gate release`
 
-Run the pre-deploy gate: all eight checklist sections in one pass, one question round for what gate cannot infer, and one
-confirmation of the go or no-go summary, for every deploy. The short form renders a shorter summary and sets a shorter
-default monitor window; it skips no check and takes no further confirmation. Hand off execution to the user, who runs
-the deploy command. Then open the monitor window and act on the user's messages in it. Gate sets no timer, and it
-reports that the user saw no anomaly, never that the deploy succeeded. An anomaly escalates to `/agentics:ops response`. Show the
-checks. Never auto-deploy.
+Run the pre-deploy gate: label and run all eight checklist sections in one pass, one question round for what gate cannot
+infer, and one confirmation of the go or no-go summary, for every deploy. The short form renders a shorter summary and
+sets a shorter default monitor window ONLY when short-form eligibility is established (never invent a 15-minute duration
+otherwise); it skips no check and takes no further confirmation. Hand off execution to the
+user, who runs the deploy command. Then open the monitor window and act on the user's messages in it (updating the
+summary field directly to `Executed` when closing, and marking any unavailable timestamp/field honestly as open or
+skipped). Gate sets no timer, and it reports that the user saw no anomaly, never that the deploy succeeded. An anomaly
+escalates to `/agentics:ops response`. Show the checks. Never auto-deploy.
 
 Load [references/release/release-workflow.md](references/release/release-workflow.md). Follow it. Checklist:
 [references/release/pre-deploy-checklist.md](references/release/pre-deploy-checklist.md). Monitor guidance:
@@ -136,8 +143,10 @@ non-trivial deploy with no change-record gets a soft suggestion from Phase 1, ne
 
 Change mode writes a CAB-style change-record for an infra or production change. It drafts eight parts: identify,
 classify, risk, approval chain, rollback, comms, schedule, and record submission. It asks one question round, renders
-all eight sections of the record once in full (never abbreviating or eliding sections), and takes one confirmation
-before it writes the file. Store the artifact as markdown at `change-records/<YYYY-MM-DD>-<slug>.md` in the consuming
+all eight sections of the record once in full (never abbreviating or eliding sections, deriving commands strictly from the
+runbook, and marking unsupplied approvers/channels/checks as open/TBD rather than inventing placeholders), and takes one
+confirmation before it writes the file. Store the artifact as markdown at `change-records/<YYYY-MM-DD>-<slug>.md` in the
+consuming
 repo. The record can also be posted through an adapter: change mode asks which one, unless the user named it, and the
 file alone is the record when the answer is `none`.
 

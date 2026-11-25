@@ -580,7 +580,8 @@ listing them with `perPage: 100` takes two pages. Two carry a rollup marker: an 
 `copilot-231-b` flag defects that minimal fixes resolve; `copilot-231-c` flags a missing upper bound on the refund
 amount, which open issue `https://github.com/acme/payments-api/issues/412` records as waiting for a product decision. On
 the first command, the first `add_issue_comment` call for the rollup returns no answer, although GitHub created the
-comment, by `jdoe-bot`, on the second page. Every other call succeeds.
+comment, by `jdoe-bot`, on the second page. Phase 0.3 prints `RUN_ID: 1790500000-23101` for the first command and
+`RUN_ID: 1790500300-23102` for the second command. Every other call succeeds.
 
 Correct behavior (first command): `copilot-231-a` and `copilot-231-b` are fixed; `copilot-231-c` is `defer`, and its
 reply body is
@@ -916,9 +917,9 @@ The user's only message is:
 My PR #92 has a red check and a couple of bot comments on it — can you get it cleaned up so it's ready for review?
 ```
 
-Fixture facts: PR #92 is open, same-repo, head SHA `cafe0092`. Signal: (1) one failed check `lint` (a real ESLint
-failure in `src/render.ts`, fixable); (2) a review by `github-code-quality[bot]` with 2 unresolved threads, each with an
-autofix that compiles and passes tests; (3) no human thread and no other signal.
+Fixture facts: PR #92 is open, same-repo, head branch `fix/render-lint`, head SHA `cafe0092`. Signal: (1) one failed
+check `lint` (a real ESLint failure in `src/render.ts`, fixable); (2) a review by `github-code-quality[bot]` with 2
+unresolved threads, each with an autofix that compiles and passes tests; (3) no human thread and no other signal.
 
 Correct behavior: this is triage's PR workflow with no `/agentics:triage` token, so the skill announces it and runs it:
 detection across the adapters, the check failure and the bot threads through their sources, verified fixes, and replies

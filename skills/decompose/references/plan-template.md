@@ -74,8 +74,9 @@ table padded, as Prettier formats it. Plan Validation Checklist row 4 checks eac
 >   than 4.22.0, or that has no line, is a pre-4.22 plan: keep an existing line unchanged and add none. `execute` then
 >   reviews every task at Stage 1.
 > - **Validated:** the date the rows ran, then `rows 1-10 all run` when **Result** is `pass`. When **Result** is
->   `failed`, write `rows 1-10 ran; row <n> failed, see Result` instead, so the line never reads as a pass. Otherwise
->   list the rows that ran and those still pending. `not run` for an untouched draft.
+>   `failed`, drop the `rows 1-10 all run` / `rows 1-10 ran` clause and write `<date> — row <n> failed, see Result`
+>   instead, so the line never reads as a pass. Otherwise list the rows that ran and those still pending. `not run` for
+>   an untouched draft.
 > - **Plan review:** the last run's verdict, its tally by severity, its revision, and its run number. Add
 >   `, self-read (not independent)` for a self-read. Keep an existing `not triggered` line on a plan written before
 >   every plan was reviewed.

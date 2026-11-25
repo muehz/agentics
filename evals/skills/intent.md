@@ -535,8 +535,10 @@ Assertions:
 
 Run each leg independently.
 
-**Leg A — an edit request at the approval question.** Starting state: the assistant has shown the intent for CSV export
-timeouts by path and hash and asked the approval question. The user says:
+**Leg A — an edit request at the approval question.** Starting state: the assistant has shown
+`docs/specs/2026-10/feature-csv-export/intent.md` (`text=a1b2c3d4e5f6`) for CSV export timeouts and asked the approval
+question; after moving admin export out of scope and re-staging, `agx flow status` prints
+`hashes: intent.md text=9f8e7d6c5b4a`. The user says:
 
 ```text
 Yes, but take the admin export out of scope.
@@ -547,9 +549,10 @@ re-stage it, run `flow status` again to note the new hash, show the change, and 
 
 **Leg B — a stale intent approval asks only the approval question again.** Starting state: a work folder
 `docs/specs/2026-10/feature-audit-export/` holds a six-section `intent.md` whose direction is resolved. Its `state.tsv`
-holds `create intent.md`, `challenge intent.md` (status `ok`), and `approve intent.md` (evidence
-`text=<hash of the 2026-10-12 content>`) rows. The user edited `intent.md` after the yes, so `flow status` prints
-`approvals: intent.md approved 2026-10-12 stale` and a `stale:` line. The user says:
+holds `create intent.md`, `challenge intent.md` (status `ok`), and `approve intent.md` (evidence `text=1a2b3c4d5e6f`)
+rows. The user edited `intent.md` after the yes, so `flow status` prints
+`approvals: intent.md approved 2026-10-12 stale`, `hashes: intent.md text=3c4d5e6f7a8b`, and
+`stale: intent.md approved 2026-10-12 (was 1a2b3c4d5e6f, now 3c4d5e6f7a8b)`. The user says:
 
 ```text
 continue the audit export work
@@ -759,8 +762,8 @@ Assertions:
 
 Starting state: a live chat, no intent for this item. The direction challenge for CSV export timeouts asked one round of
 four questions, each with a recommended answer. The user answered Q1 (success is an export that finishes inside 10
-minutes) and Q2 (only paying tenants), and left Q3 (what happens to a failed export) and Q4 (whether admins are in
-scope) unanswered. The user says:
+minutes) and Q2 (only paying tenants), and left Q3 (what happens to a failed export; recommended: mark failed and notify
+the user) and Q4 (whether admins are in scope; recommended: exclude admins) unanswered. The user says:
 
 ```text
 That's enough questions. Let's move on.
