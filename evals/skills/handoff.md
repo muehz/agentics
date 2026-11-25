@@ -28,6 +28,8 @@ unfinished work is complete.
 
 ## happy
 
+### Full handoff from a long implementation session
+
 A user is ending a long implementation session:
 
 ```

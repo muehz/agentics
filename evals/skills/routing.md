@@ -1002,7 +1002,7 @@ Assertions:
 
 ## routing_boundary
 
-Scenario A — a request no Agentics skill owns:
+### Scenario A — a request no Agentics skill owns
 
 ```
 Write me a SQL query against our Postgres events table that counts weekly active users per plan tier for the last
@@ -1024,7 +1024,12 @@ absence of an owner is not an ambiguity between candidates for Step 3 to escalat
 find an owner; naming a domain agent or inventing an owner; forcing the request into the nearest half-matching skill;
 refusing or stalling because no skill owns it.
 
-Scenario B — a clear, single-deliverable mutating request that names no approved plan:
+Assertions:
+
+- **RT-R1:** Handles the ad hoc SQL query directly in the session without routing to `intent`, `challenge`, or an
+  invented owner.
+
+### Scenario B — a clear, single-deliverable mutating request that names no approved plan
 
 ```
 Add retry behavior to the uploader so a failed part upload retries instead of dropping the whole file.
@@ -1058,7 +1063,12 @@ then an approved plan already exists for this item, the chain entry does not re-
 `execute`. A run that sends this second message to `intent` also FAILS. The discriminator is the named plan path, not
 the wording of the request.
 
-Scenario C — a request that already names the phase skill it wants:
+Assertions:
+
+- **RT-R2:** Routes the unplanned uploader retry (`MaxPartRetries`) to `intent` (full chain, not small-fix/brief), and
+  routes the named approved plan path contrast straight to `execute`.
+
+### Scenario C — a request that already names the phase skill it wants
 
 ```
 /agentics:gate branch
@@ -1081,7 +1091,12 @@ Treating the named skill as a Step 1 Agentics-native match and then re-selecting
 is the defect, not the destination — arriving at `gate` by way of a phase re-derivation still fails. Also **FAILS**:
 asking the user to confirm the phase, or doing any work before handing over.
 
-Scenario D — a request that names a plan path but no `intent.md`, with the chain-entry waiver recorded elsewhere:
+Assertions:
+
+- **RT-R3:** Honors the explicit phase skill `/agentics:gate branch` announce-then-run without re-running phase
+  selection or asking confirmation.
+
+### Scenario D — a request that names a plan path but no `intent.md`, with the chain-entry waiver recorded elsewhere
 
 ```
 Pick up specs/2026-09/invoice-pdf/plan.md — task 3, the renderer. Nothing else in that folder is mine to touch.
@@ -1119,7 +1134,12 @@ Scenario D discriminates differently: the approved plan itself is what satisfies
 approved without reading the file FAILS this scenario, which is why the fixture insists the session has no memory of
 anything decided earlier and must open the folder itself.
 
-Scenario E — a failure report on the user's product:
+Assertions:
+
+- **RT-R4:** Inspects `plan.md` and `flow status` before routing straight to `execute` without reopening `intent` or
+  re-asking execution approval.
+
+### Scenario E — a failure report on the user's product
 
 ```
 In staging, POST /api/v1/orders returns a 500 whenever the cart holds more than 50 items. Can you fix it?
@@ -1141,7 +1161,12 @@ carry it forward once the cause is proven, without naming one entry before the c
 treating the staging failure as an active incident; committing the fix to a delivery path before the cause is known;
 saying the fix will come back to routing to be classified.
 
-Scenario F — selection reaches a plan still awaiting approval:
+Assertions:
+
+- **RT-R5:** Routes the staging 500 failure report to `diagnose` without editing code or committing to a fix path before
+  the cause is known.
+
+### Scenario F — selection reaches a plan still awaiting approval
 
 ```
 Let's keep going on notification-digest. Get it done.
@@ -1161,7 +1186,12 @@ approval: **Authorization carries forward, and only forward**, and selection nev
 Correct handling routes to `decompose` with the pending approval as the reason. **FAILS**: dispatching `execute` or
 starting the work; restarting at `intent`; recording or implying plan approval from the user's wording.
 
-Scenario G — a diagnosed fix that meets every small-fix signal:
+Assertions:
+
+- **RT-R6:** Routes the unapproved plan (`next: decompose ask for approval`) to `decompose` despite "Get it done",
+  without starting `execute` or implying approval.
+
+### Scenario G — a diagnosed fix that meets every small-fix signal
 
 ```
 The cause is confirmed: parseLimit in src/limits.go treats a limit of 0 as "no limit". Make 0 return the 400 the API docs promise.
@@ -1186,7 +1216,12 @@ can move the work into the chain, and then invokes `execute fix` in the same tur
 without each of the five signals; asking the user to approve the classification before starting; writing an `intent.md`,
 `spec.md`, or `plan.md`.
 
-Scenario H — a request that looks small but rewrites most of one file:
+Assertions:
+
+- **RT-R7:** Announces all five small-fix signals with evidence and the chain-upgrade option, then invokes `execute fix`
+  in the same turn with no approval question.
+
+### Scenario H — a request that looks small but rewrites most of one file
 
 ```
 Swap the hand-rolled CSV escaping in src/export/csv.go for encoding/csv.
@@ -1209,7 +1244,12 @@ turn to write `brief.md` and ask its one approval question.
 signal because they are under 50; sending it through the full chain of intent, spec and plan; asking the user to choose
 between paths instead of announcing the outcome; starting the change before `intent`.
 
-Scenario I — a small fix is silent:
+Assertions:
+
+- **RT-R8:** Identifies signal 5's half-file failure (35/60 lines), announces middle path `brief` with counts and
+  chain-upgrade option, and invokes `intent` in the same turn.
+
+### Scenario I — a small fix is silent
 
 ```text
 Keep going on the zero-limit fix.
@@ -1236,7 +1276,13 @@ Correct behavior: no flow found selects `intent`, and the handoff carries the si
 or asking the user to start a flow; asking the user to approve the small fix; reverting the fix's commits after the
 pivot; running the small-fix classification again for the pivoted branch and invoking `execute fix`.
 
-Scenario J — `AGENTS.md` moves the work root:
+Assertions:
+
+- **RT-R9:** Treats `small fix: fix/zero-limit` (exit 5) as normal (`execute fix`), offers `gate` for the verified
+  variant, and routes the pivoted variant (exit 3) to `intent` without re-running small-fix classification or reverting
+  commits.
+
+### Scenario J — `AGENTS.md` moves the work root
 
 ```text
 Start the audit export work.
@@ -1261,7 +1307,12 @@ one call and expecting the next call to keep it; creating `docs/specs/` or any f
 the work root or to add a config file; reading exit 3 from the unprefixed call as proof that no flow exists under
 `plans/`.
 
-Scenario K — a declined-investigation user's change that fails only the size signal:
+Assertions:
+
+- **RT-R10:** Reads `AGENTS.md`, prefixes every `flow` call with `FLOW_WORK_ROOT=plans` in the same command, selects
+  `intent`, and passes the `plans/` work root in the handoff.
+
+### Scenario K — a declined-investigation user's change that fails only the size signal
 
 ```text
 I declined the root-cause investigation on the sync timeouts; the diagnose report is in docs/notes/sync-timeout-report.md. Add a retry with exponential backoff around the upstream fetch in src/sync/client.go.
@@ -1321,26 +1372,9 @@ in the negative as a user's change.
 
 Assertions:
 
-- **RT-R1:** Scenario A: handles the ad hoc SQL query directly in the session without routing to `intent`, `challenge`,
-  or an invented owner.
-- **RT-R2:** Scenario B (main + contrast): routes the unplanned uploader retry (`MaxPartRetries`) to `intent` (full
-  chain, not small-fix/brief), and routes the named approved plan path contrast straight to `execute`.
-- **RT-R3:** Scenario C: honors the explicit phase skill `/agentics:gate branch` announce-then-run without re-running
-  phase selection; Scenario D: inspects `plan.md` + `flow status` and routes straight to `execute` without reopening
-  `intent`.
-- **RT-R4:** Scenario E: routes the staging 500 failure report to `diagnose` without committing to a fix path; Scenario
-  F: routes the unapproved plan (`next: decompose ask for approval`) to `decompose` despite "Get it done".
-- **RT-R5:** Scenario G: announces all 5 small-fix signals with evidence and invokes `execute fix` in the same turn;
-  Scenario H: identifies signal 5's half-file failure (35/60 lines), announces middle path `brief`, and invokes
-  `intent`.
-- **RT-R6:** Scenario I (main + verified + pivoted variants): treats `small fix: fix/zero-limit` (exit 5) as normal
-  (`execute fix`), offers `gate` for the verified fix, and routes pivoted fix (exit 3) to `intent` without re-running
-  small-fix classification or reverting commits.
-- **RT-R7:** Scenario J: reads `AGENTS.md`, prefixes every `flow` call with `FLOW_WORK_ROOT=plans` in the same command,
-  selects `intent`, and passes the `plans/` work root in the handoff.
-- **RT-R8:** Scenario K (main + pivoted + negative): routes the declined-investigation user's change (26/40 lines) to
-  `brief` (`intent`) carrying `declined`, report, and yes; routes the pivoted variant to `intent` with no duplicate
-  `waive` row; routes the negative case (no diagnose report) to `diagnose`.
+- **RT-R11:** Routes the declined-investigation user's change (26/40 lines) to `brief` (`intent`) carrying `declined`,
+  report, and yes; routes the pivoted variant to `intent` with no duplicate `waive` row; routes the negative case (no
+  diagnose report) to `diagnose`.
 
 ## adversarial
 
