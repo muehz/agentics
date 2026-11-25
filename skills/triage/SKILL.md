@@ -117,7 +117,7 @@ Every posted triage comment/reply ends by default with `> _Triaged by an AI agen
 
 ## Continuing from a displayed issue
 
-When implementation language ("implement it", "let's work on this") follows an issue read, load [Lifecycle phases](../routing/SKILL.md#lifecycle-phases) and hand off to `routing`'s start-or-continue path, carrying the concrete handoff packet verbatim in the reply. This explicit request authorizes the local handoff ([forwarding.md](../routing/references/forwarding.md#explicit-implementation-request)): announce and proceed without extra confirmation.
+When implementation language ("implement it", "let's work on this") follows an issue read, hand off to `routing`'s start-or-continue path (Lifecycle phases), carrying the concrete handoff packet verbatim in the reply. This explicit request authorizes the local handoff ([forwarding.md](../routing/references/forwarding.md#explicit-implementation-request)): announce and proceed without extra confirmation.
 
 Retain a single displayed issue without asking the user to repeat it; disambiguate only if multiple issues fit. Pass verified repo, issue number, title, URL, body/scope evidence, and existing artifacts so `intent.md` retains them and existing chains are not restarted; fetch missing facts rather than inventing. A triage disposition or `ready-for-agent` label is not implementation approval or posting authority. Read-only follow-ups stay in issue workflow.
 
@@ -177,4 +177,4 @@ Load only when the mode or source applies:
 - **Copilot:** [index](references/pull-requests/copilot/README.md), [workflow](references/pull-requests/copilot/copilot-triage.md), [dispositions](references/pull-requests/copilot/copilot-finding-dispositions.md), [scope-sweep](references/pull-requests/copilot/copilot-scope-sweep.md)
 - **Code Quality & Security:** [quality-index](references/pull-requests/github-code-quality/README.md), [quality](references/pull-requests/github-code-quality/code-quality-triage.md), [security-index](references/pull-requests/github-code-security/README.md), [security](references/pull-requests/github-code-security/code-security-triage.md)
 - **Human & Sync:** [human-feedback](references/pull-requests/human-feedback/human-feedback-triage.md), [merge-conflicts](references/pull-requests/merge-conflicts/merge-conflicts-triage.md)
-- **Routing & Contracts:** [lifecycle](../routing/SKILL.md#lifecycle-phases), [forwarding](../routing/references/forwarding.md), [output-discipline](../routing/references/contracts/output-discipline.md)
+- **Routing & Contracts:** [forwarding](../routing/references/forwarding.md), [output-discipline](../routing/references/contracts/output-discipline.md)

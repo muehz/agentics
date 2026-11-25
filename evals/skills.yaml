@@ -8,9 +8,8 @@ settings:
 skills:
   challenge:
     last-evaluated: 2026-11-24
-    eval-status: passing
+    eval-status: not-run
     eval-digest: 845a95c31e3163cdd315e7beae035c1139c00b23aa15933a7b5bbd8f249557fe
-    grading-method: separate-provider-v1
   decompose:
     last-evaluated: 2026-11-20
     eval-status: not-run

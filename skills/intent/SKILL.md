@@ -131,7 +131,7 @@ Ask in every attended run (including capture-only); unattended runs ask nothing 
 
 If the [approval guard](../execute/references/flow-approval-and-audit.md#the-approval-guard) refuses, `intent.md` changed after display: re-run `flow status`, re-show, and re-ask (never bypass the guard).
 
-**After a yes.** Explain the next step in plain language and name `spec draft` once. If the user authorized continuing past intent (up front or in the approving reply), load and run [spec](../spec/SKILL.md) (`spec draft`) in this turn without asking again or stopping at a description of what it would do; otherwise save and report the route without starting `spec draft`. No hand-off authorizes implementation, publication, or scope expansion.
+**After a yes.** Explain the next step in plain language and name `spec draft` once. If the user authorized continuing past intent (up front or in the approving reply), invoke `spec` (`spec draft`) in this turn without asking again or stopping at a description of what it would do; otherwise save and report the route without starting `spec draft`. No hand-off authorizes implementation, publication, or scope expansion.
 
 ## References
 
@@ -146,4 +146,3 @@ If the [approval guard](../execute/references/flow-approval-and-audit.md#the-app
 - [forwarding.md](../routing/references/forwarding.md) — route-away protocol and explicit invocation.
 - [approval.md](../routing/references/contracts/approval.md), [gates.md](../routing/references/contracts/gates.md), [unattended.md](../routing/references/contracts/unattended.md), [question-format.md](../routing/references/contracts/question-format.md), [workflow-steps.md](../routing/references/contracts/workflow-steps.md), [principles-check.md](../routing/references/contracts/principles-check.md), [empirical-questions.md](../routing/references/contracts/empirical-questions.md) — shared contracts.
 - [challenge](../challenge/SKILL.md) — scoped questioning, recommendations, and resolved-decision summary.
-- [spec](../spec/SKILL.md) — next owner of every approved intent.

@@ -49,8 +49,7 @@ response or its cause. For a failure with no current user impact, when the user 
 and question the hypothesis, as
 [forwarding.md](../routing/references/forwarding.md#b-offer-to-forward-one-yesno-question) says for a decline. During
 an active incident, the hypothesis is not interviewed here: name it as deferred, and question it once the incident is
-contained or in its postmortem, as routing's [incident precedence](../routing/SKILL.md#step-1--check-for-agentics-native-workflows-incl-active-incident-precedence)
-says.
+contained or in its postmortem, as `routing`'s active-incident precedence says.
 
 ## Called by another skill
 

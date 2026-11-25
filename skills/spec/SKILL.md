@@ -115,7 +115,7 @@ An approval asked here is committed with its row, as [the commit contract](../gi
 
 ### Publishing an issue
 
-A GitHub issue is written only when the user asks for one. Forward the request to [`gh`](../gh/SKILL.md) with the title `Spec: <feature>`, the repo-relative path to `spec.md`, and a one-paragraph summary. `gh` owns the label, the duplicate search, and the posting rules. The issue body is never the spec itself, because a copy drifts from the file.
+A GitHub issue is written only when the user asks for one. Forward the request to `gh` with the title `Spec: <feature>`, the repo-relative path to `spec.md`, and a one-paragraph summary. `gh` owns the label, the duplicate search, and the posting rules. The issue body is never the spec itself, because a copy drifts from the file.
 
 ## References
 

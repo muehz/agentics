@@ -61,7 +61,7 @@ Apply the [shared redaction rule for handoffs and resume capsules](../routing/re
 
 Leave the file unstaged and follow the [handoff storage rules](../routing/references/session-storage.md#handoffs-and-resume-capsules) for the destination and any Git exclusion.
 
-If the user also explicitly asks to commit or push the document or capsule, pass that action to [git](../git/SKILL.md) with **only** the exact requested artifact path(s) and any applicable embargo the user declared (never include unrelated staged paths in the forward payload). Git runs the final [commit](../git/references/commit.md#check-session-artifacts-before-committing) or [push](../git/references/push.md#check-session-artifacts-before-pushing) check on the bytes that operation would use. Keep the request's scope. Writing the artifact alone leaves it unstaged.
+If the user also explicitly asks to commit or push the document or capsule, pass that action to `git` with **only** the exact requested artifact path(s) and any applicable embargo the user declared (never include unrelated staged paths in the forward payload). Git runs the final [commit](../git/references/commit.md#check-session-artifacts-before-committing) or [push](../git/references/push.md#check-session-artifacts-before-pushing) check on the bytes that operation would use. Keep the request's scope. Writing the artifact alone leaves it unstaged.
 
 ### References over copies
 
@@ -194,4 +194,4 @@ A checkpoint is a finished task, a passed test suite, a returned subagent, or a 
 - [gates.md](../routing/references/contracts/gates.md): the safety gate shape that a status claim holds in.
 - [session-storage.md](../routing/references/session-storage.md): durable storage for handoff documents and capsules, and the local exclude file.
 - [redaction.md](../routing/references/contracts/redaction.md): the shared redaction rule for handoffs and resume capsules.
-- [git](../git/SKILL.md): explicit commit and push requests, including the final checks on session artifacts.
+- [commit.md](../git/references/commit.md#check-session-artifacts-before-committing), [push.md](../git/references/push.md#check-session-artifacts-before-pushing): final `git` checks on explicit commit and push requests for session artifacts.
