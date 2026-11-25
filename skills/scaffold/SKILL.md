@@ -140,13 +140,17 @@ organization. Init does not make those decisions. When the user states them, ini
 | A file whose exact content the user dictated                                                                                                       | Nothing. Write it and show its path.                                                                                                                                                                    | —            |
 | Any other file or local configuration                                                                                                              | Show the generated files together in one preview, then ask one question: yes, edit a named file, or skip a named file.                                                                                  | Process gate |
 
-Rows are exclusive: first matching row wins. **Render the complete verbatim preview in that turn** for every selected
+Rows are exclusive: first matching row wins. Before previewing any starter file or protection snippet, read the
+corresponding template or reference file (`references/community/agents-md.md`, `references/community/contributing.md`,
+`references/templates/secret-scans.md`, `references/templates/consumer-settings.md`, etc.) — never say template text is
+unavailable. **Render the complete verbatim preview in that turn** for every selected
 file, `.gitignore`/diff, protection config/helper, CI repair workflow, standalone `AGENTS.md` or exact addition to an
 existing `AGENTS.md` (even after process-gate previews are skipped; never cross-reference another turn or say contents
 cannot be reconstructed), and generated `verify-<app>` skill + feature map (naming a Windows alternative to `tmux`) in
 exact catalog order (12 ordinary files with `CODEOWNERS` ninth before `.editorconfig`) — never claim "presented in
-full", promise a future preview, summarize, or emit ellipses/placeholders. When the user declines a process-gate
-preview ("skip
+full", promise a future preview, summarize, or emit ellipses/placeholders. When naming custom protections that cannot yet
+be removed, list each named protection individually with its replacement's narrower scope and missing deployed/refusal
+proof. When the user declines a process-gate preview ("skip
 the previews"), name its cost once: files are written with generated content nobody has read. On the next reply that
 still declines, write them without a preview and list them in the summary as written unpreviewed. A safety gate is held
 in the shape [gates.md](../routing/references/contracts/gates.md#safety-gate) gives, with the alternative named:
@@ -209,43 +213,41 @@ push or draft pull request goes through `git` and `gh`, when the user named it o
 
 ## References
 
-- [readiness-audit.md](references/readiness-audit.md): evidence discovery, statuses, freshness, and the ranked report.
-- [protections.md](references/protections.md): the scan and remote-protection audit, and the init protection offers.
-- [wiring-probe.md](references/wiring-probe.md): the opt-in probes that prove selected checks can fail.
-- [init.md](references/init.md): the scan, the menu, the walkthrough, the file catalog, and the conformance criteria.
-- [planning-protection.md](references/planning-protection.md): parent recording, ignore protection, and native
-  validation.
+- [readiness-audit.md](references/readiness-audit.md), [protections.md](references/protections.md),
+  [wiring-probe.md](references/wiring-probe.md): audit evidence, protections, and opt-in probes.
+- [init.md](references/init.md), [planning-protection.md](references/planning-protection.md): init catalog, conformance,
+  and planning protection.
 - [feedback-loops/author.md](references/feedback-loops/author.md),
-  [feedback-loops/audit.md](references/feedback-loops/audit.md), and
-  [feedback-loops/drive-recipes.md](references/feedback-loops/drive-recipes.md): the two verification-skill workflows
-  and the drive recipes by surface.
-- [feedback-loops/feature-map-example/README.md](references/feedback-loops/feature-map-example/README.md),
-  [create-note.md](references/feedback-loops/feature-map-example/create-note.md), and
-  [search.md](references/feedback-loops/feature-map-example/search.md): a worked feature map.
-- [community/agents-md.md](references/community/agents-md.md), [community/review-md.md](references/community/review-md.md),
-  and [community/code-review.md](references/community/code-review.md): the `AGENTS.md` starter, the `REVIEW.md` starter,
-  and the optional code-review skill.
-- [community/contributing.md](references/community/contributing.md), [community/support.md](references/community/support.md),
-  [community/discussion-category-forms.md](references/community/discussion-category-forms.md), and
-  [community/README.md](references/community/README.md): the community starters and their index.
-- [config/editorconfig.md](references/config/editorconfig.md), [config/gitignore.md](references/config/gitignore.md),
-  [config/markdownlint.md](references/config/markdownlint.md), and [config/README.md](references/config/README.md): the
-  tooling configuration starters and their index.
+  [feedback-loops/audit.md](references/feedback-loops/audit.md),
+  [feedback-loops/drive-recipes.md](references/feedback-loops/drive-recipes.md),
+  [feature-map-example/README.md](references/feedback-loops/feature-map-example/README.md),
+  [create-note.md](references/feedback-loops/feature-map-example/create-note.md),
+  [search.md](references/feedback-loops/feature-map-example/search.md): verification skills and recipes.
+- [community/agents-md.md](references/community/agents-md.md),
+  [community/review-md.md](references/community/review-md.md),
+  [community/code-review.md](references/community/code-review.md),
+  [community/contributing.md](references/community/contributing.md),
+  [community/support.md](references/community/support.md),
+  [community/discussion-category-forms.md](references/community/discussion-category-forms.md),
+  [community/README.md](references/community/README.md): community and instruction starters.
+- [config/editorconfig.md](references/config/editorconfig.md),
+  [config/gitignore.md](references/config/gitignore.md),
+  [config/markdownlint.md](references/config/markdownlint.md),
+  [config/README.md](references/config/README.md): tooling config starters.
 - [governance/codeowners.md](references/governance/codeowners.md),
   [governance/constitution.md](references/governance/constitution.md),
   [governance/dependabot.md](references/governance/dependabot.md),
-  [governance/governance.md](references/governance/governance.md), and
-  [governance/README.md](references/governance/README.md): the ownership, constitution, Dependabot, and governance
-  starters and their index.
+  [governance/governance.md](references/governance/governance.md),
+  [governance/README.md](references/governance/README.md): ownership and governance starters.
 - [templates/readme-template.md](references/templates/readme-template.md),
-  [templates/architecture.md](references/templates/architecture.md), [templates/changelog.md](references/templates/changelog.md),
+  [templates/architecture.md](references/templates/architecture.md),
+  [templates/changelog.md](references/templates/changelog.md),
   [templates/issue-templates.md](references/templates/issue-templates.md),
-  [templates/pull-request-template.md](references/templates/pull-request-template.md), and
-  [templates/README.md](references/templates/README.md): the document templates and their index.
-- [templates/consumer-settings.md](references/templates/consumer-settings.md) and
-  [templates/secret-scans.md](references/templates/secret-scans.md): the consumer-owned settings and hooks guide and the
-  staged secret scan examples.
+  [templates/pull-request-template.md](references/templates/pull-request-template.md),
+  [templates/README.md](references/templates/README.md),
+  [templates/consumer-settings.md](references/templates/consumer-settings.md),
+  [templates/secret-scans.md](references/templates/secret-scans.md): document, consumer-hook, and secret-scan templates.
 - [approval.md](../routing/references/contracts/approval.md), [gates.md](../routing/references/contracts/gates.md),
   [question-format.md](../routing/references/contracts/question-format.md),
-  [untrusted-data.md](../routing/references/contracts/untrusted-data.md), and
-  [forwarding.md](../routing/references/forwarding.md): the shared contracts this skill applies.
+  [untrusted-data.md](../routing/references/contracts/untrusted-data.md),
+  [forwarding.md](../routing/references/forwarding.md): shared contracts.

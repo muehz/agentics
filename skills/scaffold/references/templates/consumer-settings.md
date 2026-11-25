@@ -127,6 +127,31 @@ filename convention. For a multi-file edit, do these steps:
 Skip unsupported extensions and deleted files with an explanation. Retain the consumer's existing checks and a short
 timeout. Report a timeout or missing binary as incomplete verification.
 
+Illustrative Claude Code `PostToolUse` helper (`.claude/hooks/post-edit-check.cjs`, wired from `.claude/settings.json`
+under `hooks.PostToolUse` with matcher `Edit|Write`):
+
+```js
+const fs = require("node:fs");
+const path = require("node:path");
+const { execFileSync } = require("node:child_process");
+const root = fs.realpathSync(process.cwd());
+const ev = JSON.parse(fs.readFileSync(0, "utf8") || "{}");
+const rawPaths = Array.isArray(ev.tool_input?.files) ? ev.tool_input.files : [ev.tool_input?.file_path].filter(Boolean);
+for (const p of rawPaths) {
+    const abs = path.resolve(root, p);
+    if (!fs.existsSync(abs)) continue;
+    const real = fs.realpathSync(abs);
+    if (real !== root && !real.startsWith(root + path.sep)) continue;
+    if (!/\.(ts|tsx|js|jsx|json|md)$/.test(real)) continue;
+    execFileSync(path.join(root, "node_modules/.bin/prettier"), ["--write", "--", real], {
+        stdio: "inherit",
+        timeout: 10000,
+    });
+}
+```
+
+Replace the binary path, flags, and extensions with the consumer's installed formatter/linter.
+
 ## Select protected paths and explain blocks
 
 Ask the consumer which paths are protected and who can approve an exception. Generated code and frozen packages are
@@ -147,6 +172,36 @@ For example, after the consumer supplies its rule and owner, a block could read:
 ```text
 Blocked edit: generated/client.ts matches generated/**. This client is regenerated from its schema.
 Approval: the SDK owners named in CODEOWNERS. Route: request a scoped exception in the consumer's review process.
+```
+
+Illustrative Claude Code `PreToolUse` helper (`.claude/hooks/protect-paths.cjs`, wired from `.claude/settings.json`
+under `hooks.PreToolUse` with matcher `Edit|Write`):
+
+```js
+const fs = require("node:fs");
+const path = require("node:path");
+const root = fs.realpathSync(process.cwd());
+const ev = JSON.parse(fs.readFileSync(0, "utf8") || "{}");
+const rawPaths = Array.isArray(ev.tool_input?.files) ? ev.tool_input.files : [ev.tool_input?.file_path].filter(Boolean);
+for (const p of rawPaths) {
+    const abs = path.resolve(root, p);
+    const parent = fs.existsSync(abs) ? fs.realpathSync(abs) : fs.realpathSync(path.dirname(abs));
+    const rel = path
+        .relative(root, fs.existsSync(abs) ? parent : path.join(parent, path.basename(abs)))
+        .replace(/\\/g, "/");
+    if (rel.startsWith("..") || rel.startsWith("<protected-prefix>/")) {
+        process.stdout.write(
+            JSON.stringify({
+                hookSpecificOutput: {
+                    hookEventName: "PreToolUse",
+                    permissionDecision: "deny",
+                    permissionDecisionReason: `Blocked edit: ${rel} matches <protected-prefix>/**. Approval: <owner>. Route: <route>.`,
+                },
+            }),
+        );
+        process.exit(0);
+    }
+}
 ```
 
 Replace every example path, reason, owner and route with discovered consumer decisions. Do not invent an approver. Do

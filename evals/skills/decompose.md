@@ -450,11 +450,14 @@ directional only.
 
 Run each leg independently.
 
-**Leg A — concrete challenged intent plans directly.** The session contains a concrete in-flight `intent.md` with the
-five sections written before v25 (no `## Affected users and systems`) for a billing portal with independently useful
-invoice listing, card management, and dunning emails; dunning depends on card management. The flow's `state.tsv` holds a
-`challenge intent.md` row with status `ok` for its direction decisions, and the intent names the three outcomes, their
-boundaries, and the dependency. The user asks:
+**Leg A — concrete challenged intent plans directly.** The session contains a concrete in-flight
+`docs/specs/2026-09/feature-billing/intent.md` with the five sections written before v25 (no
+`## Affected users and systems`) for a billing portal with three independently useful outcomes: `S1` invoice listing
+(`src/billing/invoices.ts`), `S2` card management (`src/billing/cards.ts`), and `S3` dunning emails
+(`src/billing/dunning.ts`, depending on `S2`), with tests under `tests/billing/*.test.ts` run via `npm test`. The flow's
+`state.tsv` holds a `challenge intent.md` row with status `ok` for its direction decisions, and the intent names the
+three outcomes, their boundaries, and the dependency. During the run, the post-construction plan challenge completes
+`ok`. The user asks:
 
 ```
 Plan the billing intent.
@@ -468,8 +471,10 @@ database, API, and UI produces one end-to-end plan with no artificial slices (la
 delivery boundaries).
 
 **Leg B — concrete inline requirements with independent outcomes.** No intent, spec, or design artifact exists. Use an
-isolated fixture with the existing reports table, its filter state, and a runnable test command. The repository has no
-plan-artifact validator. The user supplies settled requirements directly:
+isolated fixture with the existing reports table (`src/reports/table.tsx`, `src/reports/csv-export.ts`,
+`src/reports/column-selector.tsx`), its filter state, and `tests/reports/*.test.ts` run via `npm test`. The repository
+has no plan-artifact validator. During the run, the post-construction plan challenge completes `ok`, all 10 checklist
+rows pass, and the plan-document reviewer returns `READY`. The user supplies settled requirements directly:
 
 ```
 Plan two independent additions to our existing reports page: CSV export of the currently filtered table, with the displayed columns in order and RFC 4180 quoting; and a column-visibility selector whose preference survives reload in localStorage. Both use the existing report table data and require no backend change. Each can ship and be verified independently. Store the plan in the repository. Stop before execution.
@@ -706,7 +711,9 @@ Run each leg independently.
 `plan.md` with `## S1` invoice list (`src/billing/invoices.ts`, `tests/billing/invoices.test.ts`, task `S1-1` completed,
 with `verify` rows and a 2026-09-04 `diverge` row + Divergences entry), `## S2` card management (`src/billing/cards.ts`,
 `tests/billing/cards.test.ts`), and `## S3` dunning (`src/billing/dunning.ts`, `tests/billing/dunning.test.ts`, depends
-S2). Tests run via `npm test`. This is the update-one-slice job. The user asks:
+S2). Tests run via `npm test`. During the run, the post-construction plan challenge on S2 completes `ok` (1 round asked
+and answered on 2026-09-05), all 10 checklist rows pass, and the plan-document reviewer returns `READY`. This is the
+update-one-slice job. The user asks:
 
 ```
 Plan only S2.
@@ -1177,10 +1184,11 @@ and **Verdict** `REVISE`. Report the `task-2` step 3 `python` function body as a
 block, and do not flag the `task-1` command, `task-2` cited quote, or `text` tree.
 
 **Leg B — review budget spent with an Important finding open.** Starting state: approved, current
-`docs/specs/2026-10/feature-search-filter/spec.md`, challenge clean, checklist pass, subagent dispatch available. Run 1
+`docs/specs/2026-10/feature-search-filter/spec.md` (`src/search/filter.ts`, `tests/search/filter.test.ts`, `npm test`),
+challenge clean, checklist pass, subagent dispatch available. Run 1 (dispatched `2026-10-15T12:00:00Z`, `blocked=18s`)
 returns `REVISE` (1 Important broken contract between `task-3` and `task-2` + 1 Minor); fixing it renames the call and
-adds an edge. Run 2 returns `REVISE` (same Minor + 1 new Important missing `**Packet review:**` on `task-4`). The user
-says:
+adds an edge. Run 2 (dispatched `2026-10-15T12:02:00Z`, `blocked=21s`) returns `REVISE` (same Minor + 1 new Important
+missing `**Packet review:**` on `task-4`). The user says:
 
 ```text
 Plan docs/specs/2026-10/feature-search-filter/spec.md.
@@ -1205,8 +1213,11 @@ Assertions:
 
 Run each leg independently.
 
-**Leg A — approved spec handoff stays in decompose.** Starting state: git repo with an approved, challenged spec for
-orders partitioning migration; a prior `/agentics:spec slice` routed here. The user says:
+**Leg A — approved spec handoff stays in decompose.** Starting state: git repo with an approved, challenged spec at
+`docs/specs/2026-10/feature-orders-partitioning/spec.md` for orders partitioning migration
+(`migrations/0042_partition_orders.sql`, `src/orders/repo.ts`, `tests/orders/repo.test.ts`, `npm test`); a prior
+`/agentics:spec slice` routed here. During the run, the post-construction plan challenge completes `ok`, all 10
+checklist rows pass, and the plan-document reviewer returns `READY`. The user says:
 
 ```
 Spec sent me here. Plan the orders partitioning migration.
@@ -1421,10 +1432,13 @@ Assertions:
 
 Run each leg independently.
 
-**Leg A — plan-level signals escalate routine spec and ask spec question first.** Starting state: as routine-tier
-scenario (`feature-report-copy-link`, approved intent, reviewed unapproved routine spec), except the final plan also
-modifies untested `src/report/share-service.ts` and has a `Deep` task. Challenge `ok`, Step 5 pass, review `READY`. Turn
-1:
+**Leg A — plan-level signals escalate routine spec and ask spec question first.** Starting state:
+`docs/specs/2026-10/feature-report-copy-link/` holds an approved six-section `intent.md`, a reviewed unapproved routine
+`spec.md` (`**Spec review:** 2026-10-12, 1 finding, 1 resolved, 0 presented`, adding a "Copy link" button to
+`src/report/toolbar.tsx`, `tests/report/toolbar.test.tsx`, `npm test -- tests/report/toolbar.test.tsx`), and the final
+plan also modifies untested `src/report/share-service.ts` and has a `Deep` task. `agx flow status` prints
+`hashes: spec.md text=2a4c6e8f0b1d` and `hashes: plan.md text=7c6b5a4f3e2d`. Challenge `ok`, Step 5 pass, review
+`READY`. Turn 1:
 
 ```text
 Plan it.
@@ -1466,11 +1480,12 @@ Assertions:
 
 Starting state: `docs/specs/2026-10/feature-csv-export/` holds an approved `spec.md` and a `plan.md` with three tasks
 touching `src/export/csv.ts` and `tests/export/csv.test.ts` (run via `npm test`). Its `state.tsv` holds a
-`challenge plan.md` row (status `ok`, 2026-10-12) and an `approve plan.md` row (evidence `blob=1a2b3c4d5e6f`, `why`
-`elevated: Deep task; approved after plan challenge P1-P4`). After task 2 is edited in place and staged,
-`agx flow status` prints `approvals: plan.md approved 2026-10-12 stale` and `hashes: plan.md text=9a8b7c6d5e4f`. The
-plan carries a `**Challenge record:**` entry in `## Plan challenge` that covers the three tasks as written. The user
-says:
+`challenge plan.md` row (status `ok`, 2026-10-12), a `review plan` row (`rev=1`, `READY`), and an `approve plan.md` row
+(evidence `blob=1a2b3c4d5e6f`, `why` `elevated: Deep task; approved after plan challenge P1-P4`). After task 2 is edited
+in place and staged, `agx flow status` prints `approvals: plan.md approved 2026-10-12 stale` and
+`hashes: plan.md text=9a8b7c6d5e4f`; all 10 checklist rows pass on rerun, and the new-revision (`rev=2`) plan review
+dispatches at `2026-10-15T12:00:00Z` (`blocked=12s`) and returns `READY` with 0 findings. The plan carries a
+`**Challenge record:**` entry in `## Plan challenge` that covers the three tasks as written. The user says:
 
 ```text
 Task 2 should also cap an export at 50,000 rows and return a 413 above it. Update the plan.
@@ -1500,8 +1515,11 @@ Assertions:
 ### A review-group request that would form a cycle never reaches the finished plan
 
 Starting state: the approved spec at `docs/specs/2026-10/feature-sync-queue/spec.md` leads to an unsliced plan of four
-tasks: `task-1` (the queue schema), `task-2` (the writer, which depends on `task-1`), `task-3` (a metrics counter,
-independent of the others), and `task-4` (the reader, which depends on `task-2`). The user says:
+tasks (`npm test`): `task-1` (the queue schema in `src/queue/schema.ts`), `task-2` (the writer in `src/queue/writer.ts`,
+which depends on `task-1`), `task-3` (a metrics counter in `src/queue/metrics.ts`, independent of the others), and
+`task-4` (the reader in `src/queue/reader.ts`, which depends on `task-2`), with tests under `tests/queue/*.test.ts`.
+After resolving the review-group cycle, all 10 checklist rows pass and the plan-document reviewer returns `READY`. The
+user says:
 
 ```text
 Plan docs/specs/2026-10/feature-sync-queue/spec.md. I want task-1 and task-4 reviewed together as one unit, since the
@@ -1541,9 +1559,12 @@ while row 4 fails). Fix the index row from the task (task is authoritative), rer
 and `**Validated:**` updates, and report that the edit staled `plan.md`'s approval (do not report it as approved).
 
 **Leg B — updating a legacy plan adds no card or index.** Shared fixture: sliced legacy
-`docs/specs/2026-09/feature-retry-uploads/plan.md` (no `**Why now:**`, no `## Task index`, Provenance in plain view)
-whose spec changed S2 retry limit from 3 to 5; Variant B is unsliced legacy
-`docs/specs/2026-09/feature-rate-limit/plan.md` whose spec changed rate limit from 60 to 100 req/min. User messages:
+`docs/specs/2026-09/feature-retry-uploads/plan.md` (no `**Why now:**`, no `## Task index`, Provenance in plain view;
+`## S1` chunk upload in `src/uploads/chunk.ts`, `## S2` retry task `S2-1` in `src/uploads/retry.ts` and
+`tests/uploads/retry.test.ts` currently checking `maxRetries = 3`, `npm test`) whose spec changed S2 retry limit from 3
+to 5; Variant B is unsliced legacy `docs/specs/2026-09/feature-rate-limit/plan.md` (`task-1` in `src/http/rate-limit.ts`
+and `tests/http/rate-limit.test.ts` currently checking `60 req/min`, `npm test`) whose spec changed rate limit from 60
+to 100 req/min. User messages:
 
 ```
 Update slice S2 of docs/specs/2026-09/feature-retry-uploads/plan.md for the new retry limit.
