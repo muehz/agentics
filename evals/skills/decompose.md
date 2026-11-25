@@ -619,9 +619,11 @@ a Scope section marking three parallel-safe disjoint groups as in scope: decidin
 handler middleware against an already-agreed interface (`src/middleware/error-handler.ts`,
 `tests/middleware/error-handler.test.ts` — execution of a defined task), and renaming `cfg.errmode` → `cfg.error_mode`
 across the repo (`src/config/loader.ts`, `src/config/schema.ts`, `tests/config/loader.test.ts` — cheap to verify by
-grep). Tests run via `npm test`. Its folder holds an `approve spec.md` row dated 2026-08-01 (`current`); during the run
-on 2026-08-01, the plan challenge finds nothing new, all 10 checklist rows pass, and the plan-document reviewer returns
-`READY` with no findings. The user says:
+grep). Its `## Success Criteria` lists three items: (1) public error taxonomy types exported and tested, (2) handler
+middleware maps errors to taxonomy responses, and (3) zero `cfg.errmode` occurrences remain. Tests run via `npm test`.
+Its folder holds an `approve spec.md` row dated 2026-08-01 (`current`); during the run on 2026-08-01, the plan challenge
+finds nothing new, all 10 checklist rows pass, and the plan-document reviewer returns `READY` with no findings. The user
+says:
 
 ```
 Break docs/specs/2026-08/feature-error-handling/spec.md into a plan — these will be fanned out through execute, so make every group dispatch-ready.
@@ -710,12 +712,12 @@ Assertions:
 Run each leg independently.
 
 **Leg A — per-slice update.** `docs/specs/2026-09/feature-billing/` holds approved, challenged, current `spec.md` and
-`plan.md` with `## S1` invoice list (`src/billing/invoices.ts`, `tests/billing/invoices.test.ts`, task `S1-1` completed,
-with `verify` rows and a 2026-09-04 `diverge` row + Divergences entry), `## S2` card management (`src/billing/cards.ts`,
-`tests/billing/cards.test.ts`), and `## S3` dunning (`src/billing/dunning.ts`, `tests/billing/dunning.test.ts`, depends
-S2). Tests run via `npm test`. During the run, the post-construction plan challenge on S2 completes `ok` (1 round asked
-and answered on 2026-09-05), all 10 checklist rows pass, and the plan-document reviewer returns `READY`. This is the
-update-one-slice job. The user asks:
+`plan.md` with `## S1` invoice list (`src/billing/invoices.ts`, `tests/billing/invoices.test.ts`, Dependencies: `none`,
+task `S1-1` completed, with `verify` rows and a 2026-09-04 `diverge` row + Divergences entry), `## S2` card management
+(`src/billing/cards.ts`, `tests/billing/cards.test.ts`, Dependencies: `none`), and `## S3` dunning
+(`src/billing/dunning.ts`, `tests/billing/dunning.test.ts`, Dependencies: `S2`). Tests run via `npm test`. During the
+run, the post-construction plan challenge on S2 completes `ok` (1 round asked and answered on 2026-09-05), all 10
+checklist rows pass, and the plan-document reviewer returns `READY`. This is the update-one-slice job. The user asks:
 
 ```
 Plan only S2.
@@ -890,10 +892,11 @@ Assertions:
 
 ### Skimmable plan scenario: card, index, folded steps, split Provenance
 
-Shared fixture: a git repo with a one-file Python CLI `cli.py` and an approved spec at
-`docs/specs/2026-10/feature-json-status/spec.md` (routine tier, reviewed, `approve spec.md` row present, so the plan
-gets its own question). The session is interactive, and the user takes the recommended answer to every question the
-skill asks before the execution question. The user asks for an ephemeral plan. The user message:
+Shared fixture: a git repo with a one-file Python CLI `cli.py`, `tests/test_cli.py` (`pytest`), `README.md`, and an
+approved spec at `docs/specs/2026-10/feature-json-status/spec.md` (routine tier, reviewed, `approve spec.md` row
+present, so the plan gets its own question). The session scratch plan path is `/tmp/session-plan-json-status/plan.md`.
+The session is interactive, and the user takes the recommended answer to every question the skill asks before the
+execution question. The user asks for an ephemeral plan. The user message:
 
 ```
 Plan docs/specs/2026-10/feature-json-status/spec.md as an ephemeral plan. Add a `--json` flag to the `status` command of a one-file Python CLI (`cli.py`), with a pytest test and one README line.
@@ -1486,11 +1489,12 @@ Assertions:
 Starting state: `docs/specs/2026-10/feature-csv-export/` holds an approved `spec.md` and a `plan.md` with three tasks
 touching `src/export/csv.ts` and `tests/export/csv.test.ts` (run via `npm test`). Its `state.tsv` holds a
 `challenge plan.md` row (status `ok`, 2026-10-12), a `review plan` row (`rev=1`, `READY`), and an `approve plan.md` row
-(evidence `blob=1a2b3c4d5e6f`, `why` `elevated: Deep task; approved after plan challenge P1-P4`). After task 2 is edited
-in place and staged, `agx flow status` prints `approvals: plan.md approved 2026-10-12 stale` and
-`hashes: plan.md text=9a8b7c6d5e4f`; all 10 checklist rows pass on rerun, and the new-revision (`rev=2`) plan review
-dispatches at `2026-10-15T12:00:00Z` (`blocked=12s`) and returns `READY` with 0 findings. The plan carries a
-`**Challenge record:**` entry in `## Plan challenge` that covers the three tasks as written. The user says:
+(pre-edit approved hash `blob=1a2b3c4d5e6f`, `why` `elevated: Deep task; approved after plan challenge P1-P4`). After
+task 2 is edited in place and staged, `agx flow status` prints `approvals: plan.md approved 2026-10-12 stale` and the
+new post-edit hash `hashes: plan.md text=9a8b7c6d5e4f` (changed from `1a2b3c4d5e6f`); all 10 checklist rows pass on
+rerun, and the new-revision (`rev=2`) plan review dispatches at `2026-10-15T12:00:00Z` (`blocked=12s`) and returns
+`READY` with 0 findings. The plan carries a `**Challenge record:**` entry in `## Plan challenge` that covers the three
+tasks as written. The user says:
 
 ```text
 Task 2 should also cap an export at 50,000 rows and return a 413 above it. Update the plan.
