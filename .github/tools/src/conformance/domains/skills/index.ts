@@ -121,8 +121,8 @@ export const FAMILIES: readonly Family[] = [
 
 /**
  * Every family the registered domain runs: `FAMILIES` in their order, with question-format after independence, and
- * standards, shell-data, file size, inbound anchor, shared contracts, waive operands and record keeping before
- * eval-check.
+ * standards, shell-data, file size, inbound anchor, shared contracts, waive operands, record keeping, and bank fixture
+ * completeness before eval-check.
  */
 export const DOMAIN_FAMILIES: readonly Family[] = FAMILIES.flatMap((family) =>
   family === EVAL_CHECK_FAMILY
