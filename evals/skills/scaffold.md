@@ -744,8 +744,10 @@ Add the planning ignore block and the native validator, but not the AGENTS.md re
 skip the validator, yes to the rest
 ```
 
-Fixture facts: repo has `AGENTS.md`, root `.gitignore`, validation script entry in `package.json`, CI workflow, work
-root `docs/specs`.
+Fixture facts: repo (`atlas-cli`, Agentics root `/opt/agentics`) has `AGENTS.md`, root `.gitignore` (`node_modules/`,
+`dist/`), `package.json` scripts (`build`, `test`, `lint`, `validate:plans`), CI workflow `.github/workflows/ci.yml`,
+and work root `docs/specs`. When asked for validator details on turn 2, the planned validator is
+`scripts/validate-plans.mjs` invoked via `npm run validate:plans`.
 
 **Case C — ignored ancestor:**
 
@@ -1181,8 +1183,9 @@ Windows (docs establish no equivalent Claude `permissions.allow`/`permissions.de
 scaffold init; add quick post-edit checks and path blocks
 ```
 
-Fixture: provider edit event with structured filenames `src/chart view.ts` and `src/table.ts`; shell/MCP edits are
-separate tools; consumer selects `policies/approved/` as protected path without naming an approver.
+Fixture: Linux Claude Code `1.0.50` with installed `node_modules/.bin/prettier` and `node_modules/.bin/eslint` and
+provider edit event with structured filenames `src/chart view.ts` and `src/table.ts`; shell/MCP edits are separate
+tools; consumer selects `policies/approved/` as protected path without naming an approver.
 
 Expected:
 

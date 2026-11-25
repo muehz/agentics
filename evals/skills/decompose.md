@@ -927,8 +927,11 @@ Assertions:
 Run each leg independently.
 
 **Leg A — edit request on the approval question.** Starting state: `docs/specs/2026-10/feature-json-status/` holds an
-approved, current `spec.md` for a `--json` flag on a Python CLI `status` command. `plan.md` has two tasks, challenge
-`ok`, checklist pass, plan review `READY` at `rev 1, run 1`. Interactive session.
+approved, current `spec.md` for a `--json` flag on a Python CLI `status` command (`src/cli/status.py`,
+`tests/test_status.py`, `pytest`). `plan.md` has two tasks, challenge `ok`, checklist pass, plan review `READY` at
+`rev 1, run 1`. `agx flow status` prints `hashes: plan.md text=1b2c3d4e5f6a` on Turn 1 and
+`hashes: plan.md text=3e4f5a6b7c8d` after Turn 2's edit; Turn 2's checklist rerun passes and `rev=2` plan review
+(`2026-10-15T12:00:00Z`, `blocked=10s`) returns `READY`. Interactive session.
 
 Turn 1:
 
@@ -1722,7 +1725,8 @@ Starting state for the primary fixture: git repo with `docs/specs/2026-09/featur
 in-flight five-section intent with concrete direction decisions, a completed challenge record, three independently
 useful outcomes (`S1` invoice list in `src/billing/invoices.ts`, `S2` card management in `src/billing/cards.ts`, `S3`
 dunning in `src/billing/dunning.ts`), and a dependency from `S3` dunning to `S2` card management. Tests run via
-`npm test`. No spec exists.
+`npm test`. No spec exists. During the run, the post-construction plan challenge completes `ok`, all 10 checklist rows
+pass, and the plan-document reviewer returns `READY`.
 
 The user says:
 
@@ -1766,7 +1770,8 @@ Assertions:
 `docs/specs/2026-10/feature-team-roles/` holds an approved, current spec with three independently useful outcomes: `S1`
 role assignment (`src/roles/assign.ts`), `S2` a role audit view (`src/roles/audit.ts`), and `S3` role-based export
 limits (`src/roles/export-limits.ts`, depending on `S1`), with tests under `tests/roles/*.test.ts` run via `npm test`.
-The user says:
+During the run, the post-construction plan challenge completes `ok`, all 10 checklist rows pass, and the plan-document
+reviewer returns `READY`. The user says:
 
 ```
 The team-roles spec is approved. Plan the whole feature.
