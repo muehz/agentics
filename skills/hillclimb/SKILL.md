@@ -51,7 +51,7 @@ Each gate is stated once here, with its class from [gates.md](../routing/referen
 
 1. **Route.** Check the request against [Don't use when](#dont-use-when) (load [forwarding.md](../routing/references/forwarding.md) before forwarding).
 2. **Metric.** If the request names a metric, a direction, and a target, use them. Otherwise, the first deliverable is agreement on them. During Step 1's exploration pass, propose a concrete metric, direction, and target together from codebase evidence (or the closest codebase operation when no benchmark exists yet) in one decision question in the [question format](../routing/references/contracts/question-format.md), with that proposal as the recommended answer, and state that a reproducible slow case comes before any harness. If no benchmark or evidence exists and the user names none, also state what starts the climb (operation, metric, direction, target, or slow case). Never start the loop on an unmeasured goal. In an [unattended run](../routing/references/contracts/unattended.md), the dispatcher answers; when the dispatch prompt names no metric, return the proposal as an assumption to confirm and stop before Step 2.
-3. **Tree.** Run `git status --porcelain`. Untracked files the climb does not touch are fine. Any other uncommitted change is the user's work, and the clean-tree safety gate holds: ask once whether to commit it, set it aside through the [git skill](../git/SKILL.md)'s `stash` mode, or leave named paths untouched. When the user names paths, no attempt changes them, and a hypothesis that needs one waits for the user's answer. Never stash, restore, or discard it yourself.
+3. **Tree.** Run `git status --porcelain`. Untracked files the climb does not touch are fine. Any other uncommitted change is the user's work, and the clean-tree safety gate holds: ask once whether to commit it, set it aside through `git`'s `stash` mode, or leave named paths untouched. When the user names paths, no attempt changes them, and a hypothesis that needs one waits for the user's answer. Never stash, restore, or discard it yourself.
 4. **Branch.** Say in one line which branch each accepted win is committed on. On the default branch or a detached HEAD, create a feature branch before the first commit, as [chain-phases.md](../routing/references/chain-phases.md#feature-branch-before-the-first-commit) says, and announce its name. No win is committed on the default branch.
 5. **Principles.** Apply the [principles check](../routing/references/contracts/principles-check.md) when you have a baseline artifact to inspect.
 
@@ -121,7 +121,7 @@ Per iteration:
 
 Each iteration ends in its measurement before the next begins, because two stacked, unmeasured changes destroy attribution for both. If changes were stacked unmeasured, revert to the last measured state and redo them one at a time.
 
-**Parallel hypotheses.** Several genuinely independent hypotheses may go to parallel subagents, each in its own worktree from the [git skill](../git/SKILL.md)'s `worktrees` mode. Hypotheses that touch the same files run one after another.
+**Parallel hypotheses.** Several genuinely independent hypotheses may go to parallel subagents, each in its own worktree from `git`'s `worktrees` mode. Hypotheses that touch the same files run one after another.
 
 - Before the fan-out, state the dispatch count: one subagent and one worktree per hypothesis. Batch under the concurrency limit in [surface-dispatch.md](../routing/references/surface-dispatch.md#concurrency-and-overlap).
 - Subagents implement only. Measure each candidate yourself, one at a time on one machine, because concurrent runs share the machine and distort each other's numbers.
@@ -167,7 +167,7 @@ Report:
 
 Every number comes from a log row under the current contract. Never use an estimate or a run the log does not carry.
 
-The kept commits sit on the branch in the order they landed, so the climb reads top to bottom. Offer [`gate`](../gate/SKILL.md) for the branch in one yes/no question ([forwarding.md](../routing/references/forwarding.md#b-offer-to-forward-one-yesno-question)), for example: "Run `/agentics:gate branch` on `<branch>` to verify the branch and propose a destination (such as a draft pull request)?" (skip the question only when the user named `gate` up front). `gate` verifies the branch and proposes one destination in plain text, such as a draft pull request, which it opens with the outbound checks its body path carries. A climb has no work folder, so `gate` runs it as a no-flow run.
+The kept commits sit on the branch in the order they landed, so the climb reads top to bottom. Offer `gate` for the branch in one yes/no question ([forwarding.md](../routing/references/forwarding.md#b-offer-to-forward-one-yesno-question)), for example: "Run `/agentics:gate branch` on `<branch>` to verify the branch and propose a destination (such as a draft pull request)?" (skip the question only when the user named `gate` up front). `gate` verifies the branch and proposes one destination in plain text, such as a draft pull request, which it opens with the outbound checks its body path carries. A climb has no work folder, so `gate` runs it as a no-flow run.
 
 ## References
 

@@ -802,9 +802,10 @@ Assertions:
 none
 ```
 
-Fixture facts: the branch `chore/typo` has 2 commits not on `main` and a clean tree. `flow where` exits 3, and the run's
-question about which work folder the branch belongs to is answered "none". No `skip chain` row names the branch, so it
-is no small fix. The tests pass, and the review finds nothing.
+Fixture facts: the repository uses the default work root `docs/specs`. The branch `chore/typo` has 2 commits not on
+`main` and a clean tree. `flow where` exits 3, and the run's question about which work folder the branch belongs to is
+answered "none". No `skip chain` row names the branch, so it is no small fix. The tests pass, and the review finds
+nothing.
 
 Correct behavior: the run binds nothing, creates no work folder, and continues as a no-flow run. The tests and the
 review run and print their lines. With no flow and no small fix, gate does not call `agx flow audit`, and the controller
@@ -1019,9 +1020,10 @@ Assertions:
 /agentics:gate branch
 ```
 
-Fixture facts: the branch is `feat/export`, and Step 2 resolved its work folder; the plan has no slice sections. When
-Step 8 runs, the flow holds no `bind` row for `feat/export`; how it was lost is not part of the fixture. The tests pass,
-and the review finds nothing. `agx flow audit --base <compare> --folder <folder>` exits 0 and prints
+Fixture facts: the branch is `feat/export`, and Step 2 resolved its work folder `docs/specs/2026-10/feature-export`; the
+plan has no slice sections. When Step 8 runs, the flow holds no `bind` row for `feat/export`; how it was lost is not
+part of the fixture. The tests pass, and the review finds nothing.
+`agx flow audit --base origin/main --folder docs/specs/2026-10/feature-export` exits 0 and prints
 `audit: not run (this branch is not bound to the flow)`.
 
 Correct behavior: the report reads `Controller audit: not run (branch not bound)` and

@@ -11,6 +11,7 @@ import {
 } from "../../testing/skills-repo.ts";
 import { writeStandardsBaseline } from "../../testing/standards-baseline.ts";
 import { BASELINE_DIR, BASELINE_STALE_RULE } from "./baseline.ts";
+import { FAMILY as BANK_FIXTURE_FAMILY } from "./bank-fixture-completeness.ts";
 import { DUPLICATE_RULE } from "./duplication.ts";
 import { FAMILY as EVAL_CHECK_FAMILY } from "./eval-check.ts";
 import { KEY_RULE, VALUE_RULE } from "./frontmatter-std.ts";
@@ -113,6 +114,7 @@ const STANDARDS_FAMILIES_RULES: ReadonlySet<string> = new Set([
   "skill-inbound-anchor",
   "flow-waive-operands",
   "gate-record-keeping",
+  "eval-bank-fixture-completeness",
 ]);
 
 /** The standards family's findings alone, through `run`, so the index's error handling is what a caller sees. */
@@ -184,6 +186,7 @@ test("the default audit's non-core rules are the question-format rule and the st
       "shared-contracts",
       "flow-waive-operands",
       "gate-record-keeping",
+      "eval-bank-fixture-completeness",
     ]),
   );
   assert.equal(STANDARDS_FAMILY.name, "skill-standards");
@@ -215,20 +218,22 @@ test("DOMAIN_FAMILIES adds question-format after independence and the other non-
     "shared-contracts",
     "flow-waive-operands",
     "gate-record-keeping",
+    "eval-bank-fixture-completeness",
   );
   assert.deepEqual(
     DOMAIN_FAMILIES.map((family) => family.name),
     expected,
   );
-  assert.equal(DOMAIN_FAMILIES.length, FAMILIES.length + 8);
+  assert.equal(DOMAIN_FAMILIES.length, FAMILIES.length + 9);
   assert.equal(DOMAIN_FAMILIES.at(-1), EVAL_CHECK_FAMILY);
-  assert.equal(DOMAIN_FAMILIES.at(-2), RECORD_KEEPING_FAMILY);
-  assert.equal(DOMAIN_FAMILIES.at(-3), WAIVE_OPERANDS_FAMILY);
-  assert.equal(DOMAIN_FAMILIES.at(-4), SHARED_CONTRACTS_FAMILY);
-  assert.equal(DOMAIN_FAMILIES.at(-5), INBOUND_ANCHOR_FAMILY);
-  assert.equal(DOMAIN_FAMILIES.at(-6), FILE_SIZE_FAMILY);
-  assert.equal(DOMAIN_FAMILIES.at(-7), SHELL_DATA_FAMILY);
-  assert.equal(DOMAIN_FAMILIES.at(-8), STANDARDS_FAMILY);
+  assert.equal(DOMAIN_FAMILIES.at(-2), BANK_FIXTURE_FAMILY);
+  assert.equal(DOMAIN_FAMILIES.at(-3), RECORD_KEEPING_FAMILY);
+  assert.equal(DOMAIN_FAMILIES.at(-4), WAIVE_OPERANDS_FAMILY);
+  assert.equal(DOMAIN_FAMILIES.at(-5), SHARED_CONTRACTS_FAMILY);
+  assert.equal(DOMAIN_FAMILIES.at(-6), INBOUND_ANCHOR_FAMILY);
+  assert.equal(DOMAIN_FAMILIES.at(-7), FILE_SIZE_FAMILY);
+  assert.equal(DOMAIN_FAMILIES.at(-8), SHELL_DATA_FAMILY);
+  assert.equal(DOMAIN_FAMILIES.at(-9), STANDARDS_FAMILY);
   for (const family of FAMILIES) assert.ok(DOMAIN_FAMILIES.includes(family));
 });
 
@@ -241,6 +246,10 @@ test("RULE_FAMILY is the map of the core families alone, and DOMAIN_FAMILIES has
     assert.equal(domainMap[rule], "skill-standards");
   assert.equal(domainMap["shared-contracts"], "shared-contracts");
   assert.equal(domainMap["gate-record-keeping"], "gate-record-keeping");
+  assert.equal(
+    domainMap["eval-bank-fixture-completeness"],
+    "eval-bank-fixture-completeness",
+  );
   assert.equal(domainMap["skill-shell-data"], "skill-shell-data");
   assert.equal(domainMap["skill-shell-data-stale"], "skill-shell-data");
   assert.equal(domainMap["skill-file-size"], "skill-file-size");

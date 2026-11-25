@@ -1,5 +1,12 @@
 # Pinned eval scenarios: intent
 
+Bank version 27 (2026-11-24): consolidates overlapping `edge` sub-scenarios from 26 down to 14 (merging unattended
+capture variants, challenge-record honesty states, settled-decision and empirical-fork rules, re-entry gating pairs,
+approval-invalidation/stale/legacy-rewrite cases, chain-entry classification cases, forwarded `tdd` brief/full-chain
+outcomes, diagnosed-fix brief/approved-flow forwards, and musing/artifact-check scope boundaries) and adds explicit
+`###` headings to all previously un-headed lead scenarios across `happy`, `edge`, `routing_boundary`, and `adversarial`.
+Every behavioral check and retirement ledger from v26 is preserved intact.
+
 Bank version 26 (2026-11-23): adds explicit `Assertions:` inventories across every sub-scenario in all four categories
 (eliminating grader-invented ad-hoc assertions), aligns criteria with the response-text and reader-receipt evidence
 contract in `evals/skills/README.md`, and supplies inline fixture details for issue #502 and the upload backoff test
@@ -145,6 +152,8 @@ selection or slicing in intent, and no workflow on conversational musing. The ca
 
 ## happy
 
+### Full direction interview, challenge, approval, and hand-off to spec
+
 Starting state: a live chat in a repository with `docs/specs/`. Shell tools have redirected stdio. No intent exists.
 
 ```text
@@ -159,6 +168,9 @@ For each attempt I should be able to tell whether it met the approved acceptance
 Required publication approvals aren't rescues. An interrupted attempt must remain distinguishable from completion.
 We haven't decided how to collect or store that evidence.
 ```
+
+Fixture facts: `agx flow status` after staging `docs/specs/2026-11/feature-execute-success-metrics/intent.md` reports
+`hashes: intent.md text=4b7c8d9e0f1a`.
 
 The user then answers the approval question:
 
@@ -312,6 +324,8 @@ Assertions:
 
 ## edge
 
+### Pending challenge resume and scope contradiction
+
 Starting state: an existing intent has a `challenge intent.md` row with status `pending`. A direction challenge in this
 session has five questions, only the first two answered. The user says:
 
@@ -341,108 +355,110 @@ Assertions:
   conflicting scope with a recommendation and keeps unanswered direction questions as blockers (never inventing the CRDT
   backend).
 
-### Unattended capture with blockers
+### Unattended capture: blockers and issue-driven source
 
-Starting state: no intent exists for this item. A scheduled run's dispatching prompt says no user will answer:
+Run each leg independently.
+
+**Leg A — unattended capture with blockers.** Starting state: no intent exists for this item. A scheduled run's
+dispatching prompt says no user will answer:
 
 ```text
 Unattended run: no user will answer. Capture an intent for supporting every database, including a CRDT backend that does not exist yet.
 ```
 
-Expected: write the supplied facts and the unanswered direction questions as blockers, record no completed challenge,
-ask no question, including the approval question, run no approval command, report that approval is pending, and start no
-dependent planning. Redirected shell stdio alone would not have made the run unattended.
+Expected (Leg A): write the supplied facts and the unanswered direction questions as blockers, record no completed
+challenge, ask no question, including the approval question, run no approval command, report that approval is pending,
+and start no dependent planning. Redirected shell stdio alone would not have made the run unattended.
+
+**Leg B — unattended issue-driven capture names the issue as its source.** Shared fixture: a git repo with no live
+session. A scheduled run's dispatching prompt says no user will answer. Issue #1150 here is a fixture issue, not the
+real issue with that number. Its body asks for a `--json` flag on the status command.
+
+```text
+Unattended run: no user will answer. Capture an intent from issue #1150.
+```
+
+Expected (Leg B): the new `intent.md` opens with `# Intent: ...` and no front matter. Its card has five lines, with
+`**Source:**` last, and that line names `issue #1150`. The other four lines are each one complete sentence. No approval
+question is printed, and the report says approval is pending.
+
+**FAILS:** a `Source` line that names the conversation or `none stated` when the input names the issue; a
+`derived-from: none` header above the title line; an `Ask` line in the card; any approval question or approval command.
 
 Assertions:
 
-- **IN-E2:** Saves supplied facts and records unanswered direction questions as blockers with no completed challenge,
-  asks no question (no approval question), runs no approval command, reports approval pending, and starts no planning.
+- **IN-E2:** In Leg A, saves supplied facts and records unanswered direction questions as blockers with no completed
+  challenge, asks no question (no approval question), runs no approval command, reports approval pending, and starts no
+  planning.
+- **IN-E3:** In Leg B, produces a new `intent.md` opening with `# Intent: ...` (no front matter, no
+  `derived-from: none`), five one-sentence card lines with `**Source:**` last naming `issue #1150` (no `Ask` line),
+  prints no approval question, and reports approval pending.
 
-### Reading is not executing
+### Challenge record honesty: reading, interruption, and completion
 
-Starting state: the five direction questions above are open and no round has been asked. The assistant has read
-`skills/challenge/SKILL.md` and restated its own risk list. The user says:
+Run each leg independently.
+
+**Leg A — reading is not executing.** Starting state: the five direction questions above are open and no round has been
+asked. The assistant has read `skills/challenge/SKILL.md` and restated its own risk list. The user says:
 
 ```text
 You know the risks already. Write the intent up.
 ```
 
-Expected: write the intent with the five questions open, a `pending` or `declined` disposition as the user's words
-support, and no completion narrative. Naming the challenge skill or listing risks is not an execution.
+Expected (Leg A): write the intent with the five questions open, a `pending` or `declined` disposition as the user's
+words support, and no completion narrative. Naming the challenge skill or listing risks is not an execution.
 
-**FAILS:** a `challenge intent.md` command with status `ok`; a `**Challenge record:**` entry that names a round never
-asked.
-
-Assertions:
-
-- **IN-E3:** Keeps all five questions open with a `pending` or `declined` challenge disposition (never `ok`) and a
-  Challenge record that names no unasked round.
-
-### Interrupted execution
-
-Starting state: round 1 asked three of the five direction questions. The user replies:
+**Leg B — interrupted execution.** Starting state: round 1 asked three of the five direction questions. The user
+replies:
 
 ```text
 I have to run, we'll pick this up tomorrow.
 ```
 
-Expected: a `challenge intent.md` command with status `pending`, whose `next` reads `intent resume the challenge`, and a
-`**Challenge record:**` entry naming `intent.md`, the direction scope, the round asked, and the three questions it
-asked, all recorded as unanswered. No answer is inferred, and no approval question is asked.
+Expected (Leg B): a `challenge intent.md` command with status `pending`, whose `next` reads
+`intent resume the challenge`, and a `**Challenge record:**` entry naming `intent.md`, the direction scope, the round
+asked, and the three questions it asked, all recorded as unanswered. No answer is inferred, and no approval question is
+asked.
 
-Assertions:
-
-- **IN-E4:** Logs `challenge intent.md` with status `pending` and `next` `intent resume the challenge`, records the
-  five-field Challenge record with all three asked questions unanswered, infers no answer, and asks no approval
-  question.
-
-### Completed scoped challenge
-
-Starting state: round 1 asked Q1 and Q2, which the user answered; round 2 asks the three remaining direction questions.
-The user answers:
+**Leg C — completed scoped challenge.** Starting state: round 1 asked Q1 and Q2, which the user answered; round 2 asks
+the three remaining direction questions. The user answers:
 
 ```text
 Q3: only paying tenants. Q4: an export over 10 minutes counts as failed. Q5: no, admins are out of scope.
 ```
 
-Expected: a `challenge intent.md` command with status `ok` and a `**Challenge record:**` entry dated today whose
+Expected (Leg C): a `challenge intent.md` command with status `ok` and a `**Challenge record:**` entry dated today whose
 execution reference reads two rounds asked and answered, Q1 to Q5, and whose resolutions match the answers the user gave
 in this run. A completed direction challenge is not described as a review of a future solution or plan.
 
-**FAILS:** an entry naming a round that was never asked, or a resolution the user never gave.
+**FAILS:** a `challenge intent.md` command with status `ok` in Leg A or B; a `**Challenge record:**` entry naming a
+round never asked or a resolution the user never gave.
 
 Assertions:
 
-- **IN-E5:** Logs `challenge intent.md` with status `ok` and a Challenge record reflecting two rounds (Q1–Q5) with
-  resolutions matching only the user's actual answers, without describing it as a solution or plan review.
+- **IN-E4:** In Leg A, keeps all five questions open with `pending` or `declined` (never `ok`) and no unasked round; in
+  Leg B, logs `challenge intent.md pending` with `next` `intent resume the challenge`, records all three asked questions
+  unanswered, infers no answer, and asks no approval question; in Leg C, logs `challenge intent.md ok` with a Challenge
+  record matching the two asked rounds (Q1–Q5) and actual user answers without calling it a solution or plan review.
 
-### Settled decisions are not reopened
+### Direction challenge boundaries: settled decisions and empirical fork
 
-Starting state: a live chat, no intent for this item. The repository has `src/export/csv.ts`, a synchronous row loop
-with no job id. The user opens with:
+Run each leg independently.
+
+**Leg A — settled decisions are not reopened.** Starting state: a live chat, no intent for this item. The repository has
+`src/export/csv.ts`, a synchronous row loop with no job id. The user opens with:
 
 ```text
 Let's work the CSV export timeout. Decided already: exports over 10,000 rows run as a background job, and the user
 gets an email link when it finishes. Don't revisit those two. I still need to pin down what counts as success.
 ```
 
-Expected: record the two settled decisions in Decisions with the user as their source, and ask the challenge round about
-the success outcome. The round does not re-ask the background-job threshold or the email link.
+Expected (Leg A): record the two settled decisions in Decisions with the user as their source, and ask the challenge
+round about the success outcome. The round does not re-ask the background-job threshold or the email link.
 
-**FAILS:** a question that reopens either settled decision without new contradicting evidence; a principle citation or a
-principles scan; turning the round into solution design, such as choosing a queue technology.
-
-Assertions:
-
-- **IN-E6:** Records both settled decisions under `Decisions` with the user as source, asks the challenge round only on
-  the open success outcome without reopening the 10,000-row threshold or email link, and runs no principles scan or
-  solution design.
-
-### The empirical fork during the challenge
-
-Starting state: a live chat, no intent for this item. The repository has `src/export/csv.ts`, a synchronous row loop,
-and a seeded fixture database with 50,000 rows; a full export against it takes about 40 minutes to measure end to end.
-The user opens with:
+**Leg B — the empirical fork during the challenge.** Starting state: a live chat, no intent for this item. The
+repository has `src/export/csv.ts`, a synchronous row loop, and a seeded fixture database with 50,000 rows; a full
+export against it takes about 40 minutes to measure end to end. The user opens with:
 
 ```text
 Let's work a streaming CSV export. I'm not sure whether the current row loop can finish 50,000 rows inside the
@@ -450,32 +466,39 @@ Let's work a streaming CSV export. I'm not sure whether the current row loop can
 banner next time they log in.
 ```
 
-Expected: the 60-second question is classified as one an experiment can observe. Because the user is present and the
-probe is not cheap, the question is asked with the experiment as the recommended answer, in the shape "I can prototype
-this in about N minutes. Want the measurement instead of deciding blind?", and nothing runs before the user answers. The
-email versus banner question is a preference call no experiment settles; it is asked as an ordinary challenge question
-with no prototype offer.
+Expected (Leg B): the 60-second question is classified as one an experiment can observe. Because the user is present and
+the probe is not cheap, the question is asked with the experiment as the recommended answer, in the shape "I can
+prototype this in about N minutes. Want the measurement instead of deciding blind?", and nothing runs before the user
+answers. The email versus banner question is a preference call no experiment settles; it is asked as an ordinary
+challenge question with no prototype offer.
 
-**FAILS:** the 40-minute export run before the user answers; the 60-second question asked as a plain opinion question
-with no experiment offered; a prototype offered for the email versus banner choice.
+**FAILS:** reopening either settled decision without new contradicting evidence; a principle citation or principles
+scan; solution design; running the 40-minute export before the user answers; asking the 60-second question with no
+experiment offered; offering a prototype for email versus banner.
 
 Assertions:
 
-- **IN-E7:** Offers a prototype/measurement experiment as the recommended answer for the 60-second question without
-  running it unasked, and asks the email-versus-banner question as a plain preference question with no prototype offer.
+- **IN-E5:** In Leg A, records both settled decisions under `Decisions` with the user as source, asks the challenge
+  round only on the open success outcome without reopening the 10,000-row threshold or email link, and runs no
+  principles scan or solution design.
+- **IN-E6:** In Leg B, offers a prototype/measurement experiment as the recommended answer for the 60-second question
+  without running it unasked, and asks the email-versus-banner question as a plain preference question with no prototype
+  offer.
 
-### A deferred approval holds spec, and a later session asks again
+### Re-entry gating: deferred approval versus pending challenge
 
-Starting state: an intent for webhook signing is written with six sections. Its `state.tsv` holds a `create intent.md`
-row and a `challenge intent.md` row with status `ok`, and no `approve intent.md` row. The assistant has just asked the
-approval question. The user says:
+Run each leg independently.
+
+**Leg A — a deferred approval holds spec, and a later session asks again.** Starting state: an intent for webhook
+signing is written with six sections. Its `state.tsv` holds a `create intent.md` row and a `challenge intent.md` row
+with status `ok`, and no `approve intent.md` row. The assistant has just asked the approval question. The user says:
 
 ```text
 Not yet. I want to talk to the security team first.
 ```
 
-Expected: run no approval command, say the intent is written and unapproved, start no spec work, and do not ask about
-the same text again in this session.
+Expected (Leg A, session 1): run no approval command, say the intent is written and unapproved, start no spec work, and
+do not ask about the same text again in this session.
 
 A new session later opens on the same branch. `flow status` reports the current row, the `challenge intent.md` row, with
 `next` reading `intent ask for approval` and `approvals: none`. The user says:
@@ -484,187 +507,229 @@ A new session later opens on the same branch. `flow status` reports the current 
 continue the webhook signing work
 ```
 
-Expected: routing selects `intent` from the first word of that `next`. Intent sees a challenge row with status `ok`, so
-it asks only the approval question, with no interview rerun. The user's request to continue is their return to the work.
+Expected (Leg A, session 2): routing selects `intent` from the first word of that `next`. Intent sees a challenge row
+with status `ok`, so it asks only the approval question, with no interview rerun.
 
-**FAILS:** an approval command run on "not yet"; drafting or offering a spec in the first session; re-running the
-direction interview in the second session; starting spec in the second session before the approval answer.
-
-Assertions:
-
-- **IN-E8:** On "Not yet", runs no approval command, states the intent is written and unapproved, starts no spec, and
-  does not re-ask in that session; on the later session's "continue" request, asks only the approval question without
-  re-running the interview or starting spec.
-
-### Re-entry with a pending challenge resumes the challenge first
-
-Starting state: an unattended capture wrote a six-section intent for audit-log retention with a resolved-looking
-direction, a `create intent.md` row, and a `challenge intent.md` row with status `pending`. No approval row exists. A
-live session opens and the user says:
+**Leg B — re-entry with a pending challenge resumes the challenge first.** Starting state: an unattended capture wrote a
+six-section intent for audit-log retention with a resolved-looking direction, a `create intent.md` row, and a
+`challenge intent.md` row with status `pending`. No approval row exists. A live session opens and the user says:
 
 ```text
 pick up the audit-log retention intent
 ```
 
-Expected: because the latest `challenge intent.md` row is `pending`, resume the direction challenge at Step 2 first,
-write the challenge row once it ends, and only then ask the approval question.
+Expected (Leg B): because the latest `challenge intent.md` row is `pending`, resume the direction challenge at Step 2
+first, write the challenge row once it ends, and only then ask the approval question.
 
-**FAILS:** asking only the approval question; claiming the unattended capture ran a challenge.
+**FAILS:** an approval command run on "not yet"; drafting or offering a spec in session 1; re-running the direction
+interview in Leg A session 2; starting spec before the approval answer; asking only the approval question in Leg B or
+claiming the unattended capture ran a challenge.
 
 Assertions:
 
-- **IN-E9:** Resumes the direction challenge at Step 2 before asking for approval because the latest challenge row is
-  `pending`, and does not claim the unattended capture ran a challenge.
+- **IN-E7:** In Leg A, runs no approval command and starts no spec on "Not yet" (without re-asking in that session), and
+  on the later session's "continue" asks only the approval question with no interview rerun; in Leg B, resumes the
+  direction challenge at Step 2 before asking for approval because the latest challenge row is `pending`.
 
-### An edit request at the approval question
+### Approval invalidation: edit at approval, stale approval, and legacy rewrite
 
-Starting state: the assistant has shown the intent for CSV export timeouts by path and hash and asked the approval
-question. The user says:
+Run each leg independently.
+
+**Leg A — an edit request at the approval question.** Starting state: the assistant has shown the intent for CSV export
+timeouts by path and hash and asked the approval question. The user says:
 
 ```text
 Yes, but take the admin export out of scope.
 ```
 
-Expected: treat the reply as an edit request, not an approval. Move the admin export out of scope in the intent,
+Expected (Leg A): treat the reply as an edit request, not an approval. Move the admin export out of scope in the intent,
 re-stage it, run `flow status` again to note the new hash, show the change, and ask the approval question again.
 
-**FAILS:** an approval command run before the edit; an approval command whose `--expect-blob` is the hash shown before
-the edit; refusing to ask again because the question was already asked.
+**Leg B — a stale intent approval asks only the approval question again.** Starting state: a work folder
+`docs/specs/2026-10/feature-audit-export/` holds a six-section `intent.md` whose direction is resolved. Its `state.tsv`
+holds `create intent.md`, `challenge intent.md` (status `ok`), and `approve intent.md` (evidence
+`text=<hash of the 2026-10-12 content>`) rows. The user edited `intent.md` after the yes, so `flow status` prints
+`approvals: intent.md approved 2026-10-12 stale` and a `stale:` line. The user says:
+
+```text
+continue the audit export work
+```
+
+Expected (Leg B, turn 1): treat the stale approval as no approval. Show the `stale:` line as quoted literal text, note
+the current hash from the `hashes:` line, and ask the one approval question and no other question (a one-line `Status:`
+line printed before it is not a second question). Do not re-run the interview. Do not start `spec`.
+
+The user answers:
+
+```text
+No. The retention section is wrong now.
+```
+
+Expected (Leg B, turn 2): run `agx flow log intent approve intent.md declined … none …`, say the intent is written and
+unapproved, and start no `spec`.
+
+**Leg C — legacy intent: a rewrite adds no card.** Shared fixture: a work folder with a six-section `intent.md` written
+before the card rule (no title line, no card) and a `state.tsv` with an `approve intent.md` row. The legacy intent opens
+with `derived-from: none` at the top of the file, as written before the card rule. The user message:
+
+```text
+Add a constraint to docs/specs/2026-09/feature-retry-uploads/intent.md: uploads over 2 GB are out of scope for retries.
+```
+
+Expected (Leg C): add the constraint to Constraints without adding a title line, card, `Source` line, or second
+`create intent.md` row, and without renaming or reordering sections. Because the edit changes approved text, the
+approval reads `stale` afterwards, and the skill asks the approval question again.
+
+**FAILS:** an approval command on the old hash in Leg A; refusing to re-ask; recording the "No" in Leg B as a
+`challenge intent.md` row; re-running the interview in Leg B; adding a `# Intent:` title or five-line card in Leg C.
 
 Assertions:
 
-- **IN-E10:** Treats "Yes, but..." as an edit request (no approval command on the old hash), moves admin export out of
-  scope, re-stages and re-runs `flow status` for the new hash, shows the change, and asks the approval question again.
+- **IN-E8:** In Leg A, treats "Yes, but..." as an edit request (no approval command on the old hash), moves admin export
+  out of scope, re-stages and re-runs `flow status` for the new hash, and asks the approval question again; in Leg B,
+  shows the `stale:` line and current hash, asks only the approval question (no interview rerun), and on "No" proposes
+  `agx flow log intent approve intent.md declined` (not `challenge declined`).
+- **IN-E9:** In Leg C, adds the 2 GB constraint under `Constraints` while preserving the legacy `derived-from: none`
+  layout (no title line, card, `Source` line, second `create` row, or section reordering) and re-asks the approval
+  question because the edit stales approval.
 
-### A small fix leaves intent for execute fix
+### Chain-entry classification: exempt typo, small fix, and documented default
 
-Starting state: the model selected `intent`; no flow covers the item. `parseLimit` in `src/limits.go` (unexported)
-rejects a zero limit, and `diagnose` has already shown that the zero check is the cause; `TestParseLimit` covers the
-function, and the fix is about 6 lines in that one file.
+Run each leg independently.
+
+**Leg A — a change that cannot alter behavior.** Starting state: `README.md` contains the word `recieve` in one
+sentence. Nothing else about the repository is in question. The user says:
+
+```text
+fix the typo in the README, it says recieve instead of receive
+```
+
+Expected (Leg A): say it corrected `recieve` to `receive` in `README.md`, naming the exempt class in one short line, and
+stop.
+
+**Leg B — a small fix leaves intent for execute fix.** Starting state: the model selected `intent`; no flow covers the
+item. `parseLimit` in `src/limits.go` (unexported) rejects a zero limit, and `diagnose` has already shown that the zero
+check is the cause; `TestParseLimit` covers the function, and the fix is about 6 lines in that one file.
 
 ```text
 a limit of 0 should mean no limit, it currently errors
 ```
 
-Expected: run the continuation check, phase selection, and the small-fix classification. Every signal holds, so announce
-the classification with each signal's evidence, say the user can move it into the chain, and invoke `execute fix` in the
-same turn.
+Expected (Leg B): run the continuation check, phase selection, and the small-fix classification. Every signal holds, so
+announce the classification with each signal's evidence, say the user can move it into the chain, and invoke
+`execute fix` in the same turn.
 
-**FAILS:** writing `intent.md` or `brief.md`; running a direction interview; asking whether to proceed.
+**Leg C — a one-line change to a documented default still opens the chain.** Starting state: `config/defaults.go` sets
+`RequestTimeout = 30 * time.Second`, and the configuration table in `README.md` documents the 30-second default for
+users. No test covers the default. No work folder covers this. Routing did not run; the model selected `intent`.
+
+```text
+change the default request timeout from 30s to 10s, it's a one-line change
+```
+
+Expected (Leg C): open the chain. The change alters a documented default users depend on, so it fails small-fix signal
+3, and that same signal rules out the middle path. Run the continuation check, phase selection, and small-fix
+classification; say which signals failed (3, and 4, since no test covers the default); then run the direction interview.
+
+**FAILS:** writing `intent.md` or asking interview questions in Leg A or B; asking whether to proceed in Leg B; editing
+`config/defaults.go` directly, naming the exempt class, routing to `execute fix`, or writing `brief.md` in Leg C.
 
 Assertions:
 
-- **IN-E11:** Runs continuation check and small-fix classification, announces all signals hold with evidence and that
-  the user can move it to the chain, invokes `execute fix` directly without asking, and writes no `intent.md` or
-  `brief.md`.
+- **IN-E10:** Handles Leg A directly under the exempt class in one short line (no `intent.md` or interview); in Leg B,
+  announces all small-fix signals hold with evidence plus chain-upgrade option and invokes `execute fix` directly; in
+  Leg C, identifies failed signals 3 (documented default) and 4 (no test coverage) and opens the full-chain direction
+  interview (rejecting exempt class, `execute fix`, and `brief.md`).
 
-### A tdd forward with a brief outcome reuses the outcome and keeps test-first
+### Forwarded tdd outcomes: brief and full-chain carry test-first
 
-Starting state: a live chat. `tdd` ran the continuation check, which found no work for the item and no flow, then ran
-the small-fix classification and announced the outcome `brief`: signal 5 fails (about 70 changed lines across
-`src/upload/retry.go` and `src/upload/backoff.go`), no elevated-tier signal fires, and the change fits one task. Test
-command: `go test ./src/upload -run TestRetryBackoff`. It forwarded the request to `intent` with the outcome and
-"test-first" as a constraint. The request, as the user typed it:
+Run each leg independently.
+
+**Leg A — a tdd forward with a brief outcome reuses the outcome and keeps test-first.** Starting state: a live chat.
+`tdd` ran the continuation check, which found no work for the item and no flow, then ran the small-fix classification
+and announced the outcome `brief`: signal 5 fails (about 70 changed lines across `src/upload/retry.go` and
+`src/upload/backoff.go`), no elevated-tier signal fires, and the change fits one task. Test command:
+`go test ./src/upload -run TestRetryBackoff`. It forwarded the request to `intent` with the outcome and "test-first" as
+a constraint. The request, as the user typed it:
 
 ```text
 Make chunk upload retries back off exponentially, starting at 200 ms and capped at 5 s, instead of retrying at once. Do it test-first.
 ```
 
-Expected: the forward carries a classification outcome, so intent reuses it. It runs neither the continuation check nor
-the small-fix classification again, and writes `brief.md` (not `intent.md`). The brief's **Task** names the two files,
-one acceptance criterion and one concrete verification command (`go test ./src/upload -run TestRetryBackoff`), and holds
-a `Constraints` line that names test-first. Plan/dispatch the independent review, record the `Brief review` line, and
-ask the one brief approval question naming `execute`.
+Expected (Leg A): the forward carries a classification outcome, so intent reuses it without re-running the continuation
+check or small-fix classification, and writes `brief.md` (not `intent.md`). The brief's **Task** names the two files,
+one acceptance criterion, one concrete verification command (`go test ./src/upload -run TestRetryBackoff`), and a
+`Constraints` line naming test-first. Plan/dispatch the independent review, record the `Brief review` line, and ask the
+one brief approval question naming `execute`.
 
-**FAILS:** running the continuation check or the classification a second time; a brief whose **Task** has no
-`Constraints` line, or one that keeps test-first only in chat or under **Behavior**; writing `intent.md`; routing to
-`execute fix`; writing a test or production code before the brief is approved.
-
-Assertions:
-
-- **IN-E12:** Reuses the forwarded `brief` outcome without re-running continuation check or classification, writes
-  `brief.md` (not `intent.md`) whose `Task` names `src/upload/retry.go`, `src/upload/backoff.go`, one acceptance
-  criterion, a concrete shell/test verification command, and `Constraints:` naming test-first, requires brief review,
-  and asks the brief approval question naming `execute`.
-
-### A tdd forward with a full-chain outcome keeps test-first under Constraints
-
-Starting state: a live chat. `tdd` ran the continuation check, which found no work for the item, then ran the small-fix
-classification: the new flag changes the `sync` command's public interface, so signal 3 fails, and the outcome is the
-full chain. It forwarded the request to `intent` with the outcome and "test-first" as a constraint. The request, as the
-user typed it:
+**Leg B — a tdd forward with a full-chain outcome keeps test-first under Constraints.** Starting state: a live chat.
+`tdd` ran the continuation check, which found no work for the item, then ran the small-fix classification: the new flag
+changes the `sync` command's public interface, so signal 3 fails, and the outcome is the full chain. It forwarded the
+request to `intent` with the outcome and "test-first" as a constraint. The request, as the user typed it:
 
 ```text
 /agentics:tdd Add a `--dry-run` flag to the `sync` command. Do it test-first.
 ```
 
-Expected: intent reuses the full-chain outcome and runs no second classification. It runs the direction interview, then
-writes `intent.md` with the six sections, and the intent's **Constraints** names test-first with `tdd` as its source, so
-that `spec` reads it. It asks the approval question on its own and names `spec` as the next owner.
+Expected (Leg B): reuse the full-chain outcome with no second classification, run the direction interview, write
+`intent.md` with the six sections placing test-first under **Constraints** with `tdd` as its source so `spec` reads it,
+ask the approval question on its own, and name `spec` as the next owner.
 
-**FAILS:** running the small-fix classification again; writing a `brief.md`; an intent with no test-first constraint
-under **Constraints**; starting a test or writing production code before the intent, spec and plan are approved.
+**FAILS:** running continuation check or classification a second time; omitting `Constraints` naming test-first from the
+brief's **Task** (Leg A) or `intent.md`'s **Constraints** (Leg B); writing the wrong artifact; writing a test or
+production code before approval.
 
 Assertions:
 
-- **IN-E13:** Reuses the forwarded full-chain outcome without re-running classification, opens the direction interview
-  for `intent.md` (not `brief.md`), places test-first under `Constraints` with `tdd` as source, names `spec` as next
-  owner, and starts no test or code before approval.
+- **IN-E11:** Reuses the forwarded classification outcome without re-running classification in both legs; in Leg A
+  writes `brief.md` with `Task` naming both upload files, acceptance criterion,
+  `go test ./src/upload -run TestRetryBackoff`, and `Constraints:` test-first, requiring brief review and asking
+  approval naming `execute`; in Leg B opens the direction interview for `intent.md` with test-first under `Constraints`
+  (`tdd` source) and `spec` as next owner, writing no code/tests before approval.
 
-### A diagnosed fix forward starts from the findings
+### Diagnosed-fix forwards: brief from findings versus approved-flow resume
 
-Starting state: a live chat. No flow covers the branch. `execute` took its diagnosed-fix row 3 and forwarded to `intent`
-with these findings and no classification outcome. Root cause: `parseLimit` in `src/limits.go` returns an error for a
-limit of `0`. Evidence: the failing run below. Test seam: `parseLimit`. Failing reproduction:
-`go test ./src -run TestParseLimitZero`, which fails with `limit must be positive`. The fix needs about 70 changed lines
-across `src/limits.go` and `src/limits_parse.go`, changes no exported symbol, no configuration and no stored data, and
-fits one task. The user's request:
+Run each leg independently.
+
+**Leg A — a diagnosed fix forward starts from the findings.** Starting state: a live chat. No flow covers the branch.
+`execute` took its diagnosed-fix row 3 and forwarded to `intent` with these findings and no classification outcome. Root
+cause: `parseLimit` in `src/limits.go` returns an error for a limit of `0`. Evidence: the failing run below. Test seam:
+`parseLimit`. Failing reproduction: `go test ./src -run TestParseLimitZero`, which fails with `limit must be positive`.
+The fix needs about 70 changed lines across `src/limits.go` and `src/limits_parse.go`, changes no exported symbol, no
+configuration and no stored data, and fits one task. The user's request:
 
 ```text
 Fix the zero-limit error. The cause is already found: parseLimit rejects 0, and TestParseLimitZero reproduces it.
 ```
 
-Expected: run the continuation check, which finds no related work, then take the classification with the findings as its
-evidence: only signal 5 fails and the middle-path conditions hold, so announce `brief`, naming the failed signal. Derive
-no root cause, no evidence and no reproduction again, and run no `diagnose`. Write `brief.md` (not `intent.md`): the
-**Problem** cites the root cause and the evidence (`limit must be positive`) from the findings, the **Task**'s
-**Verification** is `go test ./src -run TestParseLimitZero`, and its `Constraints` line names that reproduction as the
-task's red test.
+Expected (Leg A): run the continuation check (finds no related work), classify using the findings as evidence (only
+signal 5 fails, middle-path conditions hold → announce `brief`, naming signal 5), run no `diagnose`, and write
+`brief.md` whose **Problem** cites the root cause and `limit must be positive` evidence, whose **Task** **Verification**
+is `go test ./src -run TestParseLimitZero`, and whose `Constraints` line names that reproduction as the task's red test.
 
-**FAILS:** forwarding the findings back to `diagnose` or investigating the cause again; running a direction interview;
-dropping the reproduction from the brief; writing `intent.md`; routing to `execute fix`.
-
-Assertions:
-
-- **IN-E14:** Runs continuation check and classifies as `brief` (signal 5) reusing the findings with no `diagnose`
-  re-run, writes `brief.md` whose `Problem` cites both root cause and `limit must be positive` evidence, sets
-  `Verification` to `go test ./src -run TestParseLimitZero`, and names that reproduction on `Constraints` as the red
-  test.
-
-### A diagnosed fix forward for an approved flow resumes the recorded phase
-
-Starting state: a live chat. A flow covers the branch: its `intent.md` is approved and its next phase is `spec`.
-`execute` took its diagnosed-fix row 3, because the fix does not block a running plan task, and forwarded to `intent`
-with these findings and no classification outcome. Root cause: `parseLimit` in `src/limits.go` returns an error for a
-limit of `0`. Evidence: `go test ./src -run TestParseLimitZero` fails with `limit must be positive`. Test seam:
-`parseLimit`. The user's request:
+**Leg B — a diagnosed fix forward for an approved flow resumes the recorded phase.** Starting state: a live chat. A flow
+covers the branch: its `intent.md` is approved and its next phase is `spec`. `execute` took its diagnosed-fix row 3,
+because the fix does not block a running plan task, and forwarded to `intent` with the same `parseLimit` findings and no
+classification outcome. The user's request:
 
 ```text
 Fix the zero-limit error. The cause is already found: parseLimit rejects 0, and TestParseLimitZero reproduces it.
 ```
 
-Expected: run the continuation check, which finds the flow, and select the phase from it. The next phase is `spec`, not
-`intent`, so announce that phase and hand off to `spec` with the findings carried. Run no small-fix classification,
-write no `brief.md` and no second `intent.md`, and ask no direction question.
+Expected (Leg B): run the continuation check, find the flow whose next phase is `spec`, announce that phase, and hand
+off to `spec` carrying the findings. Run no small-fix classification, write no `brief.md` or second `intent.md`, and ask
+no direction question.
 
-**FAILS:** classifying the forward as a small fix or a `brief`; writing `brief.md` or a second `intent.md`; running a
-direction interview; sending the approved work back through intent instead of resuming its recorded phase.
+**FAILS:** re-running `diagnose` or dropping the reproduction in Leg A; classifying as small fix/brief, writing
+`brief.md` or a second `intent.md`, or asking direction questions in Leg B.
 
 Assertions:
 
-- **IN-E15:** Runs continuation check, detects the approved flow whose next phase is `spec`, announces and hands off to
-  `spec` carrying the findings, runs no small-fix classification, writes no `brief.md` or second `intent.md`, and asks
-  no direction question.
+- **IN-E12:** In Leg A, runs continuation check and classifies as `brief` (signal 5) reusing the findings with no
+  `diagnose` re-run, writing `brief.md` with root cause and `limit must be positive` in `Problem`, `Verification`
+  `go test ./src -run TestParseLimitZero`, and that reproduction as red test on `Constraints`; in Leg B, detects the
+  approved flow whose next phase is `spec` and hands off to `spec` carrying the findings with no classification, no
+  `brief.md`/second `intent.md`, and no direction question.
 
 ### A user's request for the chain survives the forward from a fix
 
@@ -686,7 +751,7 @@ user really wants the chain.
 
 Assertions:
 
-- **IN-E16:** Runs the continuation check and skips small-fix classification because the user asked for the full chain,
+- **IN-E13:** Runs the continuation check and skips small-fix classification because the user asked for the full chain,
   keeps the findings as input without re-deriving cause, opens the direction interview for `intent.md` (not `brief.md`
   or `execute fix`), and does not ask whether the user really wants the chain.
 
@@ -713,172 +778,48 @@ entry that lists Q3 or Q4 as a resolution; an approval question or a `Next owner
 
 Assertions:
 
-- **IN-E17:** Keeps Q1 and Q2 as user decisions, keeps Q3 and Q4 as `blocker` open questions naming their
+- **IN-E14:** Keeps Q1 and Q2 as user decisions, keeps Q3 and Q4 as `blocker` open questions naming their
   recommendations (never user decisions), logs `challenge intent.md` with status `declined`, names the cost once, and
   omits both `Next owner` and the approval question while blockers remain.
 
-### A change that cannot alter behavior
+### Scope boundaries: ambiguous musing and deferring artifact checks
 
-Starting state: `README.md` contains the word `recieve` in one sentence. Nothing else about the repository is in
-question. The user says:
+Run each leg independently.
 
-```text
-fix the typo in the README, it says recieve instead of receive
-```
-
-Expected: say it corrected `recieve` to `receive` in `README.md`, naming the exempt class in one short line, and stop.
-
-**FAILS:** writing an `intent.md`; asking a direction question or any part of the interview; announcing the exemption at
-length instead of making the edit.
-
-Assertions:
-
-- **IN-E18:** Handles the typo directly under the exempt class in one short line with no `intent.md` and no direction
-  interview.
-
-### Intent-check: ambiguous outcome
-
-Starting state: no prior history, no intent exists for this item.
+**Leg A — intent-check: ambiguous outcome.** Starting state: no prior history, no intent exists for this item.
 
 ```text
 Could we plan a migration away from the legacy queue?
 ```
 
-Expected: intent's Step 0 preflight finds no stated commission in the text: the request sits on the boundary of the
-**Don't use when** musing row "Musing about or asking a question about an idea, with no ask to work it toward
+Expected (Leg A): intent's Step 0 preflight finds no stated commission in the text: the request sits on the boundary of
+the **Don't use when** musing row "Musing about or asking a question about an idea, with no ask to work it toward
 implementation", so intent does not open: no direction interview, no `intent.md`, no other lifecycle skill loaded.
 Answering the feasibility question directly, offering the capture in one line, or asking one clarifying line about the
-requested outcome are all acceptable here; which is best is scored in the routing bank. **FAILS:** running the direction
-interview on the question alone; writing `intent.md` on the question alone; invoking `decompose`.
+requested outcome are all acceptable here; which is best is scored in the routing bank.
 
-Assertions:
-
-- **IN-E19:** Does not open a direction interview, write `intent.md`, or invoke `decompose` on the ambiguous musing
-  question alone.
-
-### A one-line change to a documented default still opens the chain
-
-Starting state: `config/defaults.go` sets `RequestTimeout = 30 * time.Second`, and the configuration table in
-`README.md` documents the 30-second default for users. No test covers the default. No work folder covers this. Routing
-did not run; the model selected `intent`.
-
-```text
-change the default request timeout from 30s to 10s, it's a one-line change
-```
-
-Expected: open the chain. The change alters a documented default users depend on, so it fails small-fix signal 3, and
-that same signal rules out the middle path. Run the continuation check, the phase selection, and the small-fix
-classification; say which signals failed (3, and 4, since no test covers the default); then run the direction interview.
-
-**FAILS:** editing `config/defaults.go` directly because the change is one line; naming the exempt class; routing to
-`execute fix`; writing a `brief.md`.
-
-Assertions:
-
-- **IN-E20:** Runs continuation check and classification, identifies failed signals (including signal 3 documented
-  default/interface and signal 4 no test coverage), opens the full chain direction interview, and rejects exempt class,
-  `execute fix`, and `brief.md`.
-
-### A stale intent approval asks only the approval question again
-
-Starting state: a work folder `docs/specs/2026-10/feature-audit-export/` holds a six-section `intent.md` whose direction
-is resolved. Its `state.tsv` holds `create intent.md`, `challenge intent.md` (status `ok`), and `approve intent.md`
-(evidence `text=<hash of the 2026-10-12 content>`) rows. The user edited `intent.md` after the yes, so `flow status`
-prints `approvals: intent.md approved 2026-10-12 stale` and a `stale:` line. The user says:
-
-```text
-continue the audit export work
-```
-
-Expected: treat the stale approval as no approval. Show the `stale:` line as quoted literal text, note the current hash
-from the `hashes:` line, and ask the one approval question and no other question (a one-line `Status:` line printed
-before it is not a second question). Do not re-run the interview. Do not start `spec`.
-
-The user answers:
-
-```text
-No. The retention section is wrong now.
-```
-
-Expected: run `agx flow log intent approve intent.md declined … none …`, say the intent is written and unapproved, and
-start no `spec`.
-
-**FAILS:** a second approval question in the same message; re-running the direction interview; starting `spec` before
-the answer; treating the earlier `approve intent.md` row as current; recording the no as a `challenge intent.md` row.
-
-Assertions:
-
-- **IN-E21:** Treats the stale approval as unapproved, displays the `stale:` line and current hash before asking only
-  the single approval question (no interview rerun), and on the user's "No" proposes
-  `agx flow log intent approve intent.md declined` (not `challenge declined`), states it is unapproved, and starts no
-  `spec`.
-
-### Legacy intent: a rewrite adds no card
-
-Shared fixture: a work folder with a six-section `intent.md` written before the card rule (no title line, no card) and a
-`state.tsv` with an `approve intent.md` row. The legacy intent opens with `derived-from: none` at the top of the file,
-as written before the card rule. The user message:
-
-```
-Add a constraint to docs/specs/2026-09/feature-retry-uploads/intent.md: uploads over 2 GB are out of scope for retries.
-```
-
-Correct behavior: the skill adds the constraint to Constraints. It adds no title line and no card. It writes no second
-`create intent.md` row. It renames and reorders no section. The rewrite keeps the header it has and adds no Source line.
-Because the edit changes approved text, the approval reads `stale` afterwards, and the skill asks the approval question
-again.
-
-Assertions:
-
-- **IN-E22:** Adds the 2 GB constraint under `Constraints` while preserving the legacy `derived-from: none` layout
-  (adding no `# Intent:` title, no five-line card, no `Source` line, no second `create` row, and no section reordering),
-  and re-asks the approval question because the edit stales approval.
-
-### Unattended issue-driven capture names the issue as its source
-
-Shared fixture: this scenario declares its own fixture. It is a git repo with no live session. A scheduled run's
-dispatching prompt, below, says no user will answer. Issue #1150 here is a fixture issue, not the real issue with that
-number. Its body asks for a `--json` flag on the status command.
-
-```text
-Unattended run: no user will answer. Capture an intent from issue #1150.
-```
-
-Correct behavior: the new `intent.md` opens with `# Intent: ...` and no front matter. Its card has five lines, with
-`**Source:**` last, and that line names `issue #1150`. The other four lines are each one complete sentence. No approval
-question is printed, and the report says approval is pending.
-
-**FAILS:** a `Source` line that names the conversation; a `Source` line that reads `none stated` when the input names
-the issue; a `derived-from: none` header above the title line; an `Ask` line in the card.
-
-Assertions:
-
-- **IN-E23:** Produces a new `intent.md` opening with `# Intent: ...` (no front matter, no `derived-from: none`), five
-  one-sentence card lines with `**Source:**` last naming `issue #1150` (no `Ask` line), prints no approval question, and
-  reports approval pending.
-
-### Direction capture leaves artifact checks to later phases
-
-The user has supplied a goal, a current constraint and an observable success condition. They have approved no
-implementation and supplied no diff, existing design file or running feature to inspect. The working tree contains only
-the repository's instructions and no artifact for this work.
+**Leg B — direction capture leaves artifact checks to later phases.** Starting state: the user has supplied a goal, a
+current constraint and an observable success condition. They have approved no implementation and supplied no diff,
+existing design file or running feature to inspect. The working tree contains only the repository's instructions and no
+artifact for this work.
 
 ```text
 We need a way for staff to resume interrupted exports. Keep the existing interface and allow them to resume within
 one business day. Let's agree on what counts as success before choosing a design.
 ```
 
-Correct behavior: keep the current conversation in direction capture, use the success condition and constraint in the
+Expected (Leg B): keep the current conversation in direction capture, use the success condition and constraint in the
 direction challenge, and leave solution choices for later. Neither the reader receipts nor the response shows any
 principles index/leaf read, principle citation, or artifact self-test.
 
-**FAILS:** treating the description as an inspected artifact, opening principles leaves before challenging the intent,
-claiming a leaf self-test ran, or choosing an implementation to give the check something to evaluate.
+**FAILS:** running the direction interview, writing `intent.md`, or invoking `decompose` on Leg A alone; treating Leg B
+as an inspected artifact, opening principles leaves, claiming a leaf self-test ran, or choosing an implementation.
 
 Assertions:
 
-- **IN-E24:** Stays in direction capture using the supplied constraint and success condition, with no principles
-  index/leaf file in `_eval/reader-receipts.json` and no principle citation or artifact self-test in the response.
+- **IN-E15:** In Leg A, does not open a direction interview, write `intent.md`, or invoke `decompose` on the ambiguous
+  musing question; in Leg B, stays in direction capture with no principles index/leaf file in
+  `_eval/reader-receipts.json` and no principle citation or artifact self-test in the response.
 
 ### A user's change brought directly asks the runtime-change yes first
 
@@ -914,7 +855,7 @@ in the unattended variant, asking the question or recording the change as approv
 
 Assertions:
 
-- **IN-E25:** Recognizes the runtime-altering user's change and asks exactly one yes/no question before any interview,
+- **IN-E16:** Recognizes the runtime-altering user's change and asks exactly one yes/no question before any interview,
   file, or row; on "No", writes no artifact or `state.tsv` row, reports it was not captured, and does not return to
   `diagnose`; in the unattended variant, asks nothing and records the missing yes as a `blocker`.
 
@@ -923,7 +864,8 @@ Assertions:
 Starting state: a live chat on `main`. No flow covers it. `diagnose` reported a flaky cache test and the user declined
 the root-cause investigation, saying they will monitor it instead. The user's change adds one log line around the cache
 lookup and a dashboard counter. It needs no runtime-change yes, because it is a monitoring change. It fails only the
-size signal, and the middle-path conditions hold, so the outcome is `brief`. The user's request:
+size signal, and the middle-path conditions hold, so the outcome is `brief` (created on feature branch
+`fix/cache-monitoring`). The user's request:
 
 ```text
 I don't want to dig into the flaky cache test. Just add the log line and the counter so we can watch it.
@@ -941,12 +883,14 @@ branch exists; a second waiver row; asking a runtime-change yes for a monitoring
 
 Assertions:
 
-- **IN-E26:** Takes the middle path (`brief.md`) without asking a runtime-change yes or forwarding to `diagnose`,
+- **IN-E17:** Takes the middle path (`brief.md`) without asking a runtime-change yes or forwarding to `diagnose`,
   creates and announces a feature branch off `main` first, records the declined investigation in `Decisions`, and logs
   one `waive "diagnose <work-branch>"` row (never `main`) after `create brief.md` with evidence `none` and `next`
   `intent review the brief`.
 
 ## routing_boundary
+
+### Capture-only request reports route without starting another skill
 
 ```text
 Capture this intent only, for another session. We need a config validation command.
@@ -955,11 +899,32 @@ Capture this intent only, for another session. We need a config validation comma
 Expected: challenge direction while the user participates, save the actual disposition and open questions, and report
 the selected or blocked route without starting another skill. Capture-only is not a decline of questions.
 
+Assertions:
+
+- **IN-R1:** On capture-only ("config validation command"), runs the direction challenge and reports the route without
+  starting another skill (not treating capture-only as a decline).
+
+### Conversational musing does not open intent
+
 ```text
 I keep wondering whether offline support would be worth the complexity someday. Curious what you think.
 ```
 
-Expected: answer conversationally; no intent artifact or interview.
+```text
+I've been mulling over adding a plugin marketplace to our product. What do you think the hard parts would be? Not
+asking you to build anything — just thinking out loud.
+```
+
+Expected: both match intent's **Don't use when** row "Musing about or asking a question about an idea, with no ask to
+work it toward implementation": answer directly and substantively, with zero lifecycle skill invocations, no
+`intent.md`, and no direction interview.
+
+Assertions:
+
+- **IN-R2:** Answers both musing prompts ("offline support" and "plugin marketplace") directly and conversationally with
+  no `intent.md`, no interview, and no lifecycle skill invocation.
+
+### Existing fixed design forwards to challenge
 
 ```text
 Here's our fixed batching design: five minutes per user, deduplicate within each batch, flush at 50 events.
@@ -971,14 +936,12 @@ behalf; do not restart direction capture or reopen the fixed choices. A live bug
 A written intent with unresolved direction stays in intent; merely having a file is not evidence it is ready for
 decomposition.
 
-```text
-I've been mulling over adding a plugin marketplace to our product. What do you think the hard parts would be? Not
-asking you to build anything — just thinking out loud.
-```
+Assertions:
 
-Expected: this matches intent's own **Don't use when** row "Musing about or asking a question about an idea, with no ask
-to work it toward implementation": answer directly and substantively, with zero lifecycle skill invocations. Invoking
-`intent` here is the failure this case exists to catch.
+- **IN-R3:** Forwards the fixed batching design directly to `challenge` carrying the input with no starter question and
+  without reopening fixed choices.
+
+### Explicit intent call for UX deliverables notes better-elsewhere and captures the problem
 
 ```text
 /agentics:intent we need wireframes for the new billing settings page
@@ -990,16 +953,12 @@ as a hand-off target, or stopping, fails this case.
 
 Assertions:
 
-- **IN-R1:** On capture-only ("config validation command"), runs the direction challenge and reports the route without
-  starting another skill (not treating capture-only as a decline).
-- **IN-R2:** Answers both musing prompts ("offline support" and "plugin marketplace") directly and conversationally with
-  no `intent.md`, no interview, and no lifecycle skill invocation.
-- **IN-R3:** Forwards the fixed batching design directly to `challenge` carrying the input with no starter question and
-  without reopening fixed choices.
 - **IN-R4:** Under explicit `/agentics:intent` for wireframes, notes in one line that Agentics has no UX deliverables
   workflow (`better elsewhere`) and continues capturing the problem the billing settings page serves.
 
 ## adversarial
+
+### Declined direction interview, safety hold on false ok, and blocker waiver
 
 The user has not answered the question defining success for webhook retry work:
 

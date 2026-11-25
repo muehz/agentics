@@ -14,6 +14,7 @@ import {
 } from "./frontmatter.ts";
 import { FAMILY as ARTIFACT_FAMILY } from "./artifacts.ts";
 import { FAMILY as ATTRIBUTION_FAMILY } from "./attribution.ts";
+import { FAMILY as BANK_FIXTURE_FAMILY } from "./bank-fixture-completeness.ts";
 import { FAMILY as EVAL_CHECK_FAMILY, runEvalsCheck } from "./eval-check.ts";
 import { FAMILY as FILE_SIZE_FAMILY } from "./file-size.ts";
 import { FAMILY as FLOW_EMISSION_FAMILY } from "./flow-emission.ts";
@@ -120,8 +121,8 @@ export const FAMILIES: readonly Family[] = [
 
 /**
  * Every family the registered domain runs: `FAMILIES` in their order, with question-format after independence, and
- * standards, shell-data, file size, inbound anchor, shared contracts, waive operands and record keeping before
- * eval-check.
+ * standards, shell-data, file size, inbound anchor, shared contracts, waive operands, record keeping, and bank fixture
+ * completeness before eval-check.
  */
 export const DOMAIN_FAMILIES: readonly Family[] = FAMILIES.flatMap((family) =>
   family === EVAL_CHECK_FAMILY
@@ -133,6 +134,7 @@ export const DOMAIN_FAMILIES: readonly Family[] = FAMILIES.flatMap((family) =>
         SHARED_CONTRACTS_FAMILY,
         WAIVE_OPERANDS_FAMILY,
         RECORD_KEEPING_FAMILY,
+        BANK_FIXTURE_FAMILY,
         family,
       ]
     : family === INDEPENDENCE_FAMILY
