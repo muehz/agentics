@@ -51,7 +51,8 @@ _(scenario)_
     - **Containment.** Does the team know the rollback, failover, or revoke path?
     - **Comms.** Is the cadence held? Is the customer-facing message clear?
     - **Hand-off.** Is the postmortem path clean?
-4. **Set the drill mode** (tabletop or game day). Confirm.
+4. **Set the drill mode** (tabletop or game day). If the request already specifies `tabletop` or `game day`, honor it
+   directly and skip Q1 below. Otherwise ask:
 
     > ❓ **Q1** - **Drill mode**: Tabletop (verbal walkthrough) or game day (real execution in a non-production
     > environment)?

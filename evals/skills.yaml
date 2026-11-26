@@ -97,9 +97,8 @@ skills:
     eval-digest: 6bc0ebe3f820b522e3e3f1ca53a911caf013e719f5d9dac28f5c9330c91ac1d1
   tdd:
     last-evaluated: 2026-11-24
-    eval-status: passing
+    eval-status: not-run
     eval-digest: 0a7cdf3e60524a282fd8e8d08d105183857d03e18a0df14f8eccf3aa95da972c
-    grading-method: separate-provider-v1
   threat-model:
     last-evaluated: 2026-11-20
     eval-status: not-run

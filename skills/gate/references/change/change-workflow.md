@@ -18,13 +18,13 @@ the rendered record; the user changes it by saying so. Ask for a name only when 
 
 ## The flow
 
-| Step | What happens                                                                                                                                                                             |
-| ---- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 1    | Draft Phases 1 to 7 from what is known. Run the security scan of Phase 3 when it applies.                                                                                                |
-| 2    | Ask one question round for every field that cannot be filled or inferred, and for each decision.                                                                                         |
-| 3    | Render the full record once, with all eight sections written out in full (never eliding sections with `...` or placeholders), the classification's reasoning, and every open gap marked. |
-| 4    | Take one confirmation that names the file path; an edit request revises the record and renders it again.                                                                                 |
-| 5    | Write the file (Phase 8), then the adapter post and the back-links when the user chose them.                                                                                             |
+| Step | What happens                                                                                                          |
+| ---- | --------------------------------------------------------------------------------------------------------------------- |
+| 1    | Draft Phases 1 to 7 from what is known. Run the security scan of Phase 3 when it applies.                             |
+| 2    | Ask one question round for every field that cannot be filled or inferred, and for each decision.                      |
+| 3    | Render the full record once across all eight sections, with the classification's reasoning and every open gap marked. |
+| 4    | Take one confirmation that names the file path; an edit request revises the record and renders it again.              |
+| 5    | Write the file (Phase 8), then the adapter post and the back-links when the user chose them.                          |
 
 The round uses the [question format](../../../routing/references/contracts/question-format.md) and its collection rules.
 A field the user already gave in the request is not asked again. A statement the user makes about their own organization
@@ -237,9 +237,10 @@ match:
 | The record was not written: no acceptable window, or the path could not be written              | `blocked`   |
 | The security scan left a Critical or Important finding open                                     | `failed`    |
 | A field was skipped, a required scan did not run, or the irreversibility acknowledgment is open | `pending`   |
+| The record was written with every applicable field filled                                       | `ok`        |
 
 A sensitive surface with no diff, recorded as `not scanned: no diff`, is a scan with nothing to run, not a skipped scan,
-so it leaves the status `ok`. | The record was written with every applicable field filled | `ok` |
+so it leaves the status `ok`.
 
 A failed adapter post does not change the status: the file is the record, and the report names the failure.
 

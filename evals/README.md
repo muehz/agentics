@@ -1,7 +1,8 @@
 # Agentics evaluations
 
-This directory holds Agentics's eval data: the scenario banks under [`skills/`](skills/README.md), the eval record
-`skills.yaml`, the staged artifact sources under `fixtures/`. The eval engine that reads them lives in
+This directory holds Agentics's eval data: the pinned development scenario banks under [`skills/`](skills/README.md),
+unseen holdout scenario banks under [`holdout/`](holdout/README.md), the eval record `skills.yaml`, and the staged
+artifact sources under `fixtures/`. The eval engine that reads them lives in
 [`muehz/evals`](https://github.com/muehz/evals). Its own documentation, tests and CI are there; Agentics runs none of
 them.
 
@@ -38,7 +39,9 @@ No CI job runs these evaluations. The author of a pull request that adds or chan
 or with a coding tool's own eval tooling, then reports the results in the pull request, as
 [Evaluate a proposed skill change](../CONTRIBUTING.md#evaluate-a-proposed-skill-change) describes.
 
-- [Skill banks](skills/README.md) pin the scenarios used to evaluate skills.
+- [Skill banks](skills/README.md) pin the development/regression scenarios used to evaluate skills.
+- [Holdout banks](holdout/README.md) hold unseen post-freeze generalization scenarios that optimization and fix agents
+  must never read.
 - `runs/` is ignored local output.
 
 `evals stamps --base <ref> --head <ref>` reports stamp and digest changes for skills. `evals/fixtures/<skill>/` holds

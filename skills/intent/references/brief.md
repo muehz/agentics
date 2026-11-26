@@ -90,10 +90,13 @@ change is never finished on the middle path.
 ## Review
 
 Every brief gets one independent review before its approval question. Dispatch one fresh general-purpose subagent with
-[brief-reviewer-charter.md](brief-reviewer-charter.md) and the brief's absolute path. The reviewer runs at the Deep
-tier, and at Max only when the user selects Max for the review. **Reviewer selection** in the
-[model ladder](../../routing/references/model-ladders.md#reviewer-selection) resolves the tier, and
-[surface-dispatch.md](../../routing/references/surface-dispatch.md) gives the host's dispatch mechanism.
+[brief-reviewer-charter.md](brief-reviewer-charter.md) and the brief's absolute path, complete the review pass (verdict
+`READY`/`REVISE`, findings tally, recorded `- **Brief review:**` line, and rendering the revised `brief.md` verbatim
+when findings trigger a revision), and then present the brief path, `flow status` hash, direction summary, and single
+approval question naming `execute`. The reviewer runs at the Deep tier, and at Max only when the user selects Max for
+the review. **Reviewer selection** in the [model ladder](../../routing/references/model-ladders.md#reviewer-selection)
+resolves the tier, and [surface-dispatch.md](../../routing/references/surface-dispatch.md) gives the host's dispatch
+mechanism.
 
 Resolve each finding in the brief, or keep it open; the budget below says which open findings may go with the approval
 question. Record the review under **Decisions** as
@@ -112,23 +115,26 @@ run goes to the user with the approval question only when it is Minor or Informa
 left after the last run blocks the question: present it and ask the user to revise the brief or stop. A revision the
 user asks for, such as an edit request at the approval question, starts a new budget.
 
-**No subagent.** When the host cannot dispatch, say so once, read the brief against the charter yourself in one pass,
-record `- **Brief review:** <YYYY-MM-DD>, self-read: no subagent available, <N> findings, run <k>`, and say in the
-approval question that the review was not independent. `execute` reads that line and reviews the task's packet itself.
+**No subagent.** Only when the host environment genuinely cannot dispatch a subagent (never in response to a user asking
+to skip the review), say so once, read the brief against the charter yourself in one pass, record
+`- **Brief review:** <YYYY-MM-DD>, self-read: no subagent available, <N> findings, run <k>`, and say in the approval
+question that the review was not independent. `execute` reads that line and reviews the task's packet itself.
 
 **The review is a safety gate**, one of the reviews before an approval question in
 [gates.md](../../routing/references/contracts/gates.md#safety-gate). A request to skip it is held, said once: the review
 is held, because an approval of an unreviewed brief sends unchecked scope to implementation; the user can instead waive
-the chain entry for this change, as [the waiver](../SKILL.md#when-the-chain-is-required) says. A repeated demand gets a
-one-line pointer back to that alternative.
+the chain entry for this change, as [the waiver](../SKILL.md#when-the-chain-is-required) says. Then immediately dispatch
+the independent review subagent with [brief-reviewer-charter.md](brief-reviewer-charter.md) at the Deep tier (do not
+fall back to a self-read when dispatch is available, and do not ask the approval question before the review completes).
+A repeated demand gets a one-line pointer back to that alternative.
 
 ## Ask
 
 Run [Step 4](../SKILL.md#step-4-route-to-spec-and-ask-for-approval)'s approval procedure with `brief.md` in place of
 `intent.md`: no question while an open question remains, the status line, the noted `hashes: brief.md text=<hash>`, the
 answer table, the approval guard, and asking again by content. Before asking, show the brief's full resolved path, its
-actual hash (never an ellipsis or placeholder), a concrete summary of its behavior, task, and decisions, and the review
-line. The question is:
+actual hash from `flow status` (never an ellipsis or placeholder), a concrete summary of its behavior, task, and
+decisions, and the `- **Brief review:**` line, then ask the approval question directly:
 
 > "Brief written to `<brief-path>`. Approve this change? Your yes lets `execute` make this one change; commits, the pull
 > request, and the merge keep their own gates."

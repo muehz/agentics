@@ -12,7 +12,7 @@ import type { Family } from "./index.ts";
 /** The rule id reported when a scenario bank criterion or assertion requires a placeholder with no concrete fixture value. */
 export const BANK_FIXTURE_COMPLETENESS_RULE = "eval-bank-fixture-completeness";
 
-const BANKS_DIR = "evals/skills";
+const BANK_DIRS = ["evals/skills", "evals/holdout"] as const;
 
 const CATEGORY_HEADING = /^##\s+(happy|edge|routing_boundary|adversarial)\s*$/;
 const SUB_HEADING = /^###\s+(.*)$/;
@@ -279,29 +279,34 @@ export function auditBankText(rel: string, text: string): Failure[] {
   return failures;
 }
 
-/** Lists sorted `evals/skills/*.md` bank paths (excluding `README.md`), or `[]` when `evals/skills` does not exist. */
+/** Lists sorted `evals/skills/*.md` and `evals/holdout/*.md` bank paths (excluding `README.md`). */
 function bankFiles(repoRoot: string): string[] {
-  let banksRoot: string;
-  try {
-    banksRoot = checkedRepoPath(repoRoot, BANKS_DIR);
-    if (!statSync(banksRoot).isDirectory()) return [];
-  } catch (error) {
-    if (isFileErrorOfKind(error, "missing")) return [];
-    throw auditFileError("checking", BANKS_DIR, error);
+  const results: string[] = [];
+  for (const dir of BANK_DIRS) {
+    let banksRoot: string;
+    try {
+      banksRoot = checkedRepoPath(repoRoot, dir);
+      if (!statSync(banksRoot).isDirectory()) continue;
+    } catch (error) {
+      if (isFileErrorOfKind(error, "missing")) continue;
+      throw auditFileError("checking", dir, error);
+    }
+    let entries: string[];
+    try {
+      entries = readdirSync(banksRoot);
+    } catch (error) {
+      throw auditFileError("reading", dir, error);
+    }
+    for (const name of entries
+      .filter((entry) => entry.endsWith(".md") && entry !== "README.md")
+      .sort()) {
+      results.push(`${dir}/${name}`);
+    }
   }
-  let entries: string[];
-  try {
-    entries = readdirSync(banksRoot);
-  } catch (error) {
-    throw auditFileError("reading", BANKS_DIR, error);
-  }
-  return entries
-    .filter((name) => name.endsWith(".md") && name !== "README.md")
-    .sort()
-    .map((name) => `${BANKS_DIR}/${name}`);
+  return results;
 }
 
-/** Checks every scenario bank under `evals/skills/` for fixture completeness against its criteria and assertions. */
+/** Checks every scenario bank under `evals/skills/` and `evals/holdout/` for fixture completeness. */
 export function bankFixtureCompletenessRules(repoRoot: string): Failure[] {
   const failures: Failure[] = [];
   for (const rel of bankFiles(repoRoot)) {

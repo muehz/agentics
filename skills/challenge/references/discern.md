@@ -93,10 +93,8 @@ Unless the user asks for another format, the response ends with:
 - `[Unverified]`: stated as fact elsewhere but not checked here.
 
 Do not present an inference as a confirmed fact. Attach `[Inference]`, `[Speculation]`, or `[Unverified]` consistently
-to **every** unsourced comparative claim across all lenses (including cost, volume/scale, and feature comparisons like
-immutability or object lock)—never leave some comparative points unlabeled while others carry labels. Qualify or support
-an unsourced absolute such as "prevent", "guarantee", or "will never". When a gap only the user can close remains, ask
-rather than guess.
+to every unsourced comparative claim across all lenses. Qualify or support an unsourced absolute such as "prevent",
+"guarantee", or "will never". When a gap only the user can close remains, ask rather than guess.
 
 **A decision needed now.** When the user wants a decision now despite missing facts, or tells you not to ask for
 context:

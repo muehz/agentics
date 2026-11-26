@@ -68,13 +68,21 @@ data already available in Git objects, logs or prior context. Report those limit
 
 ## Offer an optional sandbox and network allowlist
 
-Check the actual host, required services, dependencies and escape routes. Then offer these independently. For a
-supported Claude Code host, a discussion fragment is:
+Check the actual host, required services, dependencies and escape routes. Then offer **OS sandbox** and **network
+allowlist** strictly independently — never bundle `"enabled": true` inside a network-allowlist-only preview. For a
+supported Claude Code host, separate discussion fragments are:
 
 ```json
 {
     "sandbox": {
-        "enabled": true,
+        "enabled": true
+    }
+}
+```
+
+```json
+{
+    "sandbox": {
         "network": {
             "allowedDomains": ["registry.npmjs.org"]
         }
@@ -119,6 +127,31 @@ filename convention. For a multi-file edit, do these steps:
 Skip unsupported extensions and deleted files with an explanation. Retain the consumer's existing checks and a short
 timeout. Report a timeout or missing binary as incomplete verification.
 
+Illustrative Claude Code `PostToolUse` helper (`.claude/hooks/post-edit-check.cjs`, wired from `.claude/settings.json`
+under `hooks.PostToolUse` with matcher `Edit|Write`):
+
+```js
+const fs = require("node:fs");
+const path = require("node:path");
+const { execFileSync } = require("node:child_process");
+const root = fs.realpathSync(process.cwd());
+const ev = JSON.parse(fs.readFileSync(0, "utf8") || "{}");
+const rawPaths = Array.isArray(ev.tool_input?.files) ? ev.tool_input.files : [ev.tool_input?.file_path].filter(Boolean);
+for (const p of rawPaths) {
+    const abs = path.resolve(root, p);
+    if (!fs.existsSync(abs)) continue;
+    const real = fs.realpathSync(abs);
+    if (real !== root && !real.startsWith(root + path.sep)) continue;
+    if (!/\.(ts|tsx|js|jsx|json|md)$/.test(real)) continue;
+    execFileSync(path.join(root, "node_modules/.bin/prettier"), ["--write", "--", real], {
+        stdio: "inherit",
+        timeout: 10000,
+    });
+}
+```
+
+Replace the binary path, flags, and extensions with the consumer's installed formatter/linter.
+
 ## Select protected paths and explain blocks
 
 Ask the consumer which paths are protected and who can approve an exception. Generated code and frozen packages are
@@ -139,6 +172,36 @@ For example, after the consumer supplies its rule and owner, a block could read:
 ```text
 Blocked edit: generated/client.ts matches generated/**. This client is regenerated from its schema.
 Approval: the SDK owners named in CODEOWNERS. Route: request a scoped exception in the consumer's review process.
+```
+
+Illustrative Claude Code `PreToolUse` helper (`.claude/hooks/protect-paths.cjs`, wired from `.claude/settings.json`
+under `hooks.PreToolUse` with matcher `Edit|Write`):
+
+```js
+const fs = require("node:fs");
+const path = require("node:path");
+const root = fs.realpathSync(process.cwd());
+const ev = JSON.parse(fs.readFileSync(0, "utf8") || "{}");
+const rawPaths = Array.isArray(ev.tool_input?.files) ? ev.tool_input.files : [ev.tool_input?.file_path].filter(Boolean);
+for (const p of rawPaths) {
+    const abs = path.resolve(root, p);
+    const parent = fs.existsSync(abs) ? fs.realpathSync(abs) : fs.realpathSync(path.dirname(abs));
+    const rel = path
+        .relative(root, fs.existsSync(abs) ? parent : path.join(parent, path.basename(abs)))
+        .replace(/\\/g, "/");
+    if (rel.startsWith("..") || rel.startsWith("<protected-prefix>/")) {
+        process.stdout.write(
+            JSON.stringify({
+                hookSpecificOutput: {
+                    hookEventName: "PreToolUse",
+                    permissionDecision: "deny",
+                    permissionDecisionReason: `Blocked edit: ${rel} matches <protected-prefix>/**. Approval: <owner>. Route: <route>.`,
+                },
+            }),
+        );
+        process.exit(0);
+    }
+}
 ```
 
 Replace every example path, reason, owner and route with discovered consumer decisions. Do not invent an approver. Do
@@ -169,7 +232,27 @@ These source checks were made on 2026-10-14. Recheck capabilities for the instal
 | Copilot hooks | Command pre-tool errors deny, but timeouts and HTTP failures can fail open.                                                    |
 | Copilot hooks | CLI and cloud-agent coverage differ.                                                                                           |
 
+Illustrative native Codex (`~/.codex/config.toml` + `.codex/hooks.json`) and Copilot CLI (`.github/hooks/hooks.json` +
+`--allow-tool`) fragments (never copy Claude JSON):
+
+```toml
+# ~/.codex/config.toml (beta permission profile; does not compose with legacy sandbox settings)
+[profiles.inner_loop]
+approval_policy = "on-request"
+# Restrict allowed commands to reviewed scripts only (e.g., npm run build, npm test, npm run lint).
+```
+
+```json
+// .github/hooks/hooks.json (Copilot CLI; HTTP hooks and timeouts can fail open — prefer local command hooks)
+{
+    "version": 1,
+    "hooks": {
+        "postToolUse": [{ "type": "command", "bash": "node .github/hooks/post-edit-format.cjs" }]
+    }
+}
+```
+
 This guide defines requirements for a future selected consumer implementation. It does not ship a generic dispatcher or
 path-guard library. After the consumer approves the concrete setup and checks, test any tailored helper. Run that test
 with that provider's actual payloads and refusal protocol. Record versions, commands, results and remaining gaps. Do not
-count these documentation examples as provider execution or fresh skill evaluation evidence.
+count these documentation examples as evidence that the installed provider enforces the rule.

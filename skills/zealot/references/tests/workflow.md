@@ -37,14 +37,16 @@ never stops at an unavailable dispatch with no proof attempt.
     base. Name test files, a directory, or a diff range."
 
     Only two things widen the scope to the whole project: the explicit word `all`, and the user's own request for the
-    whole project in words. Split it into at most eight package groups balanced by test count. Count with the project's
-    test lister where one exists (Go: `go test -list . ./<package>` per package). Otherwise count the language's test
-    declarations, such as `^func Test` in Go or `def test_` in Python. Approximate balance is fine. The cap is not.
-    Every group gets its own Deep reviewer in Step 5.
+    whole project in words. Split it into at most eight nonempty package groups balanced by test count. Count with the
+    project's test lister where one exists (Go: `go test -list . ./<package>` per package). Otherwise count the
+    language's test declarations, such as `^func Test` in Go or `def test_` in Python. Approximate balance is fine. The
+    cap is not. Every nonempty group gets its own Deep reviewer in Step 5.
 
-    Before any dispatch, state the exact selection to the user: the test files, the packages, and, when `all` applies,
-    the groups. State the dispatch count in the same message: one finder for the whole selection and one Deep reviewer
-    per group. The wrapper owns scope: pass it explicitly to the finder in Step 4.
+    Before any dispatch, state the exact selection concretely to the user: list every selected test file and package by
+    name, and when `all` applies, list every concrete balanced package group (<= 8 groups) with its member packages and
+    test counts by name before dispatching. State the dispatch count in the same message (one finder for the whole
+    selection and one Deep reviewer per group) and show the dispatch line. The wrapper owns scope: pass it explicitly to
+    the finder in Step 4.
 
 2. **Determine the mutant root, snapshot the caller, and prepare the mutant worktrees.**
 
@@ -58,14 +60,13 @@ never stops at an unavailable dispatch with no proof attempt.
       root. Stop until the caller answers. Do not work around a refused environment read. Refuse a root that lies under
       `git -C <caller> rev-parse --show-toplevel` or under `git -C <caller> rev-parse --git-common-dir` resolved to an
       absolute path. Mutants never run inside the repository tree.
-    - **Snapshot.** Run these three exact commands in the caller checkout: `git rev-parse HEAD`,
-      `git status --porcelain=v2 --untracked-files=all`, and `git worktree list --porcelain` (always name all three full
-      commands verbatim, never shortened). Write each output to its own file under
-      `<mutant-root>/<run-id>/caller-snapshot-before/` with the session's file-write capability, which creates parents.
-      `<run-id>` is a name that this run picks once. It is unique on the host, so concurrent runs never share a
-      snapshot. An example is `snapshot-` plus a UTC timestamp and a random suffix. Step 6 compares against these files.
-      If a snapshot write is refused, keep the three outputs in the session record. Then report in Step 6 that the
-      comparison ran from memory. A refused snapshot write never stops the run.
+    - **Snapshot.** Run these three commands in the caller checkout: `git rev-parse HEAD`,
+      `git status --porcelain=v2 --untracked-files=all`, and `git worktree list --porcelain`. Write each output to its
+      own file under `<mutant-root>/<run-id>/caller-snapshot-before/` with the session's file-write capability, which
+      creates parents. `<run-id>` is a name that this run picks once. It is unique on the host, so concurrent runs never
+      share a snapshot. An example is `snapshot-` plus a UTC timestamp and a random suffix. Step 6 compares against
+      these files. If a snapshot write is refused, keep the three outputs in the session record. Then report in Step 6
+      that the comparison ran from memory. A refused snapshot write never stops the run.
     - **Owner.** Between Step 4's candidates and Step 5's reviewer dispatch, the wrapper creates one worktree per
       candidate with `git -C <caller> worktree add --detach <mutant-root>/<unique-name> HEAD`. Git creates missing
       parents. Save the absolute caller and worktree paths as literal data in this run's scratch directory for Step 6.
@@ -117,9 +118,10 @@ never stops at an unavailable dispatch with no proof attempt.
     **Reviewer fallback.** When the reviewer cannot be dispatched, run the reviewer pass yourself only after the finder
     list is complete, whether or not the finder was dispatched. Take the candidate identities, locations, and mutants
     alone from that list. Ignore the finder's evidence and reasoning. A claim that an assertion cannot fail is not
-    proof, but the mutant run is. Run every command and emit every candidate's full proof record, verdict, and Step 7
-    handoff block (labelled `self-read (not independent)`), never stopping after the candidate list. An in-session
-    finder with a dispatchable reviewer still gets a fresh dispatched reviewer.
+    proof, but the mutant run is. Run every command (showing verbose `-run` subtest command output confirming exact
+    subtest execution) and emit every candidate's full proof record, verdict, Step 7 handoff block, and Step 8 report
+    (labelled `self-read (not independent)` in both Step 7 Assurance and Step 8), never stopping after the candidate
+    list. An in-session finder with a dispatchable reviewer still gets a fresh dispatched reviewer.
 
     Per candidate, inside that candidate's worktree. The Go commands are examples; another language uses its test
     runner's own switches for a fresh run, an exact selection, and verbose output.
@@ -127,10 +129,10 @@ never stops at an unavailable dispatch with no proof attempt.
     - **Baseline.** Run the original named test from the module root that contains the test file. Force a fresh run. Go:
       `go test -C <worktree>/<module dir> ./<package> -run '^<Name>$' -count=1 -v` (`.` when the package is the module
       root). For a subtest, select every level exactly with `-run '^<Parent>$/^<Sub>$'`. Write spaces as `_`. Escape
-      regular-expression metacharacters, so a sibling subtest never decides the verdict. Verify that the full test name
-      (`<Parent>/<Sub>` for a subtest) appears as executed in the verbose output. Zero tests run, a `no tests to run`
-      notice, or `(cached)` output means not executed. The original must pass before any mutant is applied. A failing,
-      skipped, or unexecuted baseline makes the candidate `unproven`.
+      regular-expression metacharacters, so a sibling subtest never decides the verdict. Verify and state in the record
+      that the full test name (`<Parent>/<Sub>` for a subtest) appears as executed in the verbose output. Zero tests
+      run, a `no tests to run` notice, or `(cached)` output means not executed. The original must pass before any mutant
+      is applied. A failing, skipped, or unexecuted baseline makes the candidate `unproven`.
     - **Package baseline.** Before the first mutant of a package is applied, run that package's tests and the tests of
       its transitive importers inside the module on the original tree, once, in the first worktree of that package.
       Every candidate of the package uses that result, because every worktree carries the same caller state. Find Go
@@ -155,8 +157,7 @@ never stops at an unavailable dispatch with no proof attempt.
     - **Behavior change.** A confirmed candidate needs evidence that its mutant is not equivalent. When another test
       kills the mutant, that failure is the evidence. When none does, add a throwaway check in the worktree that calls
       the production code with one concrete input, run it on the original and on the mutant, then delete it. A mutant
-      with no observable difference is equivalent: record the candidate as `unproven` with the exact literal reason
-      `equivalent mutant` (never a paraphrase).
+      with no observable difference is equivalent: record the candidate as `unproven` with reason `equivalent mutant`.
     - **Other assertions.** Record whether the candidate test holds assertions besides the flagged one. The decision
       applies to the flagged assertion alone. Only a test with no other assertion is removed or replaced whole.
     - **Unavailable proof.** A test command that is missing, refused, or fails to start is unavailable. Record
@@ -165,10 +166,10 @@ never stops at an unavailable dispatch with no proof attempt.
       refused command in any variant: no environment wrapper, no other shell, no reworded flags. Record `unproven` at
       the first refusal.
 
-    The reviewer returns one complete record per candidate—showing the exact baseline, build, mutant named-test, and
-    package/importer commands with their outputs for every candidate individually (never abbreviating candidates
-    2..N)—with the verdict (`confirmed`, `rejected`, or `unproven`), any correction to the mutant, and the facts below.
-    The lines are the requested shape, not a required wording: Step 6 audits the facts and their command output.
+    The reviewer returns one complete record per candidate—showing the baseline, build, mutant named-test, and
+    package/importer commands with their outputs for every candidate individually—with the verdict (`confirmed`,
+    `rejected`, or `unproven`), any correction to the mutant, and the facts below. The lines are the requested shape,
+    not a required wording: Step 6 audits the facts and their command output.
     - `Original named test: PASS; valid mutant: builds; same named test: PASS`, for a confirmed candidate,
     - `Package and transitive importer tests: <commands and results on the original tree and with the mutant>; other killing test: <identity or none>`,
       with `importer set: empty` when the importer set was empty,
@@ -185,11 +186,10 @@ never stops at an unavailable dispatch with no proof attempt.
       change,
     - the other-assertions record.
 
-    A record that carries every fact—each backed by its printed command and output (never abbreviated for candidates
-    2..N)—is complete, whatever its wording. Before emitting Step 7, verify every confirmed candidate's record includes
-    its printed baseline, build, mutant-run, and package/importer commands and outputs; downgrade any record that lacks
-    one to `unproven` and name the missing fact. Never fill a gap from the wrapper's own reading of the code. Emit the
-    full Step 7 block on every run (including plain-language runs), with zero cross-references to earlier runs or turns.
+    A record that carries all six required facts stays `confirmed` regardless of phrasing (including compact alternate
+    wording). Downgrade a record to `unproven` only when one of the six required facts above is genuinely absent, and
+    name the missing fact. Never fill a gap from the wrapper's own reading of the code. Emit the full Step 7 block on
+    every run, copying every confirmed candidate's complete reviewer record lines verbatim without abbreviation.
 
     **Holding the proof.** Calling a candidate confirmed without its proof is a
     [safety gate](../../../routing/references/contracts/gates.md#safety-gate): it is a claim of status with no evidence
@@ -209,15 +209,16 @@ never stops at an unavailable dispatch with no proof attempt.
     each output to its own file under `<mutant-root>/<run-id>/caller-snapshot-after/`, with the `<run-id>` from Step 2.
     For each pair, derive the absolute `$before_file` and `$after_file` paths from the recorded snapshot directories and
     that output's filename in the same call. Compare them with `git diff --no-index -- "$before_file" "$after_file"`.
-    Name the `caller-snapshot-after/` write, all three exact commands (`git rev-parse HEAD`,
-    `git status --porcelain=v2 --untracked-files=all`, and `git worktree list --porcelain`), and the
-    `git diff --no-index` result for all three files explicitly (unchanged, or the verbatim difference). When Step 2's
-    snapshot write was refused, compare each output against the session record instead. Say that the comparison ran from
-    memory. A check that only confirms no mutant worktree remains is not the comparison. Report any difference verbatim.
-    Never repair it silently. The caller decides what to do with a changed checkout. Finally, delete this run's
-    `<mutant-root>/<run-id>/` directory, if it was written, with the session's file-delete capability. This is a file
-    deletion, distinct from `git worktree remove`. Delete nothing else under the mutant root. Another run's worktrees or
-    snapshots may still be in use.
+    Print the concrete `caller-snapshot-before/` and `caller-snapshot-after/` file paths (no placeholders), all three
+    exact commands (`git rev-parse HEAD`, `git status --porcelain=v2 --untracked-files=all`, and
+    `git worktree list --porcelain`) with their outputs, and the verbatim `git diff --no-index -- <before> <after>`
+    result for all three files (unchanged, or the verbatim difference). When Step 2's snapshot write was refused,
+    compare each output against the session record instead. Say that the comparison ran from memory. A check that only
+    confirms no mutant worktree remains is not the comparison. Report any difference verbatim. Never repair it silently.
+    The caller decides what to do with a changed checkout. Finally, delete this run's `<mutant-root>/<run-id>/`
+    directory, if it was written, with the session's file-delete capability. This is a file deletion, distinct from
+    `git worktree remove`. Delete nothing else under the mutant root. Another run's worktrees or snapshots may still be
+    in use.
 
 7. **Hand off.** Emit this fixed-shape block:
 
@@ -226,8 +227,7 @@ never stops at an unavailable dispatch with no proof attempt.
         - location (file:line of the assertion),
         - claimed behavior,
         - the mutant as applied (file:line and edit),
-        - the reviewer's record lines, copied verbatim in full for each candidate (never write "as Candidate 1 above" or
-          cross-reference an earlier section),
+        - the reviewer's record lines, copied verbatim in full for each candidate,
         - the decision.
 
         The decision is `remove` when another test killed the mutant (name that test), or `replace` when none did. A
@@ -235,7 +235,8 @@ never stops at an unavailable dispatch with no proof attempt.
         whole test only when the other-assertions record reads `none`. The block never paraphrases, summarizes, or
         reflows the reviewer's record lines.
 
-    - **Rejected.** Each candidate the mutant killed, with the test that stands.
+    - **Rejected.** Each candidate the mutant killed, with the test that stands and the killing test command and failing
+      output.
     - **Exceptions.** Each test the charter excused, with the exception that excused it. This covers a test where a
       pattern matched and an exception excused it. It also covers a test that belongs to an exception class, such as an
       Example function. A test the finder did not flag is a non-candidate and appears nowhere in this block.

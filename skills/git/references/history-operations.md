@@ -147,8 +147,8 @@ if ($LASTEXITCODE -eq 0) { 'base is an ancestor' }
 git log --oneline "$base_oid..HEAD"
 ```
 
-Report, from this output (only reporting completion after the proving commands actually ran in this run; when git cannot
-run in the environment, label the rewrite `[proposed]` with no completion verb or invented SHA):
+Report, from this output (report completion only after the proving commands have run; if they did not run, say so and
+give the commands instead of claiming completion or inventing a SHA):
 
 - the branch, the base it now sits on, and both the `source` and `fetched` fields the resolver printed for that base
 - the commits now on the branch above the base

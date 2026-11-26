@@ -151,10 +151,12 @@ change provider configuration from this audit.
 ### 5. Governance/community files
 
 Use scaffold's file catalog and per-file conformance criteria. Before a discoverable governance file is declared
-missing, check accepted root, `.github/`, and `docs/` locations. Report detected paths and the particular violated
-criterion. Apply the repository's requirements. Optional templates and irrelevant documents are not automatic failures.
-Retain catalog coverage. Do not require a changelog where repository policy prohibits one. Inspect legal/security files
-only as evidence of the project's stated requirements. Decisions about their contents remain with the organization.
+missing, check accepted root, `.github/`, and `docs/` locations. Report every absent applicable catalog file (including
+`CODEOWNERS` on GitHub/GitLab) as `missing` with an actionable next step. Report detected paths and the particular
+violated criterion. Apply the repository's requirements. Optional templates and irrelevant documents are not automatic
+failures. Retain catalog coverage. Do not require a changelog where repository policy prohibits one. Inspect
+legal/security files only as evidence of the project's stated requirements. Decisions about their contents remain with
+the organization.
 
 ### 6. Release state
 

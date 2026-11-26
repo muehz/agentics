@@ -35,7 +35,10 @@ fall through. An absent skill is `Optional — not configured`, not ❌ or a com
 ❌. An existing `REVIEW.md` is ✅ whatever its headings, and init offers no replacement for it. See the
 [REVIEW.md starter](community/review-md.md).
 
-**Step 2: present one menu.** The menu has four sections, and the user answers them in one reply:
+**Step 2: present one menu.** Report the scan results before the menu (`✅`, `❌`, `⚠️`, `—`; use `?` only when a file's
+existence is genuinely unknown), showing existing conformant files as `✅` with no `[ ]` checkbox (kept untouched,
+unselectable) and every applicable missing file as `[ ] ❌`. The menu has four sections, and the user answers them in
+one reply:
 
 1. The catalog rows, with **Select All**, which selects only ❌ and ⚠️ catalog rows.
 2. The optional additions: the code-review skill and `REVIEW.md`, when absent.
@@ -96,10 +99,11 @@ GitHub flags an unknown owner as an error); on the next reply that still asks fo
 
 **Reflection hand-off.** `forge reflect` writes approved lines to an existing instruction file itself. It hands
 `consumer pointer` rows to init only when the repository has no instruction file, so the rows need a starter
-`AGENTS.md`. Preselect `AGENTS.md` and put each row's proposed line in the generated starter, marked in the preview with
-the row's incident. The user's selection in reflect is not approval of the write. A run that carries only hand-off rows
-shows no menu and selects no other starter file; it asks only the Step 3 questions `AGENTS.md` needs that the scan does
-not answer.
+`AGENTS.md`. Preselect `AGENTS.md` and put each row's proposed line in the generated starter, explicitly marked inline
+with the row's incident ID/source (e.g., `- <rule> <!-- incident: <incident-id> -->` — never as an unmarked plain
+bullet). The user's selection in reflect is not approval of the write. A run that carries only hand-off rows shows no
+menu and selects no other starter file; it asks only the Step 3 questions `AGENTS.md` needs that the scan does not
+answer.
 
 ## Phase 2: generate, show, and confirm
 
@@ -107,8 +111,13 @@ The [file catalog](#file-catalog) links each file's questions, structure, and ge
 [Previews and confirmation](../SKILL.md#previews-and-confirmation) decides which files share a preview and which are
 shown alone.
 
-1. **Generate** every selected file from the Step 3 answers.
-2. **Show the ordinary files together**, in catalog order, in one message. Ask one question, worded exactly:
+1. **Generate** every selected file from the Step 3 answers and repository facts. The no-invention rule applies to
+   ungrounded organizational values (owning team, org, contact, check name, app ID)—it does not prevent generating
+   complete previews of starter files, config updates, standalone `AGENTS.md` additions, or local protection diffs from
+   discovered repository and user facts.
+2. **Show the ordinary files together**, in catalog order, in one message. Print the complete verbatim text or exact
+   diff of every selected file and local protection config/helper (no outlines, abbreviations, or placeholders). Ask one
+   question, worded exactly:
 
     > ❓ **Q1** - **Create these files**: Create these <N> files? (yes / edit <file> / skip <file>)
     >
@@ -168,12 +177,12 @@ source or settings are not proof of enforcement.
 own and never chooses their content. When the user asks for one, init asks for the decision the file records, then
 writes it through step 2:
 
-| File                 | The user decides                                                    | Content                                                                           |
-| -------------------- | ------------------------------------------------------------------- | --------------------------------------------------------------------------------- |
-| `LICENSE`            | The license, by SPDX identifier, and the copyright holder           | The license's published text, fetched or pasted. Never reconstructed from memory. |
-| `SECURITY.md`        | The reporting channel, the supported versions, and the response aim | Only those facts, in a short policy. No invented contact or timeline.             |
-| `CODE_OF_CONDUCT.md` | The code, by name and version, and the enforcement contact          | The code's published text, fetched or pasted, with the contact the user gave.     |
-| `FUNDING.yml`        | The funding platforms and account names                             | GitHub's `FUNDING.yml` keys with the user's values.                               |
+| File                 | The user decides                                                    | Content                                                                                                                                                            |
+| -------------------- | ------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `LICENSE`            | The license, by SPDX identifier, and the copyright holder           | The license's published text, fetched from its published source or pasted by the user, with the user's year and copyright holder. Never reconstructed from memory. |
+| `SECURITY.md`        | The reporting channel, the supported versions, and the response aim | Only those facts, in a short policy. No invented contact or timeline.                                                                                              |
+| `CODE_OF_CONDUCT.md` | The code, by name and version, and the enforcement contact          | The code's published text, fetched or pasted, with the contact the user gave.                                                                                      |
+| `FUNDING.yml`        | The funding platforms and account names                             | GitHub's `FUNDING.yml` keys with the user's values.                                                                                                                |
 
 A request that names the file without the decision gets a Step 3 question for it, with no recommendation that makes the
 decision for the user.

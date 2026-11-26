@@ -372,6 +372,6 @@ git rev-parse --verify --end-of-options "$target_ref"
 ```
 
 Report "pushed" only when `git ls-remote` actually ran in this run, returned one remote row whose ref field equals
-`target_ref`, and its object ID equals the local SHA. Report the branch or tag, the remote and that SHA. When git cannot
-run in the environment, label the push `[proposed]` with the exact commands and never report "pushed" or an invented
-SHA. When the two differ, or the remote does not hold the ref, report what each side holds and do not say "pushed".
+`target_ref`, and its object ID equals the local SHA. Report the branch or tag, the remote and that SHA. If the push did
+not run, state that explicitly and give the exact commands instead of reporting "pushed" or an invented SHA. When the
+two differ, or the remote does not hold the ref, report what each side holds and do not say "pushed".

@@ -177,6 +177,17 @@ data, never through a double-quoted shell string. See [Phase 6.2](lifecycle-publ
 - Post all PR responses after the push, so the SHAs exist on the remote.
 - Verify posted responses after Phase 6. Fetch them back. Check them for markdown/rendering hazards.
 - If one source fails, continue with the remaining sources.
+- Present the full unified diff for every Phase 4.2 draft commit and end each draft-lane presentation with a direct
+  **accept / edit / skip** question.
+- Render required PR rollups, draft replies, and proposed diffs verbatim with concrete observed values per
+  [output-discipline.md](../../routing/references/contracts/output-discipline.md) (omit unavailable IDs or links
+  honestly; keep local worktree paths and kept branch names in the session report, not in public rollup comments).
+- Keep push and posting status strictly consistent throughout the report; never claim tests or checks passed without
+  observed command output.
+- Record an undeclared Checkmarx scanner comment with detection state `unverified` (acted on none of it).
+- Under typed `/agentics:triage pr <N>`, a blocked `base-sync` rollup is authorized to post directly.
+- On a fork PR or draft-lane workflow thread, provide a reading-based finding assessment and concrete proposed diff when
+  target code is available while stating clearly that nothing was executed or verified.
 
 **DON'T:**
 

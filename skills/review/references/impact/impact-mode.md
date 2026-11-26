@@ -116,11 +116,10 @@ worried about.
   prove it, write **unproven**.
 - **Risks.** Keep only the real ones. Each names how it breaks, the `file:line`, how likely, one of the four shared
   severities from [severity.md](../../../routing/references/contracts/severity.md) (`Critical`, `Important`, `Minor`, or
-  `Informational` — never "Unknown" or "pending"), the ladder step its evidence reached, and how to check. Paste the
-  proof for the ones that matter.
+  `Informational`), the ladder step its evidence reached, and how to check. Paste the proof for the ones that matter.
 - **Cleared.** What you checked, the ladder step each check reached, and why it's fine.
-- **Before you merge.** The cheapest test or repro that catches the real bug, including the full runnable scratch proof
-  script inline (not merely a summary of its output; label it **template, not run** when execution could not run).
+- **Before you merge.** The cheapest test or repro that catches the real bug, including the runnable proof script inline
+  (labelled **template, not run** if execution could not run).
 
 Cite real code throughout. A writeup that leaves the session goes through the
 [outbound checks](../../../gh/references/posting-envelope.md#outbound-checks) first.

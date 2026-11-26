@@ -34,7 +34,7 @@ Read the rows from the top; the first match wins. The **Kind** column says what 
 | An operational runbook                                                                               | `ops`            | better elsewhere | `ops` authors, audits, and drills runbooks under `runbooks/`.                                                |
 | A wording, typo, or link fix to a skill, agent, hook, or instruction file such as `AGENTS.md`        | `forge`          | better elsewhere | `forge` owns Agentics assets and instruction files; agent-instruction edits need exact text shown and a yes. |
 
-A user who answers a forward by asking for the document anyway ("it's still a doc, just write it") has named this skill's job. Cancel the forward and treat the row as `better elsewhere`: say once what the document will not carry (for a plan: no approval and no checked task list), then write the complete requested document text (for example under `docs/`) in the same reply—never output a placeholder or meta-instruction to write it later. The forward already named any document on the topic, so ask neither the repo-check question nor Build's context-gathering questions.
+A user who answers a forward by asking for the document anyway ("it's still a doc, just write it") has named this skill's job. Cancel the forward and treat the row as `better elsewhere`: say once what the document will not carry (for a plan: no approval and no checked task list), then write the requested document directly in the same turn. The forward already named any document on the topic, so ask neither the repo-check question nor Build's context-gathering questions.
 
 ## Step 0: Preflight
 
@@ -90,7 +90,7 @@ Load [principles.md](references/principles.md) whenever you author or maintain d
 
 This skill writes decision records. Use [adr-format.md](../deepen/references/adr-format.md) as the template and its three-part test. Write the record into the directory that [repo-conventions.md](../routing/references/repo-conventions.md) resolves. A path or template the user names overrides both.
 
-- **A user's request to record a decision is written.** Apply the three-part test and state its result in **one single sentence on one line** in the reply (not two sentences). A decision that fails the test is still written when the user asked for it; that single line names which part failed.
+- **A user's request to record a decision is written.** Apply the three-part test and state its result in one sentence. A decision that fails the test is still written when the user asked for it; that single line names which part failed.
 - **A decision this skill finds on its own is offered only when it passes the test.**
 - **A decision `deepen` hands over is written.** It is either a record `deepen` offered, which passed the test, or one the user asked for, whose result `deepen` already stated. Do not run the test again, repeat its result line, or re-ask.
 - A record goes through Build when the user wants to co-author it. A supplied draft is Build's Stage 1 input.
@@ -117,7 +117,7 @@ On the next reply that still declines, in any wording, comply. Put `Draft: assum
 
 ### Status claims
 
-A claim of status with no evidence from this session is a safety gate ([gates.md](../routing/references/contracts/gates.md#safety-gate)). Never write or say that a document is `reviewed`, `reader-tested`, `final`, `complete`, or `signed off` unless that step ran in this session, and never set a verification date or a `Current official documentation:` label on a claim unless first-party evidence was checked and retained in this session (otherwise mark it `Not established by retained evidence:`). The rule covers the document, the conversation, and anything written for someone else, such as a commit message, a pull request description, or a status update. When asked for such a label, say once:
+A claim of status with no evidence from this session is a safety gate ([gates.md](../routing/references/contracts/gates.md#safety-gate)). Never write or say that a document is `reviewed`, `reader-tested`, `final`, `complete`, or `signed off` unless that step ran in this session, and never date or certify a claim against official documentation unless first-party evidence was checked and retained in this session. The rule covers the document, the conversation, and anything written for someone else, such as a commit message, a pull request description, or a status update. When asked for such a label, say once:
 
 - what is held: the label the step did not earn;
 - the harm: readers trust a review that never happened;
@@ -190,7 +190,7 @@ Load [slop-patterns.md](references/slop-patterns.md), protect spans per [STE exc
 2. **Catalog pass:** fix actual catalog hits only; leave clean text unchanged.
 3. **Focused STE pass (technical prose only):** split sequential actions, apply length/command rules, and use the mapped action terms; skip for brand copy and personal notes (and note when skipped).
 4. **Self-audit:** run the catalog self-audit and re-check against every applicable pattern and Layer 3 row; repair anything remaining.
-5. **Deliver:** return or apply the revised text with every protected span byte-exact in place, plus the change report: give **every** cited catalog pattern number and **every** cited Layer 3 STE rule number its own separate entry with column-zero fenced `Before:` and `After:` blocks quoting the exact original and exact delivered text verbatim (never inline backticks, never elided with `...`, never bundled under another pattern's pair, and never adding a fact absent from the source). For Build and Maintain edits, write the target file directly or state plainly why the write could not run.
+5. **Deliver:** return or apply the revised text with every protected span byte-exact in place, plus the change report naming each fixed catalog pattern and Layer 3 STE rule with verbatim `Before:` and `After:` excerpts and no fabricated facts.
 
 **Limits.** The slop catalog's adding-soul moves never override these:
 

@@ -5,28 +5,28 @@ Shared rules for what every skill prints, drafts, and claims. Skills link here i
 ## Verbatim drafts and zero placeholders
 
 Whenever a workflow previews, drafts, or delivers an artifact, diff, comment, rollup, brief, or command, render the
-complete verbatim text using concrete computed or fixture-backed values:
+complete verbatim text using concrete observed or computed values:
 
 - No elision markers (`...`, `(unchanged)`, comment-only stubs) and no narrative summaries in place of required content.
 - No unresolved template placeholders (`<trunk>`, `<summary>`, `<test command>`, `<login>`, `[annotation ...]`,
-  `<all task ids>`, `<real counts>`). Resolve every value from inspected repo state, tool output, or scenario fixtures;
-  if a value is unavailable, state that explicitly rather than printing a placeholder.
+  `<all task ids>`, `<real counts>`). Resolve every value from inspected repo state, tool output, or session input; if a
+  value is unavailable, state that explicitly rather than printing a placeholder.
 
-## Executed vs. simulated status honesty
+## Executed vs. proposed status honesty
 
 Report a write, commit, push, check, review, post, URL, SHA, or read-back value as completed or passing only after the
 proving command actually ran and succeeded in this session.
 
-- In simulated execution or unapplied previews, deliver the complete candidate text labeled unapplied/proposed and state
-  explicitly which checks or actions did not run.
+- In unapplied previews or when an action cannot run in this session, deliver the complete candidate text labeled
+  unapplied/proposed and state explicitly which checks or actions did not run.
 - Never claim a check passed, a comment posted, or a branch pushed from memory, from an earlier turn, or from intent
   alone.
 
 ## Question formatting
 
-Decision questions follow [question-format.md](question-format.md): column-0 `❓ **Q1** - **<title>**: ...` and
-`➡️ <recommendation>` inside one visible blockquote posted before any ask-tool call. Fixed yes/no confirmations and
-approval questions keep their fixed wording.
+Decision questions follow [question-format.md](question-format.md): `❓ **Q1** - **<title>**: ...` and
+`➡️ <recommendation>` inside one visible blockquote (`>` on every line) posted before any ask-tool call. Fixed yes/no
+confirmations and approval questions keep their fixed wording.
 
 ## Skill command syntax
 

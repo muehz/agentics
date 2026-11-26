@@ -45,9 +45,10 @@ names work gate can do, which another skill does better.
 | Merge a pull request or mark it ready                                     | `/agentics:gh`         | cannot           | That is repository policy, which gh states.                                                  |
 | A code review of a diff, with no completion decision                      | `/agentics:review`     | better elsewhere | Gate runs the same review, but adds the tests, the audit and a disposition.                  |
 
-**Cannot.** Load [forwarding.md](../routing/references/forwarding.md) and carry the input to the owner: announce and
-run a local-only target, ask one yes/no question before a target that writes, pushes or posts (including a merge via
-`gh` or a plain push via `git`), and forward once. After a forwarded fix, offer one re-run of gate on the fixed work.
+**Cannot.** Load [forwarding.md](../routing/references/forwarding.md) and carry the input directly to the owner: announce and
+run any local-only target directly without asking permission; ask one yes/no question only before a target that writes,
+pushes, or posts externally (including a merge via `gh` or a plain push via `git`), and forward once. After a forwarded
+fix, offer one re-run of gate on the fixed work.
 
 **Better elsewhere.** Under an explicit invocation, say in one line that the other skill fits better, name it, and run
 gate: `/agentics:gate branch` for a review request on a diff, branch, or pull request. Under `/agentics:gate check`, a
@@ -117,12 +118,12 @@ says how findings, the status lines and the proposal work.
 
 ## `/agentics:gate release`
 
-Run the pre-deploy gate: all eight checklist sections in one pass, one question round for what gate cannot infer, and one
-confirmation of the go or no-go summary, for every deploy. The short form renders a shorter summary and sets a shorter
-default monitor window; it skips no check and takes no further confirmation. Hand off execution to the user, who runs
-the deploy command. Then open the monitor window and act on the user's messages in it. Gate sets no timer, and it
-reports that the user saw no anomaly, never that the deploy succeeded. An anomaly escalates to `/agentics:ops response`. Show the
-checks. Never auto-deploy.
+Run the pre-deploy gate: label and run all eight checklist sections in one pass, one question round for what gate cannot
+infer, and one confirmation of the go or no-go summary, for every deploy. The short form renders a shorter summary and
+sets a shorter default monitor window only when short-form eligibility is established; it skips no check and takes no
+further confirmation. Hand off execution to the user, who runs the deploy command. Then open the monitor window and act
+on the user's messages in it. Gate sets no timer, and it reports that the user saw no anomaly, never that the
+deploy succeeded. An anomaly escalates to `/agentics:ops response`. Show the checks. Never auto-deploy.
 
 Load [references/release/release-workflow.md](references/release/release-workflow.md). Follow it. Checklist:
 [references/release/pre-deploy-checklist.md](references/release/pre-deploy-checklist.md). Monitor guidance:
@@ -136,10 +137,10 @@ non-trivial deploy with no change-record gets a soft suggestion from Phase 1, ne
 
 Change mode writes a CAB-style change-record for an infra or production change. It drafts eight parts: identify,
 classify, risk, approval chain, rollback, comms, schedule, and record submission. It asks one question round, renders
-all eight sections of the record once in full (never abbreviating or eliding sections), and takes one confirmation
-before it writes the file. Store the artifact as markdown at `change-records/<YYYY-MM-DD>-<slug>.md` in the consuming
-repo. The record can also be posted through an adapter: change mode asks which one, unless the user named it, and the
-file alone is the record when the answer is `none`.
+all eight sections of the record once in full (deriving commands from the runbook and marking unsupplied fields as open
+rather than inventing values), and takes one confirmation before it writes the file. Store the artifact as markdown at
+`change-records/<YYYY-MM-DD>-<slug>.md` in the consuming repo. The record can also be posted through an adapter: change
+mode asks which one, unless the user named it, and the file alone is the record when the answer is `none`.
 
 Load [references/change/change-workflow.md](references/change/change-workflow.md). Follow it. Template:
 [references/change/change-record-template.md](references/change/change-record-template.md). Classification guidance:
