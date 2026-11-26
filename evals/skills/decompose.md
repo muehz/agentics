@@ -713,7 +713,8 @@ Run each leg independently.
 
 **Leg A — per-slice update.** `docs/specs/2026-09/feature-billing/` holds approved, challenged, current `spec.md` and
 `plan.md` with `## S1` invoice list (`src/billing/invoices.ts`, `tests/billing/invoices.test.ts`, Dependencies: `none`,
-task `S1-1` completed, with `verify` rows and a 2026-09-04 `diverge` row + Divergences entry), `## S2` card management
+task `S1-1` completed, with `state.tsv` rows `verify S1-1 ok 2026-09-04` and `diverge S1-1 ok 2026-09-04` and
+`## Divergences` entry `2026-09-04 (S1-1): switched invoice list to cursor pagination`), `## S2` card management
 (`src/billing/cards.ts`, `tests/billing/cards.test.ts`, Dependencies: `none`), and `## S3` dunning
 (`src/billing/dunning.ts`, `tests/billing/dunning.test.ts`, Dependencies: `S2`). Tests run via `npm test`. During the
 run, the post-construction plan challenge on S2 completes `ok` (1 round asked and answered on 2026-09-05), all 10
