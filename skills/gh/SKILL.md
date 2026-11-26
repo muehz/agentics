@@ -27,7 +27,7 @@ Follow [output-discipline.md](../routing/references/contracts/output-discipline.
 
 **Handing off means forwarding, not doing.** Finish gh's own reads, perform none of the deferred analysis/writes, and forward per [forwarding.md](../routing/references/forwarding.md):
 
-- **Auto-forward** targets marked A in [target classification](../routing/references/forwarding.md#target-classification): announce safety scope in one line, forward, and pass fetched data. A forward to `/agentics:review` uses a local mode (`feedback`, `interactive`, or `axes`, never `post`) and forwards immediately for any named PR or "this PR" without stalling for a PR number.
+- **Auto-forward** targets marked A in [target classification](../routing/references/forwarding.md#target-classification): announce safety scope in one line, forward, and pass fetched data. A forward to `/agentics:review` uses a local mode (`feedback`, `interactive`, or `axes`, never `post`) and forwards immediately when the PR is already identified in context.
 - **Offer** targets marked as an offer: ask one yes/no naming side-effect scope, forward only on yes. Under explicit `/agentics:gh`, `better elsewhere` notes the owner in one line and runs gh.
 - Forward at most once per invocation; if bounced back, stop and explain.
 
@@ -37,7 +37,7 @@ Prefer **GitHub MCP server tools** first; fall back to **`gh` CLI** for scriptin
 
 ## Cross-cutting write safety
 
-Any remote/public mutation (create, update, close, post, delete, labels, milestones, projects, PRs, branches, releases, raw `gh api`) on MCP or CLI is named in the request or confirmed once via **draft-and-confirm**. Never bypass confirmation via `gh api`; report URLs/changed status only after verified execution ([output-discipline.md](../routing/references/contracts/output-discipline.md#executed-vs-simulated-status-honesty)). Merging follows [Repository policy](#repository-policy).
+Any remote/public mutation (create, update, close, post, delete, labels, milestones, projects, PRs, branches, releases, raw `gh api`) on MCP or CLI is named in the request or confirmed once via **draft-and-confirm**. Never bypass confirmation via `gh api`; report URLs/changed status only after verified execution ([output-discipline.md](../routing/references/contracts/output-discipline.md#executed-vs-proposed-status-honesty)). Merging follows [Repository policy](#repository-policy).
 
 - **Named steps** run with no second question when verified target matches (except named posts previewed first per [approval.md](../routing/references/contracts/approval.md#a-named-post-a-skill-previews-first), destructive deletes, and policy-gated actions). State up front in one line which named steps are authorized and which will still be asked.
 - **Unnamed writes:** show one preview and confirm once (any clear affirmative confirms; affirmative with changes is an edit request).
@@ -55,7 +55,7 @@ Single source for drafts, merging, review threads, and security alerts:
 - **While on:** hold regardless of session instructions; name setting once and note UI/setting exit (repeat -> one-line pointer; no override recorded).
 - **When `policy.draft_prs` is off:** open/mark ready on named request; merge only on named request after verifying target, review decision, and checks.
 - **Hosts without draft PRs:** hand push to `git push`, state drafts unavailable, give create command; open ready only when `policy.draft_prs` is off.
-- **Returning a PR to draft:** ungoverned by policy. Read `gh pr view <number> --json isDraft` freshly in this turn before acting/claiming (stop if already draft; never cite an earlier turn's read); on named request only, run `gh pr ready <number> --undo`, re-read `isDraft`, and report draft only when `true`.
+- **Returning a PR to draft:** ungoverned by policy. On named request only, check current `isDraft` via `gh pr view <number> --json isDraft` (stop if already draft), run `gh pr ready <number> --undo`, and re-read `isDraft` before reporting it as draft.
 
 ## Continuing from a displayed issue
 
@@ -83,14 +83,14 @@ Determine action -> list existing labels (exact-match, never guess) -> duplicate
 2. **Issue linkage:** detect from commits, touched plans, and branch name; validate via issues API; apply without extra confirmation. If none detected and no preference given, ask one ❓ question (➡️ "proceed unlinked"). Use `Closes #N` only for full resolution, else `Part of #N` ([references/pull-requests/linkage.md](references/pull-requests/linkage.md)).
 3. **Merge settings:** check `allow_squash_merge` and `squash_merge_commit_message` via `gh api` (note if unread); write body assuming `PR_BODY`.
 4. **Template precedence:** resolve via [repo-conventions.md](../routing/references/repo-conventions.md) (ask one ❓ if multiple match; fallback in body contract if none).
-5. **Body:** write complete, diff-grounded Summary, Evidence, and Impact per [references/pull-requests/body.md](references/pull-requests/body.md) and [output-discipline.md](../routing/references/contracts/output-discipline.md) on create, stack layers, and edit (no stubs; omit `Issue linkage:` on unlinked fallback PRs; keep template heading order/checklists intact; zero placeholders). Ground Impact in repo callers/scripts; state unrun checks honestly. Once target/inputs are verified, run named create/edit directly. For UI before/after screenshots, state upload plan once and attach under Verification per [references/images.md](references/images.md) (resolved login/repo, zero `<login>`). Pass multi-line bodies via `--body-file`. Draft-only asks return text without creating. Report only returned PR number/URL.
+5. **Body:** write complete, diff-grounded Summary, Evidence, and Impact per [references/pull-requests/body.md](references/pull-requests/body.md) and [output-discipline.md](../routing/references/contracts/output-discipline.md) on create, stack layers, and edit. For UI screenshots, follow [references/images.md](references/images.md). Pass multi-line bodies via `--body-file`. Draft-only asks return text without creating. Report only the returned PR number/URL.
 6. **Refresh on scope change:** rewrite open PR bodies from final diff per [references/pull-requests/body.md](references/pull-requests/body.md#refresh) under write safety (`gate` [Option 2](../gate/references/branch/propose-and-execute.md#option-2-push-and-create-a-draft-pr) and stack confirmation authorize their created/layer bodies; still verify target).
 7. **Non-trunk base: stack only when base is another open PR's head.** Check `gh api .../pulls -f state=open -f head="{owner}:$BASE"` or MCP `list_pull_requests` (capture `$BASE` safely, never interpolate into shell source). No matching open PR -> ordinary PR (no stack offer). Lookup unavailable -> state base unchecked, ordinary PR, never call it a stack. Matching open PR -> create/retarget as base-chained (not a stack); if stack/link named, run with no question, else offer once with exact `gh stack link --base <trunk> <parent-PR> <new-PR>` and cascade cost ([stack.md](references/stack.md#rebase-ripple)), ensure `github/gh-stack`, push via `git push`, `gh stack link`, and verify via [Definition of done: GitHub confirms the stack](#definition-of-done-github-confirms-the-stack) (exit 9 = stacked PRs disabled, not a stack).
 8. **Base:** resolve via [repo-conventions.md](../routing/references/repo-conventions.md) (named/work-item -> open PR base -> default branch); state it, ask only if unresolved.
 
 ### PR check-failure workflow
 
-Read PR (`pull_request_read` `get`) -> `get_check_runs` -> fetch annotations via CLI Checks API (`gh api /repos/{owner}/{repo}/check-runs/{check_run_id}/annotations --paginate`, `--hostname {host}` off `github.com`) -> fall back to `get_job_logs` if empty -> summarize with exact names, ids, links, and verbatim `file:line` text (or state annotations missing and quote logs; zero placeholders). Draft/post via [references/posting-envelope.md](references/posting-envelope.md) only on request. Commands: [references/mode-procedures.md](references/mode-procedures.md#pr-check-failure-workflow).
+Read PR (`pull_request_read` `get`) -> `get_check_runs` -> fetch annotations via CLI Checks API (`gh api /repos/{owner}/{repo}/check-runs/{check_run_id}/annotations --paginate`, `--hostname {host}` off `github.com`) -> fall back to `get_job_logs` if empty -> summarize with exact names, ids, links, and verbatim `file:line` text (or state that annotations are missing and quote the logs). Draft/post via [references/posting-envelope.md](references/posting-envelope.md) only on request. Commands: [references/mode-procedures.md](references/mode-procedures.md#pr-check-failure-workflow).
 
 ## Part 2: GitHub CLI (fallback)
 

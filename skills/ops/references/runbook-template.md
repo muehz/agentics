@@ -18,13 +18,14 @@ match against an active incident's symptoms.
 <!--
 Last tested is the date of the last drill, never the date of an audit.
 Until the first drill, keep the text the author workflow writes
-("YYYY-MM-DD (not yet tested; run /agentics:ops drill before relying on this in
-production)"). `/agentics:ops audit` needs a real date here, so a runbook that
+("not yet tested; run /agentics:ops drill before relying on this in
+production"). `/agentics:ops audit` needs a real date here, so a runbook that
 has never been drilled gets a freshness finding until its first drill.
 -->
 
-**Version:** 1.0 **Last tested:** YYYY-MM-DD **Owner:** <github handle of one person, not a team> **Severity grade:**
-<P1 | P2 | P3 | P4; same taxonomy as `/agentics:ops response`>
+**Version:** 1.0 **Last tested:** <YYYY-MM-DD, or "not yet tested; run /agentics:ops drill before relying on this in
+production"> **Owner:** <github handle of one person, not a team> **Severity grade:** <P1 | P2 | P3 | P4; same taxonomy
+as `/agentics:ops response`>
 
 ---
 

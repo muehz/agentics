@@ -160,9 +160,8 @@ branch already has an open pull request, the same workflow pushes to it.
 
 **The pull request.** Create it, or refresh the open one, by `gh`'s
 [Pull request creation workflow](../../../gh/SKILL.md#pull-request-creation-workflow), loaded in this session. If `gh`'s
-issue-linkage check asks whether to link an issue or proceed unlinked, stop and wait for the user's answer before
-creating the pull request—never assume the answer and create the PR in the same turn. That workflow owns the draft rule,
-issue linkage, the merge-settings read, the template, the body contract, and the
+issue-linkage check asks a question, wait for the user's answer before creating the pull request. That workflow owns the
+draft rule, issue linkage, the merge-settings read, the template, the body contract, and the
 [repository policy](../../../gh/SKILL.md#repository-policy) on drafts and merging. The yes to the proposal is the
 authorization for the pull request, so the workflow asks no second confirmation for it, and still resolves linkage as it
 always does. On a host or plan with no draft pull requests, or an unsupported forge host, push the branch and show the

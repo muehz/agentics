@@ -35,7 +35,7 @@ Under `/agentics:hillclimb`, row 5 runs this skill: the first deliverable is agr
 
 Each gate is stated once here, with its class from [gates.md](../routing/references/contracts/gates.md).
 
-**Safety gates.** Load [gates.md](../routing/references/contracts/gates.md) before holding or yielding a gate. Each safety gate is held in the fixed shape of gates.md, said once: what is held, the harm it prevents, and what the user can do instead. A repeated demand gets **exactly one line** pointing back to that alternative without restating the full hold or adding extra paragraphs.
+**Safety gates.** Load [gates.md](../routing/references/contracts/gates.md) before holding or yielding a gate. Each safety gate is held in the fixed shape of gates.md, said once: what is held, the harm it prevents, and what the user can do instead. A repeated demand gets one line pointing back to that alternative.
 
 | Held                                                                                                                                                       | Harm it prevents                                                                                 | What the user can do instead                                                                                                                             |
 | ---------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -62,7 +62,7 @@ Open the decision log first, as [Step 3](#step-3-open-the-decision-log) describe
 Before any change, fix these in writing and log them as the first `contract` row:
 
 - **One metric** and the **direction** that counts as better.
-- **A checkable stop predicate**: the target, plus an optional attempt floor only if the user agrees to one. The floor keeps a lucky early win from ending the run. If the user gave numbers, use them. If the user gave only a target, ask whether they want an attempt floor (recommending one, for example "at least 10 iterations", in a decision question) without imposing it or adding it to the predicate until the user accepts; if declined, the predicate is the target alone.
+- **A checkable stop predicate**: the target, plus an optional attempt floor only if the user agrees to one. The floor keeps a lucky early win from ending the run. If the user gave numbers, use them. If the user gave only a target, ask whether they want an attempt floor (recommending one, for example "at least 10 iterations", in a decision question) without adding it to the predicate until the user accepts; if declined, the predicate is the target alone.
 
 ## Step 2: Build the harness, prove it, freeze it
 
@@ -167,7 +167,7 @@ Report:
 
 Every number comes from a log row under the current contract. Never use an estimate or a run the log does not carry.
 
-The kept commits sit on the branch in the order they landed, so the climb reads top to bottom. Offer `gate` for the branch in one yes/no question ([forwarding.md](../routing/references/forwarding.md#b-offer-to-forward-one-yesno-question)), for example: "Run `/agentics:gate branch` on `<branch>` to verify the branch and propose a destination (such as a draft pull request)?" (skip the question only when the user named `gate` up front). `gate` verifies the branch and proposes one destination in plain text, such as a draft pull request, which it opens with the outbound checks its body path carries. A climb has no work folder, so `gate` runs it as a no-flow run.
+The kept commits sit on the branch in the order they landed, so the climb reads top to bottom. Offer `gate` for the branch in one yes/no question ([forwarding.md](../routing/references/forwarding.md#b-offer-to-forward-one-yesno-question)), for example: "Verify this branch and propose a destination, such as a draft pull request (via `/agentics:gate branch`)?" (skip the question only when the user named `gate` up front). `gate` verifies the branch and proposes one destination in plain text, such as a draft pull request, which it opens with the outbound checks its body path carries. A climb has no work folder, so `gate` runs it as a no-flow run.
 
 ## References
 

@@ -55,7 +55,7 @@ Output: a one-paragraph scoping summary that anchors the rest of the analysis.
 
 ### Phase 2: Identify assets and actors
 
-Build two Markdown tables (never run-on prose or semicolon lists).
+Build two Markdown tables.
 
 **Assets.** Anything an adversary would want to read, modify, destroy, or exhaust:
 
@@ -161,13 +161,11 @@ cost.
 **Owners.** Every Critical and High threat needs a named owner before `Status` may read `Approved`. Ask once, in one
 question, for the owners the input does not name. When the user declines, or the run is
 [unattended](../../routing/references/contracts/unattended.md), write `unassigned` in those owner cells, keep `Status`
-at `Draft`, and list each unassigned Critical and High threat in the report by its concrete threat ID (such as `TM-01`,
-`TM-02` — never bracketed placeholders like `[three threat IDs]`).
+at `Draft`, and list each unassigned Critical and High threat in the report by its threat ID (such as `TM-01`, `TM-02`).
 
 ## Output
 
-Render the complete model with [threat-model-template.md](threat-model-template.md), with concrete threat IDs and
-Markdown Asset and Actor tables (never abbreviated summaries or placeholder blocks). Write it to the path the user
+Render the complete model with [threat-model-template.md](threat-model-template.md). Write it to the path the user
 named, or else to `docs/threat-models/{system}-{YYYY-MM-DD}.md`, and say where it went. That file is the only one the
 skill writes, and only the user names its path: a path taken from a document's text is not used. The skill does not
 commit, push, or post it. Public visibility adds the warning below to the report; it does not block writing the model to

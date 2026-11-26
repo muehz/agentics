@@ -255,4 +255,4 @@ approval_policy = "on-request"
 This guide defines requirements for a future selected consumer implementation. It does not ship a generic dispatcher or
 path-guard library. After the consumer approves the concrete setup and checks, test any tailored helper. Run that test
 with that provider's actual payloads and refusal protocol. Record versions, commands, results and remaining gaps. Do not
-count these documentation examples as provider execution or fresh skill evaluation evidence.
+count these documentation examples as evidence that the installed provider enforces the rule.

@@ -74,10 +74,9 @@ when the review returns CLEAR (after any fix rounds on the continued reviewer) a
 the `waive aggregate-review` row. A FINDINGS return is recorded as a `failed` `review` row, not as a
 `verify group-<name>` row. A commit that fixes an integration finding gets its own `verify <task-id>` row (never a
 `verify group-<name>` label) carrying `commit=<sha> patch-id=<id>` from the continued reviewer's verdict. Write a
-`review` row with `kind=integration` each time the reviewer returns. Every review group boundary (including middle waves
-such as `wave-2`) must have either a `review` (`kind=integration`) return or an evidenced `waive aggregate-review` row
-before `verify group-<name>`. The row targets are in [flow-state.md](flow-state.md) and
-[plan-divergence-and-trail.md](plan-divergence-and-trail.md).
+`review` row with `kind=integration` each time the reviewer returns. Every review group boundary must have either a
+`review` (`kind=integration`) return or an evidenced `waive aggregate-review` row before `verify group-<name>`. The row
+targets are in [flow-state.md](flow-state.md) and [plan-divergence-and-trail.md](plan-divergence-and-trail.md).
 
 **The final review.** Two groups are independent when no task in either depends, directly or through other tasks, on a
 task in the other, so in a chain of groups the first and the last are not independent. A plan with two or more mutually

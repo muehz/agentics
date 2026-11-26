@@ -52,10 +52,9 @@ However Zealot was loaded, run the selected mode's workflow whole. A result buil
 ## Step 0: Preflight
 
 **Read nothing else first.** Before Step 0 preflight and mode selection finish, read no mode workflow or charter file
-(neither `comments/` nor `tests/`), resolve no scope, and make zero tool calls on an ambiguous or non-matching request.
-Check the request against [Don't use when](#dont-use-when) before loading any mode reference, on every invocation. A
-matching row forwards by [forwarding.md](../routing/references/forwarding.md) before any scope is resolved. Otherwise
-select the mode below.
+and resolve no scope. Check the request against [Don't use when](#dont-use-when) before loading any mode reference, on
+every invocation. A matching row forwards by [forwarding.md](../routing/references/forwarding.md) before any scope is
+resolved. Otherwise select the mode below.
 
 ## Which mode?
 
@@ -73,11 +72,11 @@ Announce an inferred mode in one line. The `all` scope applies to tests mode onl
 
 ## /agentics:zealot comments
 
-Read [references/comments/workflow.md](references/comments/workflow.md) before acting, and follow its steps in order. It resolves the scope, spawns the Comment Zealot finder from [references/comments/comment-zealot.md](references/comments/comment-zealot.md) (embedding the charter verbatim), has a fresh read-only Deep reviewer audit the finder's report (passing both the Reject list and keep rule), shows the code fixes, constraint encodings, and exact Step 5 verification command in the confirmation batch, applies confirmed items, runs baseline/post-fix verification, deletes saved copies, and reports.
+Read [references/comments/workflow.md](references/comments/workflow.md) before acting, and follow its steps in order. It resolves the scope, spawns the Comment Zealot finder from [references/comments/comment-zealot.md](references/comments/comment-zealot.md), has a fresh read-only Deep reviewer audit the finder's report, shows the code fixes, constraint encodings, and exact Step 5 verification command in the confirmation batch, applies confirmed items, runs baseline/post-fix verification, deletes saved copies, and reports.
 
 ## /agentics:zealot tests
 
-Read [references/tests/workflow.md](references/tests/workflow.md) before acting, and follow its steps in order. It resolves the scope (stating nonempty balanced package groups before dispatch when `all` applies), prepares disposable mutant worktrees outside the repository, spawns the Test Zealot finder from [references/tests/test-zealot.md](references/tests/test-zealot.md), has a fresh Deep reviewer prove each candidate by mutation, audits the records, restores and diffs the caller snapshot, and emits the Step 7 handoff naming the next step for confirmed remove-or-replace work. It never deletes or edits a test, and it never reports a mutation score, kill ratio, or coverage percentage.
+Read [references/tests/workflow.md](references/tests/workflow.md) before acting, and follow its steps in order. It resolves the scope, prepares disposable mutant worktrees outside the repository, spawns the Test Zealot finder from [references/tests/test-zealot.md](references/tests/test-zealot.md), has a fresh Deep reviewer prove each candidate by mutation, audits the records, restores and diffs the caller snapshot, and emits the Step 7 handoff naming the next step for confirmed remove-or-replace work. It never deletes or edits a test, and it never reports a mutation score, kill ratio, or coverage percentage.
 
 ## References
 

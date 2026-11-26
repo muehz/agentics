@@ -102,9 +102,8 @@ two files does not use it: report the changed files and the unresolved items in 
 That rule, in `SKILL.md` under **Refresh against code**, takes precedence over this contract.
 
 Return a plain-English markdown report, not JSON. Print a numbered section **only** when it has concrete items to
-report. Omit any section that has nothing to report completely—do not print its heading with `None`, `none established`,
-`not applicable`, or an empty list. Keep the original numbers of the sections you print, so a reader can refer to a
-section by number. The sections are:
+report. Omit any empty section rather than printing an empty heading or placeholder. Keep the original numbers of the
+sections you print, so a reader can refer to a section by number. The sections are:
 
 ### 1. Status
 

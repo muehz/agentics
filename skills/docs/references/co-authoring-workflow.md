@@ -218,10 +218,9 @@ Detailed step rules and reporting contract for [Unslop mode](../SKILL.md#unslop-
 
 ### The change report
 
-Give **one separate entry per cited catalog pattern number and per cited Layer 3 STE rule number**—each naming the
-verified pattern or rule number and its short rule text from [slop-patterns.md](slop-patterns.md) or
-[technical-writing.md](technical-writing.md#layer-3-make-statements-load-one-at-a-time-ste), followed by its own
-`Before:` and `After:` fenced text blocks at column zero quoting the original and the delivered text exactly. Never
-bundle multiple pattern numbers or multiple STE rule numbers under a single shared `Before:`/`After:` pair. A fix counts
-only when the problem is in the original and gone from the final text. Patterns found only in protected text are not
-reported. Do not claim full STE compliance. If you skipped the STE pass, say so.
+List each fixed catalog pattern and Layer 3 STE rule with its verified number and short rule text from
+[slop-patterns.md](slop-patterns.md) or
+[technical-writing.md](technical-writing.md#layer-3-make-statements-load-one-at-a-time-ste), followed by verbatim
+`Before:` and `After:` excerpts quoting the original and delivered text. A fix counts only when the problem is in the
+original and gone from the final text. Patterns found only in protected text are not reported. Do not claim full STE
+compliance. If you skipped the STE pass, say so.

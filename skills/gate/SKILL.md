@@ -122,8 +122,7 @@ Run the pre-deploy gate: label and run all eight checklist sections in one pass,
 infer, and one confirmation of the go or no-go summary, for every deploy. The short form renders a shorter summary and
 sets a shorter default monitor window only when short-form eligibility is established; it skips no check and takes no
 further confirmation. Hand off execution to the user, who runs the deploy command. Then open the monitor window and act
-on the user's messages in it (updating the summary field to `Executed` when closing, and marking any unavailable
-timestamp or field as open or skipped). Gate sets no timer, and it reports that the user saw no anomaly, never that the
+on the user's messages in it. Gate sets no timer, and it reports that the user saw no anomaly, never that the
 deploy succeeded. An anomaly escalates to `/agentics:ops response`. Show the checks. Never auto-deploy.
 
 Load [references/release/release-workflow.md](references/release/release-workflow.md). Follow it. Checklist:
@@ -138,12 +137,10 @@ non-trivial deploy with no change-record gets a soft suggestion from Phase 1, ne
 
 Change mode writes a CAB-style change-record for an infra or production change. It drafts eight parts: identify,
 classify, risk, approval chain, rollback, comms, schedule, and record submission. It asks one question round, renders
-all eight sections of the record once in full (never abbreviating or eliding sections, deriving commands strictly from the
-runbook, and marking unsupplied approvers/channels/checks as open/TBD rather than inventing placeholders), and takes one
-confirmation before it writes the file. Store the artifact as markdown at `change-records/<YYYY-MM-DD>-<slug>.md` in the
-consuming
-repo. The record can also be posted through an adapter: change mode asks which one, unless the user named it, and the
-file alone is the record when the answer is `none`.
+all eight sections of the record once in full (deriving commands from the runbook and marking unsupplied fields as open
+rather than inventing values), and takes one confirmation before it writes the file. Store the artifact as markdown at
+`change-records/<YYYY-MM-DD>-<slug>.md` in the consuming repo. The record can also be posted through an adapter: change
+mode asks which one, unless the user named it, and the file alone is the record when the answer is `none`.
 
 Load [references/change/change-workflow.md](references/change/change-workflow.md). Follow it. Template:
 [references/change/change-record-template.md](references/change/change-record-template.md). Classification guidance:

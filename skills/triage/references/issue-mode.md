@@ -200,8 +200,7 @@ code answers. A question only the reporter can answer goes into a `needs-info` c
 Apply the confirmed or named batch: labels ([Labels](#labels)), links ([Relationships](#relationships)), comment
 ([Dispositions and templates](#dispositions-and-templates)), and close reason ([Close reasons](#close-reasons)). Read
 the issue back after each write and report the concrete verified state observed (labels present, comment posted, state,
-links—or report failed/unavailable if no read-back returned, never claiming unverified effects). When forwarding an
-issue to `intent`, carry the issue number, identity, and supplied scope directly into `intent`.
+links—or report failed/unavailable if no read-back returned, never claiming unverified effects).
 
 ### Moving an issue the user names
 

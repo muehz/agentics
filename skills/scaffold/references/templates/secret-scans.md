@@ -129,7 +129,6 @@ avoids filename-filter skips. The scanner selects the staged diff itself.
 A consumer may instead select the pinned upstream hook, after its existing formatter and check entries:
 
 ```yaml
-fail_fast: true
 repos:
     - repo: https://github.com/gitleaks/gitleaks
       rev: v8.30.1

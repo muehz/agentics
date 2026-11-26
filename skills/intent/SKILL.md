@@ -62,7 +62,7 @@ Commits, pushes, and pull requests for the waived change keep their own rules.
 
 ### Step 0. Preflight
 
-Check the input against **Don't use when**. Forward matching rows directly in this turn via [forwarding.md](../routing/references/forwarding.md#target-classification) (carry the full original input verbatim and run the target's opening step rather than stopping at a "Proposed action"; forward once, ask no starter question for the target). Under an explicit invocation, a `better elsewhere` row gets one line naming the other route and continues at Step 1. On the exempt-class row when model-loaded, make the edit directly, name the exempt class in one short line, and write no intent.
+Check the input against **Don't use when**. Forward matching rows directly in this turn via [forwarding.md](../routing/references/forwarding.md#target-classification) (carry the full original input verbatim and invoke the target in this turn; forward once, ask no starter question for the target). Under an explicit invocation, a `better elsewhere` row gets one line naming the other route and continues at Step 1. On the exempt-class row when model-loaded, make the edit directly, name the exempt class in one short line, and write no intent.
 
 ### Step 1. Gather the direction
 
@@ -133,7 +133,7 @@ Ask in every attended run (including capture-only); unattended runs ask nothing 
 
 If the [approval guard](../execute/references/flow-approval-and-audit.md#the-approval-guard) refuses, `intent.md` changed after display: re-run `flow status`, re-show, and re-ask (never bypass the guard).
 
-**After a yes.** Explain the next step in plain language and name `spec draft` once. If the user authorized continuing past intent (up front or in the approving reply), execute the guarded `approve intent.md ok` row using the displayed `<work-folder>` path and **begin `spec draft` in this same turn** (e.g., `# Spec: <topic>` scaffold / solution-definition questions grounded in the approved intent — never stopping after announcing `spec draft`); otherwise save and report the route without starting `spec draft`. No hand-off authorizes implementation, publication, or scope expansion.
+**After a yes.** Explain the next step in plain language and name `spec draft` once. If the user authorized continuing past intent (up front or in the approving reply), execute the guarded `approve intent.md ok` row using the displayed `<work-folder>` path and **begin `spec draft` in this same turn**; otherwise save and report the route without starting `spec draft`. No hand-off authorizes implementation, publication, or scope expansion.
 
 ## References
 

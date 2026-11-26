@@ -110,7 +110,7 @@ ignored, do these steps:
 
 Never silently unignore an unrelated ancestor. A proposed adjustment is a further edit to `.gitignore`, shown before it
 is written like the block itself. Report observed results and tracked extras separately. A matching generated preview
-does not prove effective consumer rules or Agentics live alignment.
+does not prove effective consumer rules.
 
 ## Optional repository-native validation
 
@@ -131,4 +131,4 @@ Write them only on the user's yes. Then run the agreed local command. Report the
 user to ask for it and its own preview; a yes to the validator does not cover CI. A declined validator leaves existing
 files unchanged and preserves the ignore option's independent decision. With no validator, describe tracked-file and
 force-add enforcement as absent, not passing. Only an observed run in the consumer repository shows that the protection
-works; template fixtures and this workflow's authoring do not.
+works; generating the template alone does not.

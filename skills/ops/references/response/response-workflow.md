@@ -48,10 +48,10 @@ customers are drafts the user sends.
 
     4. **The incident record.** Read the repository's visibility first. Every active-response first reply (P1–P4)
        includes the fenced incident-record draft verbatim rather than describing record handling only in prose. When the
-       branch is security, unsure, or `pending Q1`, OR when repository visibility is `PUBLIC` or unreadable, render a
-       fenced draft security advisory or private incident record
-       ([security-branch.md](security-branch.md#where-the-record-lives))—never a public tracking issue. Otherwise render
-       the fenced tracking issue draft from
+       branch is security, unsure, or `pending Q1`, follow
+       [security-branch.md](security-branch.md#where-the-record-lives) (render a fenced draft security advisory or
+       private incident record when the repository is public, internal, or unreadable—never a public tracking issue).
+       Otherwise render the fenced tracking issue draft from
        [../github-artifacts.md](../github-artifacts.md#tracking-issue-response-mode-declaration). Every draft named in a
        reply (incident record, first internal update, customer status-page draft) appears in a fenced block in that same
        reply, never promised for later. Post it on the user's yes, or at once when they named it up front.

@@ -112,7 +112,7 @@ Reviews task packets against approved plan at Deep tier before implementation. L
 
 ### Aggregate wave review
 
-Runs at **every** review-group boundary (including middle waves) after quality review clears—each group gets a `review` (`kind=integration`) return or evidenced `waive aggregate-review` row before `verify group-<name>`; 2+ mutually independent groups also get one final integration review. Load [aggregate-wave-review.md](references/aggregate-wave-review.md) before first boundary.
+Runs at **every** review-group boundary after quality review clears—each group gets a `review` (`kind=integration`) return or evidenced `waive aggregate-review` row before `verify group-<name>`; 2+ mutually independent groups also get one final integration review. Load [aggregate-wave-review.md](references/aggregate-wave-review.md) before first boundary.
 
 ### Two-strike stop
 
