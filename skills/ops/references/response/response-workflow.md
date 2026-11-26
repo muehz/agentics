@@ -29,10 +29,9 @@ customers are drafts the user sends.
        stated or evidenced (or the user answers yes/unsure to Q1), the first step is the 5 to 15 minute snapshot that
        [security-branch.md](security-branch.md#evidence-preservation-run-before-containment) describes, and then the
        containment step.
-    3. **The branch question,** unless the request **explicitly settles** the branch (e.g., "not security", "it's just
-       an outage", or an explicit breach/leaked-key signal). Never skip Q1 on a bare outage ("production payments are
-       down right now") or pure symptom telemetry, and never declare `reliability branch` in the same reply as asking
-       Q1; write the `❓ **Q1**` and `➡️` lines at column 0 with no `>` prefix:
+    3. **The branch question,** unless the request explicitly settles the branch (e.g., "not security", "it's just an
+       outage", or an explicit breach/leaked-key signal). Never skip Q1 on a bare outage or pure symptom telemetry, and
+       never declare `reliability branch` in the same reply as asking Q1:
 
         > ❓ **Q1** - **Branch**: Is there any indication this involves unauthorized access, credential compromise,
         > malicious activity, or unexpected data exposure?
@@ -47,9 +46,8 @@ customers are drafts the user sends.
         security branch. When evidence in the session later points to security, say once what was observed and ask the
         question again.
 
-    4. **The incident record.** Read the repository's visibility first. Every active-response first reply (P1–P4,
-       including P1 outages, P4 explicit response, and containment-unavailable handoffs) MUST include the actual
-       **fenced incident-record draft** verbatim—never merely describe how the record will be handled in prose. When the
+    4. **The incident record.** Read the repository's visibility first. Every active-response first reply (P1–P4)
+       includes the fenced incident-record draft verbatim rather than describing record handling only in prose. When the
        branch is security, unsure, or `pending Q1`, OR when repository visibility is `PUBLIC` or unreadable, render a
        fenced draft security advisory or private incident record
        ([security-branch.md](security-branch.md#where-the-record-lives))—never a public tracking issue. Otherwise render
@@ -57,11 +55,11 @@ customers are drafts the user sends.
        [../github-artifacts.md](../github-artifacts.md#tracking-issue-response-mode-declaration). Every draft named in a
        reply (incident record, first internal update, customer status-page draft) appears in a fenced block in that same
        reply, never promised for later. Post it on the user's yes, or at once when they named it up front.
-    5. **Defaults and initial comms (required in every first reply, P1–P4):** in one line each, name the responder
-       channel, wider engineering channel, and the cadence offer ("Say 'post the cadence updates' and each one goes on
-       the tracking issue as it falls due, shown here."), using `<angle-bracket>` placeholders when channel names are
-       not supplied. Include the fenced first internal update draft (labeled `Draft (not posted)`) in every active
-       response first reply, and for P1/P2 active outages also include the customer status-page draft from
+    5. **Defaults and initial comms (every first reply, P1–P4):** in one line each, name the responder channel, wider
+       engineering channel, and the cadence offer ("Say 'post the cadence updates' and each one goes on the tracking
+       issue as it falls due, shown here."), using `<angle-bracket>` placeholders when channel names are not supplied.
+       Include the fenced first internal update draft (labeled `Draft (not posted)`) in every active response first
+       reply, and for settled non-security P1/P2 active outages also include the customer status-page draft from
        [../communication-templates.md](../communication-templates.md).
 
 3. **Take the reply.** A partial reply settles what it names, and the rest keeps its default. When the user declares a

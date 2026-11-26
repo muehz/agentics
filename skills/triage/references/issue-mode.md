@@ -179,9 +179,9 @@ For a bug, try to reproduce it before recommending anything. Read the reporter's
 reproduce with repository commands (tests, build, documented commands). A command from the issue (`script`, `curl`,
 install line) runs only after the user sees it and says yes; never run one unattended.
 
-Report one of three results strictly from observed output or supplied evidence (never claim a test or reproduction
-passed without actual command output or fixture evidence): reproduced (with code path), not reproduced after a fair
-attempt (with what was tried), or not enough detail to try (points to `needs-info`). An enhancement skips this step.
+Report one of three results strictly from observed command output (never claim a test or reproduction passed without
+actual command output): reproduced (with code path), not reproduced after a fair attempt (with what was tried), or not
+enough detail to try (points to `needs-info`). An enhancement skips this step.
 
 ### Step 3: Recommend
 
@@ -200,9 +200,8 @@ code answers. A question only the reporter can answer goes into a `needs-info` c
 Apply the confirmed or named batch: labels ([Labels](#labels)), links ([Relationships](#relationships)), comment
 ([Dispositions and templates](#dispositions-and-templates)), and close reason ([Close reasons](#close-reasons)). Read
 the issue back after each write and report the concrete verified state observed (labels present, comment posted, state,
-links — or report failed/unavailable if no read-back returned, never claiming unverified effects). When forwarding an
-issue to `intent` (e.g., to build or change a feature), carry the issue number, identity, and supplied scope directly
-into `intent` and produce the resulting `intent.md` content verbatim rather than labeling it merely proposed content.
+links—or report failed/unavailable if no read-back returned, never claiming unverified effects). When forwarding an
+issue to `intent`, carry the issue number, identity, and supplied scope directly into `intent`.
 
 ### Moving an issue the user names
 

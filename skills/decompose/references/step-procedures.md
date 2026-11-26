@@ -138,10 +138,8 @@ the ignored `temp/`.
 ## Step 4b: Challenge resolutions, blockers, and unattended
 
 - **Reuse.** A prior review of the same unchanged plan can be reused only with its scope and resolutions available.
-- **Resolutions.** Rebuild gaps the source already answers or the user answers now in place, rendering the rebuilt tasks
-  and acceptance criteria verbatim, and then run and report the full Step 5 sequence in order (checklist through
-  plan-document review) through Step 6's approval offer (never stopping with "Step 5 checks not established" or only
-  summarizing that tasks were rebuilt). Never silently invent an answer.
+- **Resolutions.** Rebuild gaps the source already answers or the user answers now in place, then run and report the
+  full Step 5 sequence in order through Step 6's approval offer. Never silently invent an answer.
 - **An unanswered gap is a pending blocker.** An "undecided" answer counts as unanswered. When the user ends a challenge
   round early after answering some questions, record each remaining question's recommendation explicitly with source
   `recommendation taken when the user ended the round` (not bare unanswered) rather than omitting the taken
@@ -219,22 +217,15 @@ the ignored `temp/`.
   [vocabulary.md](../../routing/references/contracts/vocabulary.md) beside a tier.
 - **Commit and local storage.** A plan without approval stays staged and uncommitted. Under the `local` storage setting
   nothing is staged or committed.
-- **Proportionality two-sided check and override.** Always compute and report exact integer `outcome` and `support` task
-  counts from the described plan tasks in every leg (never say counts are unspecified or cannot be computed). Never
-  accept a reduced plan (such as a README or manual guide) that drops the **Outcome proof** command: reject it in one
-  line and name the smallest outcome-complete version instead. On a user's sustained push for the full plan, comply
-  immediately without re-arguing: write the full plan, record `**Proportionality:** override by user` with all five real
-  computed signal counts and fired signals, log one `waive proportionality` row without asking for a reason, and still
-  run the Plan Validation Checklist.
-- **Concrete Step 6 operator output (no raw template placeholders).** Always deliver concrete filled-in values for Step
-  6 and complete skimmable plan output verbatim (including header card, 6-column `## Task index`, concrete stable slice
-  and task IDs with exact dependency direction matching the source—e.g. if dunning depends on card management then S3
-  depends on S2, never reversed—actual `<details>` folded task-step blocks inside the plan, concrete `YYYY-MM-DD`
-  validation date in split Provenance/Coverage, actual saved plan path under the resolved work root such as `planning/`,
-  `flow status` `text=<hash>`, concrete goal, size, tier with plain meaning, artifact validator result, review result,
-  flow rows, combined routine spec+plan question with both concrete paths and hashes, and commit-and-route completion on
-  approval); never merely announce you will write the plan, echo scenario prompts, or leave raw bracketed placeholders
-  like `[path]`, `[hash]`, `<simulated flow hash>`, `[plan goal]`, `[actual plan size]`, or `[actual result]`.
+- **Proportionality two-sided check and override.** Compute and report exact integer `outcome` and `support` task counts
+  from the plan's tasks. Never accept a reduced plan (such as a README or manual guide) that drops the **Outcome proof**
+  command: reject it in one line and name the smallest outcome-complete version instead. On a user's sustained push for
+  the full plan, comply immediately without re-arguing: write the full plan, record
+  `**Proportionality:** override by user` with all five real computed signal counts and fired signals, log one
+  `waive proportionality` row without asking for a reason, and still run the Plan Validation Checklist.
+- **Concrete Step 6 output.** Deliver concrete filled-in values for the saved plan path, `flow status` `text=<hash>`,
+  summary fields, artifact validator result, and review result (no bracketed placeholders), and preserve the source's
+  exact slice dependency direction (never invert or serialize independent slices).
 - **Readiness claims.** Never call a plan "validated" unless every checklist row ran this session and passed. "Ready to
   execute" also requires the offer gate. "Reviewed" also requires an `ok` `challenge plan.md` row (a validated plan with
   a declined challenge is "validated; plan challenge declined"). If asked to call an unvalidated plan validated, say it
@@ -248,14 +239,12 @@ the ignored `temp/`.
 
 - **Row 4 (Task index).** The Task index clause applies only when the plan has a `## Task index` section.
 - **Row 8 (No code).** On a pre-4.22 plan, the no-code clause covers only tasks the update adds or changes; the
-  specific-steps clause covers every task. On turn 1 before any waiver, quote any needed existing code with concrete
-  `path:lines` citations. Under a `waive no-code` row, comply across **every** affected task the user named (never
-  partially), list every waived task's concrete ID (never placeholders), write **actual concrete function and test code
-  blocks covering every behavior in the spec** (including retry/idempotency/error paths) verbatim into each waived
-  task's steps (never prose descriptions of illustrative bodies), log `waive no-code` naming those task IDs, record row
-  8 as `pass (no-code waived by user: <task ids>)`, display the revised plan steps directly in the reply, rerun the
+  specific-steps clause covers every task. Before any waiver, quote any needed existing code with concrete `path:lines`
+  citations. Under a `waive no-code` row, comply across every affected task the user named, list every waived task's
+  concrete ID (no placeholders), write the concrete function and test code into each waived task's steps, log
+  `waive no-code` naming those task IDs, record row 8 as `pass (no-code waived by user: <task ids>)`, rerun the
   plan-document review as a new revision with the waived task IDs passed as waiver scope, print the rerun review result
-  (`READY`/`REVISE`, findings tally, and updated `**Plan review:**` line), and re-show path + new hash + approval
-  question if the plan had already been shown.
+  and updated `**Plan review:**` line, and re-show the path, new hash, and approval question if the plan had already
+  been shown.
 - **Row 9 (Commands).** Never fails solely because this session cannot reach a service: reachability is `execute`'s
   verification preflight, and a task naming its runner (user or CI) is valid.

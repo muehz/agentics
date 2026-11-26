@@ -46,15 +46,12 @@ names work gate can do, which another skill does better.
 | A code review of a diff, with no completion decision                      | `/agentics:review`     | better elsewhere | Gate runs the same review, but adds the tests, the audit and a disposition.                  |
 
 **Cannot.** Load [forwarding.md](../routing/references/forwarding.md) and carry the input directly to the owner: announce and
-invoke any local-only target directly in the same turn **with no yes/no permission question** (including forwarding
-plan execution or fixes to `/agentics:execute` — never asking permission for local `execute` work or stopping at a
-"proposed action" disclaimer); ask one yes/no question ONLY before a target that writes, pushes, or posts externally
-(including a merge via `gh` or a plain push via `git`), and forward once. After a forwarded fix, offer one re-run of
-gate on the fixed work.
+run any local-only target directly without asking permission; ask one yes/no question only before a target that writes,
+pushes, or posts externally (including a merge via `gh` or a plain push via `git`), and forward once. After a forwarded
+fix, offer one re-run of gate on the fixed work.
 
 **Better elsewhere.** Under an explicit invocation, say in one line that the other skill fits better, name it, and run
-gate directly through its review/workflow (never stopping early over unprovided branch/worktree metadata):
-`/agentics:gate branch` for a review request on a diff, branch, or pull request. Under `/agentics:gate check`, a
+gate: `/agentics:gate branch` for a review request on a diff, branch, or pull request. Under `/agentics:gate check`, a
 review request first gets that one line naming `/agentics:review`; with no artifact or pass criteria, check mode's own
 preflight line then ends the run. When the model loaded gate on its own, forward it like a cannot row.
 
@@ -80,8 +77,7 @@ not a decision question.
 
 **`check` mode.** Load [references/check/check-workflow.md](references/check/check-workflow.md) and follow it. It
 produces a pass or fail note, not a completion artifact, and writes no row. With no artifact in hand yet, it says so and
-runs no checkpoint. On a repeated decline after naming the cost once, record a `NOT RUN` note with literal
-`reason: none given` (not quoting the user's pushback) and write no state row.
+runs no checkpoint.
 
 ## Step 0: Preflight
 
@@ -124,12 +120,11 @@ says how findings, the status lines and the proposal work.
 
 Run the pre-deploy gate: label and run all eight checklist sections in one pass, one question round for what gate cannot
 infer, and one confirmation of the go or no-go summary, for every deploy. The short form renders a shorter summary and
-sets a shorter default monitor window ONLY when short-form eligibility is established (never invent a 15-minute duration
-otherwise); it skips no check and takes no further confirmation. Hand off execution to the
-user, who runs the deploy command. Then open the monitor window and act on the user's messages in it (updating the
-summary field directly to `Executed` when closing, and marking any unavailable timestamp/field honestly as open or
-skipped). Gate sets no timer, and it reports that the user saw no anomaly, never that the deploy succeeded. An anomaly
-escalates to `/agentics:ops response`. Show the checks. Never auto-deploy.
+sets a shorter default monitor window only when short-form eligibility is established; it skips no check and takes no
+further confirmation. Hand off execution to the user, who runs the deploy command. Then open the monitor window and act
+on the user's messages in it (updating the summary field to `Executed` when closing, and marking any unavailable
+timestamp or field as open or skipped). Gate sets no timer, and it reports that the user saw no anomaly, never that the
+deploy succeeded. An anomaly escalates to `/agentics:ops response`. Show the checks. Never auto-deploy.
 
 Load [references/release/release-workflow.md](references/release/release-workflow.md). Follow it. Checklist:
 [references/release/pre-deploy-checklist.md](references/release/pre-deploy-checklist.md). Monitor guidance:

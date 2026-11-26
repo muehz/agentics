@@ -15,12 +15,11 @@ work. The rest of the team should arrive ready to discuss, not ready to read.
 
 **Solo path.** When one person supplies the timeline, root cause, and action items directly in the conversation, there
 is no meeting to prepare. Skip the meeting schedule and the pre-read. Draft the full applicable
-[postmortem-template.md](postmortem-template.md) structure (keeping every required section — metadata header, Summary,
-Customer impact, Timeline (UTC), Root cause, Contributing factors, What went well, What didn't go well, and Action items
-with an explicit regression test or eval that fails on this incident's defect, or `n/a: <reason>`) from what they give
-you, using `<angle-bracket>` or `unknown` placeholders for unsupplied fields rather than dropping sections. The
-blameless rule and the anti-fabrication rule still hold in full. A fact nobody can produce stays marked unknown. One
-person's recollection is a source to attribute, not a verified timeline entry.
+[postmortem-template.md](postmortem-template.md) structure from what they give you (including an explicit regression
+test or eval action item that fails on this incident's defect, or `n/a: <reason>`), using `<angle-bracket>` or `unknown`
+placeholders for unsupplied fields rather than dropping sections. The blameless rule and the anti-fabrication rule still
+hold in full. A fact nobody can produce stays marked unknown. One person's recollection is a source to attribute, not a
+verified timeline entry.
 
 1. **Pull the tracking issue.** The response-mode tracking issue is the primary input. Extract severity, branch
    (reliability / security), roles, timeline, comms log, attempted mitigations, and resolution. **If no tracking issue

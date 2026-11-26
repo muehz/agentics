@@ -141,8 +141,7 @@ readability, declared file paths, configuration syntax, and referenced launch co
 not impose Agentics's metadata or heading conventions on ordinary consumer assets. Follow the optional code-review skill
 discovery order from scaffold: `.github/skills`, `.claude/skills`, then `.agents/skills`. An unreadable or invalid first
 match is a defect, not permission to fall through to another match. Keep valid freeform author content intact. Optional
-absence is inapplicable with exact literal `Optional — not configured` evidence (em-dash `—`, never an ASCII hyphen
-`-`), not a compliance failure.
+absence is inapplicable with `Optional — not configured` evidence, not a compliance failure.
 
 Inspect MCP configuration. Do not disclose secret values or contact privileged services. Configuration existence does
 not prove connectivity. Missing tools or credentials block the relevant verification. Untested connectivity is
@@ -153,11 +152,11 @@ change provider configuration from this audit.
 
 Use scaffold's file catalog and per-file conformance criteria. Before a discoverable governance file is declared
 missing, check accepted root, `.github/`, and `docs/` locations. Report every absent applicable catalog file (including
-`CODEOWNERS` on GitHub/GitLab) as `missing` with an actionable next step (never soften it to "No action unless
-requested"). Report detected paths and the particular violated criterion. Apply the repository's requirements. Optional
-templates and irrelevant documents are not automatic failures. Retain catalog coverage. Do not require a changelog where
-repository policy prohibits one. Inspect legal/security files only as evidence of the project's stated requirements.
-Decisions about their contents remain with the organization.
+`CODEOWNERS` on GitHub/GitLab) as `missing` with an actionable next step. Report detected paths and the particular
+violated criterion. Apply the repository's requirements. Optional templates and irrelevant documents are not automatic
+failures. Retain catalog coverage. Do not require a changelog where repository policy prohibits one. Inspect
+legal/security files only as evidence of the project's stated requirements. Decisions about their contents remain with
+the organization.
 
 ### 6. Release state
 

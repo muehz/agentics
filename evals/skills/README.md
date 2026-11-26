@@ -217,8 +217,8 @@ it does its work. Where a mode has no do-the-job scenario, the bank header says 
 - **A bank change with no skill change is proposed on an issue first.**
   [Changing a pinned bank](../README.md#changing-a-pinned-bank) gives the triggers, the proposal, the approval, and the
   effect on stamps and comparisons.
-- **Fix agents never read this directory.** Findings reach them as extracted gap lists. Teaching the skill text to the
-  pinned test defeats the eval.
+- **Fix agents never read this directory or [`evals/holdout/`](../holdout/README.md).** Findings reach them as extracted
+  gap lists. Teaching the skill text to the pinned test or peeking at holdout scenarios defeats the eval.
 - **A footer edit is not a bank change.** An edit to a bank's preamble footer that names its consumers bumps no version.
 - **Freeze the bank through the baseline and revisions.** Reuse the same scenarios so a score delta measures the skill
   revision rather than a changed test.

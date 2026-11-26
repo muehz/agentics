@@ -28,18 +28,17 @@ setting or unresolved manager is a blocked or unverified item with its prerequis
 
 **Optional review skill.** Discover `code-review/SKILL.md` under `.github/skills`, `.claude/skills`, and
 `.agents/skills`, in that order. Use the first existing match and report its path. Flag an unreadable match rather than
-fall through. An absent skill is `Optional — not configured` (exact em-dash `—`, never an ASCII hyphen `-`), not ❌ or a
-compliance failure. An existing valid skill is ✅ whatever its headings or metadata. See
-[review skill authoring](community/code-review.md).
+fall through. An absent skill is `Optional — not configured`, not ❌ or a compliance failure. An existing valid skill is
+✅ whatever its headings or metadata. See [review skill authoring](community/code-review.md).
 
-**Optional `REVIEW.md`.** Check the repository root for `REVIEW.md`. An absent file is `Optional — not configured`
-(exact em-dash `—`, never an ASCII hyphen `-`), not ❌. An existing `REVIEW.md` is ✅ whatever its headings, and init
-offers no replacement for it. See the [REVIEW.md starter](community/review-md.md).
+**Optional `REVIEW.md`.** Check the repository root for `REVIEW.md`. An absent file is `Optional — not configured`, not
+❌. An existing `REVIEW.md` is ✅ whatever its headings, and init offers no replacement for it. See the
+[REVIEW.md starter](community/review-md.md).
 
-**Step 2: present one menu.** Report the scan results explicitly before the menu using clean UTF-8 symbols (`✅`, `❌`,
-`⚠️`, `—` — use `?` ONLY when a file's existence is genuinely unstated, NEVER for files stated present or absent),
-showing existing conformant files as `✅` **with no `[ ]` checkbox** (kept untouched, unselectable) and every applicable
-missing file as `[ ] ❌`. The menu has four sections, and the user answers them in one reply:
+**Step 2: present one menu.** Report the scan results before the menu (`✅`, `❌`, `⚠️`, `—`; use `?` only when a file's
+existence is genuinely unknown), showing existing conformant files as `✅` with no `[ ]` checkbox (kept untouched,
+unselectable) and every applicable missing file as `[ ] ❌`. The menu has four sections, and the user answers them in
+one reply:
 
 1. The catalog rows, with **Select All**, which selects only ❌ and ⚠️ catalog rows.
 2. The optional additions: the code-review skill and `REVIEW.md`, when absent.
@@ -112,18 +111,13 @@ The [file catalog](#file-catalog) links each file's questions, structure, and ge
 [Previews and confirmation](../SKILL.md#previews-and-confirmation) decides which files share a preview and which are
 shown alone.
 
-1. **Generate** every selected file from the Step 3 answers and repository facts. The no-invention rule applies ONLY to
-   ungrounded organizational values (owning team, org, contact, check name, app ID) — it NEVER prevents generating
-   complete, concise concrete previews of starter files, `.gitignore` replacements, standalone `AGENTS.md` or exact
-   additions, `REVIEW.md`, `code-review/SKILL.md`, `verify-<app>/SKILL.md` + feature map, or protection/CI/consumer
-   diffs from the supplied repo/user facts. Never withhold a required preview by saying contents are "unavailable" or
-   "cannot be reconstructed".
-2. **Show the ordinary files together**, in exact catalog order (`CODEOWNERS` after `docs/CONSTITUTION.md` and before
-   `.editorconfig`), in one message. Print the **complete, concise verbatim text or exact diff** of every selected file
-   and local protection config/helper (`.gitignore`, `.gitleaks.toml`, hook-manager additions, CI scan workflow,
-   consumer settings/hooks/helper scripts, and user-decided `LICENSE`/`SECURITY.md`) right in this turn — never stop at
-   an outline, summarize, abbreviate, cross-reference another turn, or say preview bytes cannot be reconstructed when
-   fixture details are available. Ask one question, worded exactly:
+1. **Generate** every selected file from the Step 3 answers and repository facts. The no-invention rule applies to
+   ungrounded organizational values (owning team, org, contact, check name, app ID)—it does not prevent generating
+   complete previews of starter files, config updates, standalone `AGENTS.md` additions, or local protection diffs from
+   discovered repository and user facts.
+2. **Show the ordinary files together**, in catalog order, in one message. Print the complete verbatim text or exact
+   diff of every selected file and local protection config/helper (no outlines, abbreviations, or placeholders). Ask one
+   question, worded exactly:
 
     > ❓ **Q1** - **Create these files**: Create these <N> files? (yes / edit <file> / skip <file>)
     >
@@ -183,12 +177,12 @@ source or settings are not proof of enforcement.
 own and never chooses their content. When the user asks for one, init asks for the decision the file records, then
 writes it through step 2:
 
-| File                 | The user decides                                                    | Content                                                                                                                                                                                                                                                          |
-| -------------------- | ------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `LICENSE`            | The license, by SPDX identifier, and the copyright holder           | The license's published text, fetched from its published source (including simulated fetches when available in fixture runs) or pasted by the user — preview the full fetched text with the user's year and copyright holder, and never reconstruct from memory. |
-| `SECURITY.md`        | The reporting channel, the supported versions, and the response aim | Only those facts, in a short policy. No invented contact or timeline.                                                                                                                                                                                            |
-| `CODE_OF_CONDUCT.md` | The code, by name and version, and the enforcement contact          | The code's published text, fetched or pasted, with the contact the user gave.                                                                                                                                                                                    |
-| `FUNDING.yml`        | The funding platforms and account names                             | GitHub's `FUNDING.yml` keys with the user's values.                                                                                                                                                                                                              |
+| File                 | The user decides                                                    | Content                                                                                                                                                            |
+| -------------------- | ------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `LICENSE`            | The license, by SPDX identifier, and the copyright holder           | The license's published text, fetched from its published source or pasted by the user, with the user's year and copyright holder. Never reconstructed from memory. |
+| `SECURITY.md`        | The reporting channel, the supported versions, and the response aim | Only those facts, in a short policy. No invented contact or timeline.                                                                                              |
+| `CODE_OF_CONDUCT.md` | The code, by name and version, and the enforcement contact          | The code's published text, fetched or pasted, with the contact the user gave.                                                                                      |
+| `FUNDING.yml`        | The funding platforms and account names                             | GitHub's `FUNDING.yml` keys with the user's values.                                                                                                                |
 
 A request that names the file without the decision gets a Step 3 question for it, with no recommendation that makes the
 decision for the user.
