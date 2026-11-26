@@ -22,9 +22,8 @@ verification skill.
 
 Read the rows in order; the first match wins. Each row is marked with its kind, as
 [forwarding.md](../routing/references/forwarding.md#explicit-invocation) defines it. A `cannot` row forwards by that
-protocol (quote the user's exact request text verbatim inside quotation marks in the single yes/no offer — never
-paraphrase or write "as written" without quoting it). A `better elsewhere` row, under an explicit invocation of this
-skill, gets one line naming the better route, and then this skill runs.
+protocol (quote the user's request verbatim in the single yes/no offer). A `better elsewhere` row, under an explicit
+invocation of this skill, gets one line naming the better route, and then this skill runs.
 
 | Order | Input signal                                                                                    | Use this instead                                                                                                                          | Kind   |
 | ----- | ----------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- | ------ |
@@ -118,14 +117,13 @@ and the conformance criteria. Init runs in this order, and each step asks at mos
 1. **Scan** every catalog file, the optional additions, the [standard protections](references/protections.md) and
    [planning protection](references/planning-protection.md). An existing file is never regenerated wholesale; only its
    gaps are offered.
-2. **Select** in one menu after explicitly reporting the scan: mark every absent catalog file `[ ] ❌` and every existing
-   conformant file `✅` with no `[ ]` (use `?` ONLY when a file's existence is genuinely unknown, never for stated
-   present/absent files), plus optional additions and applicable protections (exact file/helper paths, keeping
-   environments separate from writers). Preselect user-named files.
-3. **Ask** only missing facts in one round (`❓ **Q<n>** - **<title>**:` and `➡️` — never `??`). When the user says to
-   take your recommendations or confirms (`yes`), adopt your `➡️` defaults immediately (using template defaults and an
-   inline `.gitignore` when offline) and proceed directly to the shared preview (`Create these <N> files?`) and
-   standalone `AGENTS.md` preview without blocking on a second round. Fetch published license text when available.
+2. **Select** in one menu after reporting the scan: mark absent catalog files `[ ] ❌` and existing conformant files
+   `✅` with no `[ ]` (use `?` only when a file's existence is genuinely unknown), plus optional additions and applicable
+   protections (exact file/helper paths, keeping environments separate from writers). Preselect user-named files.
+3. **Ask** only missing facts in one round (`❓ **Q<n>** - **<title>**:` and `➡️`). When the user says to take your
+   recommendations or confirms (`yes`), adopt your `➡️` defaults immediately (using template defaults and an inline
+   `.gitignore` when offline) and proceed directly to the shared preview (`Create these <N> files?`) and standalone
+   `AGENTS.md` preview without stalling in a second question round. Fetch published license text when available.
 4. **Show and confirm**, as [Previews and confirmation](#previews-and-confirmation) says.
 5. **Summarize** what was written, skipped, declined, and proposed.
 
@@ -144,13 +142,10 @@ organization. Init does not make those decisions. When the user states them, ini
 
 Rows are exclusive: first matching row wins. Before previewing any starter file or protection snippet, read its template
 in `references/` (`community/agents-md.md`, `community/contributing.md`, `templates/secret-scans.md`,
-`templates/consumer-settings.md`, etc.) — never say template text is unavailable. **Render the complete verbatim preview
-in that turn** for every selected file (including fresh-repo starters populated from known facts, omitting empty
-sections instead of withholding), `.gitignore`/diff, protection config/helper, CI repair workflow, standalone
-`AGENTS.md` or exact addition to it (even after process-gate previews are skipped), and generated `verify-<app>`
-`SKILL.md` + feature map (naming a Windows alternative to `tmux`) in catalog order (12 ordinary files with `CODEOWNERS`
-ninth before `.editorconfig`) — never summarize or emit ellipses/placeholders. List each named custom protection that
-cannot yet be removed individually with its replacement's narrower scope and missing deployed/refusal proof. When the
+`templates/consumer-settings.md`, etc.). Render the complete verbatim file, diff, or policy text in that turn in catalog
+order (omitting empty sections instead of withholding; show standalone `AGENTS.md` or exact additions even when
+process-gate previews are skipped)—never summarize or emit ellipses or placeholders. List each custom protection that
+cannot yet be removed individually with its replacement's narrower scope and missing deployed or refusal proof. When the
 user declines a process-gate preview ("skip the previews"), name its cost once (files written with unread generated
 content). On repeated decline, yield, write them unpreviewed, and list them as written unpreviewed. Hold safety gates
 per [gates.md](../routing/references/contracts/gates.md#safety-gate) with the alternative named:

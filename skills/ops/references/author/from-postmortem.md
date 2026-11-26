@@ -88,9 +88,9 @@ Use the template ([../runbook-template.md](../runbook-template.md)). Pre-fill fr
 ````markdown
 # Runbook: <derived-from-postmortem-title>
 
-**Version:** 1.0 **Last tested:** YYYY-MM-DD (seeded from postmortem; not yet drilled as a runbook; run /agentics:ops
-drill before relying on this in production) **Owner:** <postmortem owner, with note "confirm this is still you">
-**Severity grade:** <postmortem severity, default; confirm with author>
+**Version:** 1.0 **Last tested:** seeded from postmortem; not yet drilled as a runbook; run /agentics:ops drill before
+relying on this in production **Owner:** <postmortem owner, with note "confirm this is still you"> **Severity grade:**
+<postmortem severity, default; confirm with author>
 
 ---
 

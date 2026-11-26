@@ -90,15 +90,13 @@ change is never finished on the middle path.
 ## Review
 
 Every brief gets one independent review before its approval question. Dispatch one fresh general-purpose subagent with
-[brief-reviewer-charter.md](brief-reviewer-charter.md) and the brief's absolute path, complete the review pass (showing
-the reviewer dispatch, verdict `READY`/`REVISE`, findings tally, recorded `- **Brief review:**` line, and — whenever a
-review finding triggers a revision such as adding a fail-before/pass-after verification test — rendering the **complete
-revised `brief.md` verbatim** with the corrected verification command), and then present the concrete brief path,
-`flow status` hash, direction summary, and single approval question naming `execute` — never stop with "independent
-review not completed" or omit the brief path/hash/approval question when the review clears. The reviewer runs at the
-Deep tier, and at Max only when the user selects Max for the review. **Reviewer selection** in the
-[model ladder](../../routing/references/model-ladders.md#reviewer-selection) resolves the tier, and
-[surface-dispatch.md](../../routing/references/surface-dispatch.md) gives the host's dispatch mechanism.
+[brief-reviewer-charter.md](brief-reviewer-charter.md) and the brief's absolute path, complete the review pass (verdict
+`READY`/`REVISE`, findings tally, recorded `- **Brief review:**` line, and rendering the revised `brief.md` verbatim
+when findings trigger a revision), and then present the brief path, `flow status` hash, direction summary, and single
+approval question naming `execute`. The reviewer runs at the Deep tier, and at Max only when the user selects Max for
+the review. **Reviewer selection** in the [model ladder](../../routing/references/model-ladders.md#reviewer-selection)
+resolves the tier, and [surface-dispatch.md](../../routing/references/surface-dispatch.md) gives the host's dispatch
+mechanism.
 
 Resolve each finding in the brief, or keep it open; the budget below says which open findings may go with the approval
 question. Record the review under **Decisions** as
@@ -135,11 +133,8 @@ A repeated demand gets a one-line pointer back to that alternative.
 Run [Step 4](../SKILL.md#step-4-route-to-spec-and-ask-for-approval)'s approval procedure with `brief.md` in place of
 `intent.md`: no question while an open question remains, the status line, the noted `hashes: brief.md text=<hash>`, the
 answer table, the approval guard, and asking again by content. Before asking, show the brief's full resolved path, its
-concrete 12-hex-char hash (when a fixture supplies a hash use it verbatim; otherwise show a concrete simulated hash such
-as `a1b2c3d4e5f6` labelled simulated rather than saying "no hash available" or emitting a placeholder), a concrete
-summary of its behavior, task, and decisions, and the `- **Brief review:**` line. **Always** complete the review and
-output the exact approval question below verbatim as the final line of your response (never write meta-text like "ask an
-approval question naming `execute`" instead of actually asking it, and add zero trailing text after it):
+actual hash from `flow status` (never an ellipsis or placeholder), a concrete summary of its behavior, task, and
+decisions, and the `- **Brief review:**` line, then ask the approval question directly:
 
 > "Brief written to `<brief-path>`. Approve this change? Your yes lets `execute` make this one change; commits, the pull
 > request, and the merge keep their own gates."

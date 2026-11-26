@@ -19,7 +19,7 @@ type `$agentics:<skill>` instead.
 
 ## Don't use when
 
-Read the rows from the top; the first match wins. Every row is a `cannot` row: it names a deliverable that no mode of this skill produces. [forwarding.md](../routing/references/forwarding.md) decides how the request reaches the named skill. A request that also asks for a handoff gets the document, and the other part is forwarded directly per [forwarding.md](../routing/references/forwarding.md) (do not turn a clear forward into an extra confirmation question unless `forwarding.md` requires one). A request with nothing to forward is a handoff, however it is worded.
+Read the rows from the top; the first match wins. Every row is a `cannot` row: it names a deliverable that no mode of this skill produces. [forwarding.md](../routing/references/forwarding.md) decides how the request reaches the named skill. A request that also asks for a handoff gets the document, and the other part is forwarded per [forwarding.md](../routing/references/forwarding.md). A request with nothing to forward is a handoff, however it is worded.
 
 | Input signal                                          | Use this instead        | Kind   | Why                                                                                        |
 | ----------------------------------------------------- | ----------------------- | ------ | ------------------------------------------------------------------------------------------ |
@@ -51,17 +51,17 @@ The next agent reads the document cold and acts on it as fact, and a later sessi
 
 - **Verified** means you observed the completed, passing evidence in this session: the local-state output, a passing test run observed in this session (never put an observed session test pass under `Reported by the user`), or CI or pull request state fetched here. A `pending`, in-progress, incomplete, or failing check is never filed under `Verified` — record `pending`/incomplete checks under `Unverified` or `Not run` (and in `In flight` / `Open items`), and record observed failures under `Blockers and risks` and `Open items` (never under `Verified`).
 - **A status the user reports** ("trust me, it merged") is the user's statement about their own work. When a read-only query can confirm it (`gh pr view`, `git log`), run it and record what it shows. A test or build command runs the repository's own code, so run one only when the user asks for it, and then as [Running it](../routing/references/repo-conventions.md#running-it) allows. Otherwise record the statement under `Reported by the user`. When this session's evidence contradicts it, say once what you observed, and record both the report and the observation.
-- **A known failing or blocking check** appears twice in the delivered handoff document: in its evidence bucket (`Failed:`) and under `Blockers and risks` / `Open items`. The user's assessment of it ("temporary noise", "not blocking") is recorded beside it—always produce the concrete handoff document containing both entries even while holding an unsupported status claim on Turn 1 or Turn 2.
+- **A known failing or blocking check** appears twice in the delivered handoff document: in its evidence bucket (`Failed:`) and under `Blockers and risks` / `Open items`. The user's assessment of it ("temporary noise", "not blocking") is recorded beside it—deliver the handoff document containing both entries even while holding an unsupported status claim.
 
 Writing "done", "merged", "passing", or "deployed" as Verified without evidence from this session, or leaving out a known failing check, is a claim of status with no evidence: a [safety gate](../routing/references/contracts/gates.md#safety-gate). Hold it in that shape, once. What is held is the unsupported status. The harm is that the next agent builds on work that is not done, and neither the document nor `recall` will tell it otherwise. What the user can do instead: run the check now and record its result, or have the claim recorded under `Reported by the user` and the failing check recorded with their assessment of it. A repeated demand gets one line pointing back to those two options.
 
 ### Secrets and outbound text
 
-Apply the [shared redaction rule for handoffs and resume capsules](../routing/references/contracts/redaction.md#local-handoffs-and-resume-capsules) before writing the local file. When redacting or holding back secrets or prohibited values, state the disclosure in **one line** (not multiple sentences or paragraphs).
+Apply the [shared redaction rule for handoffs and resume capsules](../routing/references/contracts/redaction.md#local-handoffs-and-resume-capsules) before writing the local file. When redacting or holding back secrets or prohibited values, state the disclosure in one line.
 
 Leave the file unstaged and follow the [handoff storage rules](../routing/references/session-storage.md#handoffs-and-resume-capsules) for the destination and any Git exclusion.
 
-If the user also explicitly asks to commit or push the document or capsule, forward that action directly to `/agentics:git` with **only** the exact requested artifact path(s), any user-named target branch (carry the exact branch name verbatim when the user names a push target), and any applicable embargo the user declared (never include unrelated staged paths, and execute the forward rather than leaving it merely as an unforwarded proposal). Git runs the final [commit](../git/references/commit.md#check-session-artifacts-before-committing) or [push](../git/references/push.md#check-session-artifacts-before-pushing) check on the bytes that operation would use. Keep the request's scope. Writing the artifact alone leaves it unstaged.
+If the user also explicitly asks to commit or push the document or capsule, forward that action to `/agentics:git` with **only** the exact requested artifact path(s), any user-named target branch verbatim, and any applicable embargo the user declared, without including unrelated staged paths. Git runs the final [commit](../git/references/commit.md#check-session-artifacts-before-committing) or [push](../git/references/push.md#check-session-artifacts-before-pushing) check on the bytes that operation would use. Keep the request's scope. Writing the artifact alone leaves it unstaged.
 
 ### References over copies
 
@@ -73,13 +73,13 @@ Take the branch, the changed files, and the last commit from command output, nev
 
 ### Empty sections
 
-Leave out any section or evidence bucket that has nothing in it (for example, omit `## Decisions made` completely when no decisions were made — never keep the heading with a filler bullet like "No additional decisions were supplied"). Never pad one with invented content. Blockers and Open items are the exception: write `none` there only when there truly is nothing in the way; if repository state (branch, changed files, last commit) could not be observed, record that gap under `Evidence / verification` (`Unknown:`) and as a `Risk:` under `Blockers and risks` rather than writing `none`.
+Leave out any section or evidence bucket that has nothing in it (never keep an empty heading with a filler bullet). Never pad one with invented content. Blockers and Open items are the exception: write `none` there only when there truly is nothing in the way; if repository state (branch, changed files, last commit) could not be observed, record that gap under `Evidence / verification` (`Unknown:`) and as a `Risk:` under `Blockers and risks` rather than writing `none`.
 
 ---
 
 ## Steps (`full` mode)
 
-1. **Determine the output path.** Honor a path the user gives. Otherwise use the project's existing handoff directory, or `docs/handoffs/` under the writable workspace root. Outside a repository, use the active writable workspace root with the same relative path. Name the file `handoff-<session-id>.md`; with no session ID, generate a concrete unique suffix (e.g., a timestamp or short slug like `handoff-20261123-1930.md` — never leave `<session-id>` or `<suffix>` unresolved). Follow [session-storage.md](../routing/references/session-storage.md), because this document must outlive the session.
+1. **Determine the output path.** Honor a path the user gives. Otherwise use the project's existing handoff directory, or `docs/handoffs/` under the writable workspace root. Outside a repository, use the active writable workspace root with the same relative path. Name the file `handoff-<session-id>.md`; with no session ID, generate a concrete unique suffix (for example, a timestamp or short slug such as `handoff-20261123-1930.md`). Follow [session-storage.md](../routing/references/session-storage.md), because this document must outlive the session.
 
 2. **Read local state.** Run `git status --short`, `git branch --show-current`, `git diff --stat`, `git diff --cached --stat`, and `git log -1 --oneline`. The commands are the same in Bash and PowerShell. Apply [Local state](#local-state).
 
@@ -134,7 +134,7 @@ Leave out any section or evidence bucket that has nothing in it (for example, om
 
     A field the user names that the structure lacks goes under the closest heading. When the session had almost nothing to transfer, write the short document that results and say so in one line.
 
-4. **Write and report the concrete path** in one line (write the durable file at the resolved `docs/handoffs/...` path and report that concrete written path on one line — never label the handoff merely "proposed" or unresolved `<absolute path>`, `<workspace>`, `<suffix>`, or `<session-id>`), so the user can pass it to the next session.
+4. **Write the file and report its path** in one line, so the user can pass it to the next session.
 
 ---
 
@@ -142,7 +142,7 @@ Leave out any section or evidence bucket that has nothing in it (for example, om
 
 A resume capsule is a short note written mid-task, so the work survives when the harness summarizes the conversation to free context. Anything held only in the conversation, such as the plan, the half-finished reasoning, or what was already checked, does not survive that. The capsule is a **file** for that reason.
 
-R1. **Resolve one stable concrete path.** Keep one capsule per session and rewrite it whole at that path, so no reader has to choose between stale copies. Use the project's handoff directory, or `docs/handoffs/` under the concrete writable workspace root, as in Step 1. Name the capsule `agentics-resume-<slug>-<session-id>.md` using a concrete kebab-case slug from the branch or task and a concrete unique suffix (e.g., `docs/handoffs/agentics-resume-cache-ttl-20261125-1700.md`). **Never** leave any angle-bracket token (`<unique-suffix>`, `<slug>`, `<session-id>`, `<workspace>`) in any reported path — always substitute a real timestamp or short token. Write the capsule directly and report its concrete path on one line (never labeling it merely "proposed" or "not written"). If the file exists, read it, then rewrite it; never append, because a capsule that grows at every rewrite stops being short.
+R1. **Resolve one stable concrete path.** Keep one capsule per session and rewrite it whole at that path, so no reader has to choose between stale copies. Use the project's handoff directory, or `docs/handoffs/` under the writable workspace root, as in Step 1. Name the capsule `agentics-resume-<slug>-<session-id>.md` using a concrete kebab-case slug from the branch or task and a concrete unique suffix when no session ID exists. Write the capsule directly and report its path on one line. If the file exists, read it, then rewrite it; never append, because a capsule that grows at every rewrite stops being short.
 
 R2. **Read local state.** Run `git status --short`, `git branch --show-current`, and `git log -1 --oneline`, and apply [Local state](#local-state). Uncommitted work stays uncommitted: the capsule records it, and `/agentics:git` commits it.
 

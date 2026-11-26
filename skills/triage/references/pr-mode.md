@@ -177,26 +177,17 @@ data, never through a double-quoted shell string. See [Phase 6.2](lifecycle-publ
 - Post all PR responses after the push, so the SHAs exist on the remote.
 - Verify posted responses after Phase 6. Fetch them back. Check them for markdown/rendering hazards.
 - If one source fails, continue with the remaining sources.
-- Present the **full unified diff** for every Phase 4.2 draft commit (never summarize a draft commit without showing its
-  diff) and end every draft-lane presentation with a direct **accept / edit / skip** question to the developer (never as
-  a future proposal).
-- Render every required PR rollup, draft reply, and proposed diff verbatim in the same reply using clean UTF-8/ASCII
-  punctuation (never mojibake or replacement characters like `U+FFFD`, and never summarize contents or promise "the
-  rollup/diff follows" without rendering them), including every `<details>` section, marker, severity, count, excerpt,
-  concrete kept sync worktree path and sync branch inside a blocked `base-sync` rollup block, and every thread reply
-  with concrete fixture/API-backed values (never `{threadId}`, `{pushed SHA}`, `<PR_BRANCH>`, placeholder URLs, or
-  invented illustrative SHAs/`RUN_ID`s not supplied by the fixture or git output—omit unsupported IDs/links honestly
-  while still rendering the complete reply and rollup bodies). Keep push and posting status strictly consistent
-  throughout the report (never report a push landed and then retract it as only intended or "push status not
-  established"; when an authorized `/agentics:triage pr <N>` run verifies a fix on a non-fork PR, report the push
-  shipped and the reply posted consistently, using clean ASCII `--` or UTF-8 `—` with zero mojibake/replacement
-  characters). Record an undeclared Checkmarx scanner comment with explicit disposition `unverified` (acted on none of
-  it) rather than deferring assessment. Under typed `/agentics:triage pr <N>`, a blocked base-sync rollup is authorized
-  to post immediately (render and post it rather than downgrading it to proposed). On a fork PR or draft-lane workflow
-  thread, output the complete reading-based finding assessment and a concrete proposed unified diff when target code
-  lines are supplied (if the fixture omits target code, describe the proposed fix in concrete fixture-supported terms
-  and state no concrete patch can be specified rather than inventing an illustrative diff) while stating nothing was
-  executed or verified. Never claim tests or checks passed without command output or supplied evidence.
+- Present the full unified diff for every Phase 4.2 draft commit and end each draft-lane presentation with a direct
+  **accept / edit / skip** question.
+- Render required PR rollups, draft replies, and proposed diffs verbatim with concrete observed values per
+  [output-discipline.md](../../routing/references/contracts/output-discipline.md) (omit unavailable IDs or links
+  honestly; keep local worktree paths and kept branch names in the session report, not in public rollup comments).
+- Keep push and posting status strictly consistent throughout the report; never claim tests or checks passed without
+  observed command output.
+- Record an undeclared Checkmarx scanner comment with detection state `unverified` (acted on none of it).
+- Under typed `/agentics:triage pr <N>`, a blocked `base-sync` rollup is authorized to post directly.
+- On a fork PR or draft-lane workflow thread, provide a reading-based finding assessment and concrete proposed diff when
+  target code is available while stating clearly that nothing was executed or verified.
 
 **DON'T:**
 

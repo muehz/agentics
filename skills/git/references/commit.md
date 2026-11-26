@@ -247,9 +247,9 @@ git add -- "${paths[@]}"
 Stage by individual file. Patterns or directory arguments can stage files nobody reviewed. When a file holds changes for
 two intents and only part of it belongs in this commit, say so and ask how to split it.
 
-**Stage only the files that match the scope the user named.** If the request says "commit the scenario bank additions",
-the scenario files are the commit. Everything else in the tree stays unstaged. When the tree holds work outside that
-scope, say what you leave behind and why. Do not stage it silently. Batch Mode carries the same rule per group.
+**Stage only the files that match the scope the user named.** If the request says "commit the parser changes", only the
+parser files are the commit. Everything else in the tree stays unstaged. When the tree holds work outside that scope,
+say what you leave behind and why. Do not stage it silently. Batch Mode carries the same rule per group.
 
 **Never commit secrets** (.env, credentials.json, private keys).
 
@@ -322,13 +322,9 @@ git commit --file "$message_file"
 passphrase prompt. Do these steps:
 
 1. Stop the run. Leave the index staged as it is.
-2. Give the user an inline, immediately copy-pasteable retry of the failed `git commit` command for their own terminal
-   (where the prompt can appear), preserving every original option, scope flag, and pathspec (such as
-   `--only -- <paths>` for user-named paths) and replacing only `--file "$message_file"` with
-   `-m '<concrete subject>' -m '<concrete body>'` containing the complete actual commit subject and body drafted from
-   the diff (for example, `git commit -m '<concrete subject>' -m '<concrete body>'`, or
-   `git commit --only -m '<concrete subject>' -m '<concrete body>' -- <paths>` for user-named paths; never
-   `--file "$message_file"`, `<subject>`, or `<body from the message draft>`).
+2. Give the user an exact, copy-pasteable retry command for their own terminal (where the prompt can appear), preserving
+   every original option, scope flag, and pathspec with the drafted commit subject and body passed inline via `-m` (no
+   scratch-file references or placeholders).
 3. Do not run the commit again with signing turned off, and do not change a signing setting.
 4. Continue from step 6 once the user says the commit exists.
 
@@ -348,10 +344,10 @@ evidence of red.
 git log -1 --stat
 ```
 
-Report the SHA, final message, and files included only after `git log -1 --stat` actually printed them in this run. When
-git cannot run in the environment, label the commit `[proposed]` with the exact commands and never print `"Committed"`
-or an invented SHA. If the commit failed (hook rejection, empty index), report the actual failure. Never report a commit
-you did not verify.
+Report the SHA, final message, and files included only after `git log -1 --stat` actually printed them in this run. If
+the commit did not run, state that explicitly and give the exact commands instead of claiming completion or inventing a
+SHA. If the commit failed (hook rejection, empty index), report the actual failure. Never report a commit you did not
+verify.
 
 ---
 

@@ -154,12 +154,9 @@ finder, and one investigator for each batch of up to 20 unverified keeps, a numb
     - for each accepted constraint comment ("do not remove", "do not change wording", "talk to X before changing"), the
       cheapest in-scope encoding: a type, a runtime assertion, a test, or a CI lint.
     - the exact runnable command Step 5 will run: the
-      [verification command](../../../routing/references/repo-conventions.md#verification-command), or the concrete
-      project build and touched-file test command from the repository's toolchain/scripts when none is configured (for
-      example, `npm run build && npm test` / `npx tsc --noEmit` in a JS/TS repo or `go build ./... && go test ./...` in
-      Go — always name an exact command string and always present the Step 4 batch and single confirmation question;
-      never leave the command as "unavailable" or skip the confirmation batch or Step 5 baseline/rerun sequence). It
-      runs code the repository controls, such as a package `test` script, so it is shown before it runs.
+      [verification command](../../../routing/references/repo-conventions.md#verification-command), or the project's
+      concrete build and touched-file test command from its toolchain/scripts when none is configured. It runs code the
+      repository controls, such as a package `test` script, so it is shown before it runs.
 
     Then ask one question: apply all and run the command, apply all but the ones the user names, or apply none. When the
     user's request already named fixing what the sweep flags, the fixes are authorized

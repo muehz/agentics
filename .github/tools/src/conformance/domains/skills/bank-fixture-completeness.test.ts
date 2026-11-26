@@ -227,21 +227,30 @@ Assertions:
   );
 });
 
-test("ignores evals/skills/README.md and runs across bank files on disk", () => {
+test("ignores README.md and runs across bank files in evals/skills and evals/holdout", () => {
   withBanks(
     {
       "evals/skills/README.md":
         "## happy\n\n```\nturn\n```\n\nCorrect behavior: `<PR_BRANCH>`.\n",
       "evals/skills/sample.md":
         "## happy\n\n### Bad\n\n```\nturn\n```\n\nCorrect behavior: `{threadId}`.\n",
+      "evals/holdout/README.md":
+        "## happy\n\n```\nturn\n```\n\nCorrect behavior: `<current-hash>`.\n",
+      "evals/holdout/sample.md":
+        "## edge\n\n### Bad holdout\n\n```\nturn\n```\n\nCorrect behavior: `<current-hash>`.\n",
     },
     (root) => {
       const found = bankFixtureCompletenessRules(root);
-      assert.equal(found.length, 1);
+      assert.equal(found.length, 2);
       assert.equal(found[0]?.path, "evals/skills/sample.md");
       assert.match(
         found[0]?.message ?? "",
         /unresolved thread-id placeholder \{threadId\}/,
+      );
+      assert.equal(found[1]?.path, "evals/holdout/sample.md");
+      assert.match(
+        found[1]?.message ?? "",
+        /unresolved hash placeholder <current-hash>/,
       );
     },
   );

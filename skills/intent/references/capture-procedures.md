@@ -63,12 +63,11 @@ executing that step.
   A carried-forward pass uses `prior record dated YYYY-MM-DD` and the prior record's fields. Present for `ok`,
   `declined`, and a pending pass after one asked round.
 - **Card and existing intents.** Each of the five card bullets (`Change`, `Why now`, `Out of scope`, `Risk`, `Source`)
-  must be one complete sentence with a verb (when unsupported, write a complete sentence such as
-  `None stated in the conversation.` rather than a bare fragment);
-  [skim-rules.md](../../decompose/references/skim-rules.md#the-card) defines `Source`, including for writers with no
-  live session. Include the five-line card and Challenge record even when holding with open direction blockers. An
-  existing intent with a header, a card of another length, or no card keeps its layout (and any existing `Ask` line,
-  since removing it stales approval) and converts only on user request. Keep existing card lines accurate.
+  is one sentence, or `none stated` when the source does not support it
+  ([skim-rules.md](../../decompose/references/skim-rules.md#the-card)); `Source` covers writers with no live session.
+  Include the five-line card and Challenge record even when holding with open direction blockers. An existing intent
+  with a header, a card of another length, or no card keeps its layout (and any existing `Ask` line, since removing it
+  stales approval) and converts only on user request. Keep existing card lines accurate.
 
 ### User's change `diagnose` waiver row
 

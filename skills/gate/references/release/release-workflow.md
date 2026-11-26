@@ -74,9 +74,8 @@ of status from no evidence and no statement is never reported as `pass`.
 
 ### Go or no-go summary
 
-The summary is the checklist's one report. Always print all eight section lines explicitly with each section's concrete
-result (never use bracketed placeholders such as `[other seven sections]`). Its first line is `GO` when every item is
-`pass` or `n/a`, and `NO-GO` otherwise.
+The summary is the checklist's one report. Print all eight section lines with each section's concrete result. Its first
+line is `GO` when every item is `pass` or `n/a`, and `NO-GO` otherwise.
 
 ```text
 <GO | NO-GO> — pre-deploy gate for <ref> (<short SHA>) to <target>

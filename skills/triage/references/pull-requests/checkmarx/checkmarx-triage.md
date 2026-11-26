@@ -179,10 +179,9 @@ For each true or likely positive without a commit:
   value, because the section can be public.
 
 These items appear in the Needs you block of the section on **private** repositories only. On a **public** repository,
-the orchestrator's outbound checks withhold **every** confirmed or likely finding that is not yet fixed—including
-missing security headers (such as HSTS) as well as credentials—from any posted rollup section or reply; omit all public
-descriptions, file/line details, and remediation guidance for unfixed findings from the posted comment, report them only
-in the session report, and name the repository's private security channel
+the orchestrator's outbound checks withhold **every** confirmed or likely finding that is not yet fixed from any posted
+rollup section or reply; omit public descriptions, file/line details, and remediation guidance for unfixed findings from
+the posted comment, report them only in the session report, and name the repository's private security channel
 ([posting envelope](../../../../gh/references/posting-envelope.md#outbound-checks)).
 
 ## Phase 5 — Draft the Rollup Section

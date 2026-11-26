@@ -47,15 +47,14 @@ An agent may load Zealot without `/agentics:zealot`, inside four bounds:
 3. Never chain it from another skill. Other skills may only suggest it. A route or preflight forward of the user's own request (`routing`, or `tdd` for a test audit the user asked for) is not a chain.
 4. Never pick the `all` scope unless the user typed `all` or asked for the whole project in words.
 
-However Zealot was loaded, run the selected mode's workflow whole. Every fresh session (including plain-language runs) emits its own complete selection, dispatch count, embedded charter, concrete numeric `file:line` locations (never `<line>` placeholders), concrete `caller-snapshot-before/` and `caller-snapshot-after/` paths with verbatim `git diff --no-index` outputs, and complete Step 7 handoff block independently — never pointing back to an earlier run ("same as H1"). A result built from plain copies instead of mutant worktrees, without the finder and the reviewer (or their labelled fallback), or without the mode's report is a finder claim, not a finding. Never report it as a finding.
+However Zealot was loaded, run the selected mode's workflow whole. A result built from plain copies instead of mutant worktrees, without the finder and the reviewer (or their labelled fallback), or without the mode's report is a finder claim, not a finding. Never report it as a finding.
 
 ## Step 0: Preflight
 
 **Read nothing else first.** Before Step 0 preflight and mode selection finish, read no mode workflow or charter file
-(neither `comments/` nor `tests/`), resolve no scope, and make zero tool calls on an ambiguous or non-matching request.
-Check the request against [Don't use when](#dont-use-when) before loading any mode reference, on every invocation
-(including plain-language invocations — state explicitly that Step 0 preflight ran). A matching row forwards by
-[forwarding.md](../routing/references/forwarding.md) before any scope is resolved. Otherwise select the mode below.
+and resolve no scope. Check the request against [Don't use when](#dont-use-when) before loading any mode reference, on
+every invocation. A matching row forwards by [forwarding.md](../routing/references/forwarding.md) before any scope is
+resolved. Otherwise select the mode below.
 
 ## Which mode?
 
@@ -73,11 +72,11 @@ Announce an inferred mode in one line. The `all` scope applies to tests mode onl
 
 ## /agentics:zealot comments
 
-Read [references/comments/workflow.md](references/comments/workflow.md) before acting, and follow its steps in order. It resolves the scope, spawns the Comment Zealot finder from [references/comments/comment-zealot.md](references/comments/comment-zealot.md) (embedding the finder charter verbatim), has a fresh read-only Deep reviewer audit the finder's report (explicitly passing both the Reject list and keep rule; deleting any saved untracked-file copy before reporting), shows the code fixes and constraint encodings the accepted flags call for together with the **exact Step 5 verification command** (never a generic phrase like "the project's configured verification command") in the confirmation batch, applies confirmed deletions/fixes, runs baseline/fix/rerun verification, and reports completed results.
+Read [references/comments/workflow.md](references/comments/workflow.md) before acting, and follow its steps in order. It resolves the scope, spawns the Comment Zealot finder from [references/comments/comment-zealot.md](references/comments/comment-zealot.md), has a fresh read-only Deep reviewer audit the finder's report, shows the code fixes, constraint encodings, and exact Step 5 verification command in the confirmation batch, applies confirmed items, runs baseline/post-fix verification, deletes saved copies, and reports.
 
 ## /agentics:zealot tests
 
-Read [references/tests/workflow.md](references/tests/workflow.md) before acting, and follow its steps in order. It resolves the scope (for multi-package / `all` runs, state every concrete balanced package group by name **before** dispatch), prepares disposable mutant worktrees outside the repository (capturing pre-run snapshot and completed post-cleanup `caller-snapshot-after/`, reporting verbatim `git diff --no-index` comparison outputs and recorded-worktree cleanup), spawns the Test Zealot finder from [references/tests/test-zealot.md](references/tests/test-zealot.md), has a fresh **Deep** reviewer prove **every** candidate individually by mutation across the project's actual runner (Go, pytest, etc., recording the exact `file:line` mutant location and baseline + mutant command outputs on every record; never confirm a finder candidate without Deep reviewer mutation proof — on a proof safety-gate hold or repeated demand, point explicitly to **`proof declined by caller` under `Unproven`** and the user's option to act on the finder claim, using a concise one-line pointer on repeat demand), audits the records, restores the caller, and emits the complete Step 7 handoff naming the next step for confirmed remove-or-replace work (including on plain-language runs). It never deletes or edits a test, and it never reports a mutation score, kill ratio, or coverage percentage.
+Read [references/tests/workflow.md](references/tests/workflow.md) before acting, and follow its steps in order. It resolves the scope, prepares disposable mutant worktrees outside the repository, spawns the Test Zealot finder from [references/tests/test-zealot.md](references/tests/test-zealot.md), has a fresh Deep reviewer prove each candidate by mutation, audits the records, restores and diffs the caller snapshot, and emits the Step 7 handoff naming the next step for confirmed remove-or-replace work. It never deletes or edits a test, and it never reports a mutation score, kill ratio, or coverage percentage.
 
 ## References
 

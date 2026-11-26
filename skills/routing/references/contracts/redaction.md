@@ -4,8 +4,7 @@
 
 Before copying text into a review, session artifact, or outbound body, replace every secret, credential, token, private
 key, and internal URL or hostname with `[redacted]`. Apply the same rule to logs, tool output, files, and session text.
-Synthetic fixture values stay in the fixture. Point to where a sensitive value lives when that is useful and the
-location itself is safe to share.
+Point to where a sensitive value lives when that is useful and the location itself is safe to share.
 
 ## Local handoffs and resume capsules
 

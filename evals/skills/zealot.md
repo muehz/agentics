@@ -612,7 +612,7 @@ Assertions:
 Grade E16 only on the baseline and mutant commands and the test-name check.
 
 E16, a Python suite. Scope `tests/test_pricing.py` in a Python project that runs its tests with `pytest` and has no Go
-toolchain; the finder's one candidate is `test_discount_self`, a self-comparison of `discount(2)` with itself. Simulated
+toolchain; the finder's one candidate is `test_discount_self`, a self-comparison of `discount(2)` with itself. Fixture
 runs: `pytest tests/test_pricing.py::test_discount_self -v -p no:cacheprovider` passes and shows
 `tests/test_pricing.py::test_discount_self PASSED` on both original and mutated `discount`.
 

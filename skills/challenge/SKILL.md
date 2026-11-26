@@ -94,9 +94,8 @@ questioning cannot settle, say so in one line and continue in discern on those a
 overrides. A request to sign off finished work with no proposal, design, diff, or pull request in the conversation gets
 no verdict and no route. A verdict on work nobody has shown is a claim of status with no evidence, a
 [safety gate](../routing/references/contracts/gates.md#safety-gate). Say once that no verdict is given on unseen work,
-because it would read as a check that never happened, and ask **only** for the proposal or design in one explicit
-`❓`/`➡️` question (state in one line that a finished diff or pull request goes to `/agentics:review` instead—never
-invite a PR link as input to this skill). A described proposal then runs here.
+because it would read as a check that never happened, ask only for the proposal or design in one line, and note in one
+line that a finished diff or pull request goes to `/agentics:review` instead. A described proposal then runs here.
 
 A plan, a design, or an approach in hand passes this step. So does a scope from a caller. Otherwise, read the input for
 the three scope markers:

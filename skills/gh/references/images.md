@@ -49,7 +49,7 @@ DEFAULT_BRANCH=$(gh repo view --json defaultBranchRef --jq '.defaultBranchRef.na
 # Get the SHA of the default branch
 SHA=$(gh api "repos/{owner}/{repo}/git/ref/heads/$DEFAULT_BRANCH" --jq '.object.sha')
 
-# Create a new branch using the resolved GitHub login (never literal "<login>")
+# Create a new branch using the resolved GitHub login
 LOGIN=$(gh api user --jq '.login')
 BRANCH="${LOGIN}/images"
 gh api repos/{owner}/{repo}/git/refs -X POST \
@@ -79,8 +79,7 @@ Repeat for each image. The Contents API creates a commit per file.
 **Step 3: Reference in markdown**
 
 Resolve `{host}`, `{owner}`, `{repo}`, and `$BRANCH` (`${LOGIN}/images`) from `gh repo view` and
-`gh api user --jq '.login'` before writing the PR body—never leave literal `<login>`, `<owner>`, `<repo>`, or `<branch>`
-in a published URL:
+`gh api user --jq '.login'` before writing the PR body, so the published URL uses concrete values:
 
 ```markdown
 ![Description](https://${HOST}/${OWNER}/${REPO}/raw/${BRANCH}/docs/images/my-image.png)

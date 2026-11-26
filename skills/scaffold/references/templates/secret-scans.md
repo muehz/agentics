@@ -107,9 +107,8 @@ A parsed example alone is not enforcement evidence.
 For a consumer that already uses pre-commit, append the local hook after its existing formatters and checks. This
 complete configuration uses the scan-only script and a system gitleaks 8.30.1 binary on PATH. Only add global
 `fail_fast: true` when an existing formatter must stop subsequent hooks (and preview its effect); do **not** add global
-`fail_fast: true` when preserving existing non-formatter checks (such as `schema-check`) so global hook behavior stays
-unchanged. Preserve existing entries and formatter modification and retry behavior. Do not add this manager to a Husky
-repository.
+`fail_fast: true` when preserving existing non-formatter checks so global hook behavior stays unchanged. Preserve
+existing entries and formatter modification and retry behavior. Do not add this manager to a Husky repository.
 
 ```yaml
 repos:
@@ -130,7 +129,6 @@ avoids filename-filter skips. The scanner selects the staged diff itself.
 A consumer may instead select the pinned upstream hook, after its existing formatter and check entries:
 
 ```yaml
-fail_fast: true
 repos:
     - repo: https://github.com/gitleaks/gitleaks
       rev: v8.30.1
